@@ -1,0 +1,10 @@
+# robotstxt.org/
+
+User-agent: *
+
+Disallow: /author/
+Disallow: /category/
+Disallow: /feeds/
+Disallow: /tag/
+Disallow: /theme/
+
