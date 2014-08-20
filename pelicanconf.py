@@ -13,7 +13,7 @@ PATH = 'content'
 OUTPUT_PATH = 'reachtim/'
 ARTICLE_PATHS = ['articles',]
 STATIC_PATHS = ['images', 'extra',]
-    
+
 EXTRA_PATH_METADATA = {
     'extra/404.html': {'path': '404.html'},
     'extra/403.html': {'path': '403.html'},
@@ -25,7 +25,7 @@ EXTRA_PATH_METADATA = {
 
 ARTICLE_URL = 'articles/{slug}.html'
 ARTICLE_SAVE_AS = 'articles/{slug}.html'
-PAGE_URL = 'pages/{slug}.html' 
+PAGE_URL = 'pages/{slug}.html'
 PAGE_SAVE_AS = 'pages/{slug}.html'
 
 THEME = '/Users/tim/web/themes/zurb-F5-basic'
