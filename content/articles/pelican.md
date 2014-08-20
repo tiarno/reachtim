@@ -107,11 +107,12 @@ PLUGINS = [
 I played around with a lot of themes before deciding on the `zurb-F5-basic`. I like the way it looks and operates. Other than this site, you can see another example here, from the github page: [zurb-F5-basic](https://github.com/getpelican/pelican-themes/tree/master/zurb-F5-basic)
 
 The plugins:
-    * `neighbors` adds `prev_article` and `next_article` variables to the article context, so you can use them in your template.
-    * `pelican_fontawesome` enables you to embed FontAwesome icons in your content. This plugin was not in the getpelican plugins project, so I installed it separately from [pelican-fontawesome](https://github.com/kura/pelican-fontawesome)
-    * `pelican_gist` makes it easy to embed entire GitHub gists into your content.
-    * `render_math` enables the rendering of LaTeX style math by using the MathJax javascript engine.
-    * `sitemap` automatically generates your sitemap which helps search engines know about all of your pages.
+
+* `neighbors` adds `prev_article` and `next_article` variables to the article context, so you can use them in your template.
+* `pelican_fontawesome` enables you to embed FontAwesome icons in your content. This plugin was not in the getpelican plugins project, so I installed it separately from [pelican-fontawesome](https://github.com/kura/pelican-fontawesome)
+* `pelican_gist` makes it easy to embed entire GitHub gists into your content.
+* `render_math` enables the rendering of LaTeX style math by using the MathJax javascript engine.
+* `sitemap` automatically generates your sitemap which helps search engines know about all of your pages.
 
 The `sitemap` plugin needs a little more data:
 ```python

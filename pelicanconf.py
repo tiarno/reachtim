@@ -28,8 +28,8 @@ ARTICLE_SAVE_AS = 'articles/{slug}.html'
 PAGE_URL = 'pages/{slug}.html'
 PAGE_SAVE_AS = 'pages/{slug}.html'
 
-THEME = '/Users/tim/web/themes/zurb-F5-basic'
-PLUGIN_PATHS=['/Users/tim/web/plugins',]
+THEME = '../themes/zurb-F5-basic'
+PLUGIN_PATHS=['../plugins',]
 PLUGINS = [
 	'neighbors',
     'pelican_fontawesome',
