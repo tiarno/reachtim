@@ -72,7 +72,7 @@ As my first step I wasn't sure of what I needed and would use and so this is wha
 
 Here is the python code for getting data from the system (using `psutil`) into the MongoDb database. I created a collection in MongoDb for each machine to be monitored. You could create a single document in MongoDb that contains data for each machine; it depends on your needs. I didn't want a request over the network bringing in data I didn't need so I separated the collections by machine.
 
-## About the MongoDB Collection.
+#### About the MongoDB Collection.
 
 I have a three-member replicaset for MongoDb, and that is not necessary but it is recommended to have a replicaset for production. The machines that hold the data happen to be the same ones I am monitoring, `example01` and `example02`.
 The third member is just an arbiter and doesn't keep the data. These mongoDB server machines don't have to be the ones that are monitored, they could be anywhere.
@@ -173,6 +173,7 @@ Each mongoDB collection contains 48 hours of system performance data about the c
 The complete code is in the GitHub project, but here is a snippet of how `jqplot` is set up to show the data. The machine `example0` runs the web server that will return the json load data. Again, the web server could be on any machine, in my example, it happens to be one of the machines being monitored. 
 
 The complete code is in the file `psmonitor.js` and it all follows the same pattern:
+
 1. Make the AJAX call to the server
 2. Put the data you want to chart into a variable
 3. Pass the variable to `jqplot`.
@@ -199,6 +200,7 @@ $.jqplot('cpu_user',  cpu_user, {
 ```
 
 The HTML is also simple. 
+
 1. Read in the stylesheet
 2. Write the `div` to hold each chart
 3. Load the javascript.
@@ -216,7 +218,7 @@ The HTML is also simple.
     <div id="cpu_user" style="height:400px;width:800px; "></div>
 
 <script src="http://code.jquery.com/jquery-latest.min.js" ></script>
-<script language="javascript" type="text/javascript" src="/js/jquery.jqplot.js"></script>
+<script type="text/javascript" src="/js/jquery.jqplot.js"></script>
 <script type="text/javascript" src="/js/jqplot.json2.js"></script>
 <script type="text/javascript" src="/js/jqplot.dateAxisRenderer.js"></script>
 <script type="text/javascript" src="/js/jqplot.highlighter.js"></script>
