@@ -5,7 +5,7 @@ Date: 2014-Aug-24
 Tags: sysadmin, python, web
 Summary: How to use psutil and MongoDB for monitoring system health.
 
-This article shows how to create a set of charts for monitoring one or more machines. It uses Python (psutil and bottle), MongoDb, and jquery. The general idea is the same no matter if you use a different database or web framework.
+This article describes how you can create a set of charts for monitoring one or more machines. It uses Python (psutil and bottle), MongoDb, and jquery. The general idea is the same no matter if you use a different database or web framework.
 
 At the end of the process, you will have a web page for each machine that displays charts showing cpu, memory, and disk usage.
 
@@ -18,16 +18,18 @@ I don't want to go to each machine and run `top` or `ds` to find out what's goin
 The overall workflow follows these three steps:
 
 1. Get the system data into MongoDB (`psutil` and `cron`).
-2. Write a short HTML page to display the data (`jqplot` + AJAX).
-3. Set up a web server to query the MongoDB server (`bottle`).
+2. Set up a web server to query the MongoDB server (`bottle`).
+3. Write a short HTML page to display the data (`jqplot` + AJAX).
+
+![psflow][psflow]
 
 You can get all the code in my GitHub project [psmonitor](https://github.com/tiarno/psmonitor). I use snippets of that code in this article.
 
-In the first part, I use the `psutil` package inside a `cron` job to write system information to a capped collection in MongoDB every 5 minutes.
+In the first part, you use the `psutil` package inside a `cron` job to write system information to a capped collection in MongoDB every 5 minutes.
 
-In the second part, I have an HTML file corresponding to each machine. The file loads `jqplot` from jquery, and makes an AJAX request to the MongoDB collection via `bottle`.
+In the second part, the `bottle` application makes a request to MongoDB and responds with the JSON data.
 
-In the third part, the `bottle` application ties it together by making the request to MongoDB and passing that data back to the HTML page.
+In the third part, you have an HTML file corresponding to each machine. The file loads `jqplot` and makes an AJAX request to the MongoDB collection via `bottle`.
 
 This is an example of one of the charts we will create:
 ![monitor01][monitor01]
@@ -56,25 +58,25 @@ The [jqplot](http://www.jqplot.com/) `jquery` plugin makes producing the charts 
 
 ### Part 1: Get the Data {: .article-title}
 
-We want to create data structure that follows this pattern. The main thing is to create time series so getting the timestamp to along with the data is the point here. You can add or remove any data that psutil supports in this step. 
+We want to create a data structure that follows this pattern. The main thing is to create time series so getting the timestamp to along with the data is the point here. You can add or remove any data that psutil supports in this step. 
 
-As my first step I wasn't sure of what I needed and would use and so this is what I started out with. I figured that as time went by and I saw the actual needs of the machine this would change, and could be easily changed.
+As my first step I wasn't sure of what I needed and would use and I had a few more measurements. I figured that as time went by and I saw the actual needs of the machine this would change, and could be easily changed. 
 
 ```python
 {
+  server: servername,
   datetime: datetime.now(),
-  cpu:       {user:, nice:, system:, idle:, irq:,},
-  disk_root: {total:, used:, free: },
-  phymem:    {total:, used:, free: },
-  virtmem:   {total:, used:, free: },
+  cpu: {user:, nice:, system:, idle:, irq:,},
+  disk_root: ,
+  phymem:,
 }
 ```
 
-Here is the python code for getting data from the system (using `psutil`) into the MongoDb database. I created a collection in MongoDb for each machine to be monitored. You could create a single document in MongoDb that contains data for each machine; it depends on your needs. I didn't want a request over the network bringing in data I didn't need so I separated the collections by machine.
+Here is the python code for getting data from the system (using `psutil`) into the MongoDb database. I created a collection in MongoDb for each machine to be monitored. You could create a single document in MongoDb that contains data for each machine; it depends on your needs. Since I want a separate page for each machine, I divided the data in the same way. You might want the data for all machines in one document if you want to render one page with charts for all the machines.
 
 #### About the MongoDB Collection.
 
-I have a three-member replicaset for MongoDb, and that is not necessary but it is recommended to have a replicaset for production. The machines that hold the data happen to be the same ones I am monitoring, `example01` and `example02`.
+I have a three-member replicaset for MongoDb. It isn't necessary but it is recommended to have a replicaset for production. The machines that hold the data happen to be the same ones I am monitoring, `example01` and `example02`.
 The third member is just an arbiter and doesn't keep the data. These mongoDB server machines don't have to be the ones that are monitored, they could be anywhere.
 
 Now for the collection that will contain the data for a single machine:
@@ -92,6 +94,8 @@ So I created a capped collection for each machine with a maximum size of 1179648
     db.createCollection('example02', {capped:true, size:1179648, max:576})
 
  By using a capped collection, we are guaranteed that the data will be preserved in insertion order, and old documents are automatically removed as time goes by so we always have the latest 48 hours of data.
+
+#### The Data Gathering Code
 
 First, do the necessary imports and make the connection to the MongoDb instance.
 
@@ -117,10 +121,10 @@ def main():
     cpu = psutil.cpu_times_percent()
     disk_root = psutil.disk_usage('/')
     phymem = psutil.phymem_usage()
-    virtmem = psutil.virtmem_usage()
 ```
 
- Create a dictionary so in contains the data in the time-series structure we need.
+ Create a dictionary to contain the data in the time-series structure you need.
+
 ```python
     doc = dict()
     doc['server'] = socket.gethostname()
@@ -132,22 +136,8 @@ def main():
         'idle': cpu.idle,
         'irq': cpu.irq
     }
-
-    doc['disk_root'] = {
-        'total': disk_root.total, 
-        'used': disk_root.used, 
-        'free': disk_root.free
-    }
-    doc['phymem'] = {
-        'total': phymem.total, 
-        'used': phymem.used, 
-        'free': phymem.free
-    }
-    doc['virtmem'] = {
-        'total': virtmem.total, 
-        'used': virtmem.used, 
-        'free': virtmem.free
-    }
+    doc['disk_root'] = disk_root.free, 
+    doc['phymem'] = phymem.free, 
 ```
 
  Finally, add that dictionary as a document into the corresponding MongoDb collection.
@@ -168,41 +158,75 @@ Set up a cron job to run the script every 5 minutes on each server you want to m
 
 Each mongoDB collection contains 48 hours of system performance data about the corresponding server. 
 
-### Part 2: Display the Data with jqplot {: .article-title}
+### Part 2: Set up the bottle Server {: .article-title}
 
-The complete code is in the GitHub project, but here is a snippet of how `jqplot` is set up to show the data. The machine `example0` runs the web server that will return the json load data. Again, the web server could be on any machine, in my example, it happens to be one of the machines being monitored. 
+Create a `bottle` application to query the mongoDb collection.
 
-The complete code is in the file `psmonitor.js` and it all follows the same pattern:
+Connect to MongoDb. On receipt of a request for server data, return the formatted data for the appropriate server in the response.  
 
-1. Make the AJAX call to the server
-2. Put the data you want to chart into a variable
-3. Pass the variable to `jqplot`.
+```python
+from bottle import Bottle
+import pymongo
+load = Bottle()
 
-```javascript
-$(document).ready(function(){
-var jsonData = $.ajax({
-      async: false,
-      url: "http://example01/load/example01",
-      dataType:"json"
-    });
-
-var cpu_user = [jsonData.responseJSON['cpu_user']];
-
-$.jqplot('cpu_user',  cpu_user, {
-    title: "CPU User Percent: EXAMPLE01",
-    highlighter: {show: true, sizeAdjust: 7.5},
-    cursor: {show: false},
-    axes:{xaxis:{renderer:$.jqplot.DateAxisRenderer, 
-        tickOptions:{formatString:"%a %H:%M"}}},
-    series:[{lineWidth:1, showMarker: false}]
-  });
-});
+conn = pymongo.MongoReplicaSetClient(
+    'example01.com, example02.com',
+    replicaSet='rs1',
+    read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
+)
+db = conn.reports
 ```
 
-The HTML is also simple. 
+This is a url connection. When a request comes in, *get* the servername from the url (`server`) and create and return the proper data structure.
 
-1. Read in the stylesheet
-2. Write the `div` to hold each chart
+```python
+@load.get('/<server>')
+def get_loaddata(server):
+    cpu_user = list()
+    cpu_nice = list()
+    cpu_system = list()
+    cpu_idle = list()
+    cpu_irq = list()
+    disk_root_free = list()
+    phymem_free = list()
+
+    if server == 'example02':
+        data = db.example02.find()
+    elif server == 'example01':
+        data = db.example01.find()
+
+    for data in data_cursor:
+        date = data['date']
+
+        cpu_user.append([date, data['cpu']['user']])
+        cpu_nice.append([date, data['cpu']['nice']])
+        cpu_system.append([date, data['cpu']['system']])
+        cpu_idle.append([date, data['cpu']['idle']])
+        cpu_irq.append([date, data['cpu']['irq']])
+
+        disk_root_free.append([date, data['disk_root'])
+        phymem_free.append([date, data['phymem'])
+        
+    return {
+            'cpu_user': cpu_user,
+            'cpu_irq': cpu_irq,
+            'cpu_system': cpu_system,
+            'cpu_nice': cpu_nice,
+            'cpu_idle': cpu_idle,
+            'disk_root_free': disk_root_free,
+            'phymem_free': phymem_free
+            }
+```
+
+### Part 3: Display the Data with jqplot {: .article-title}
+
+
+#### The HTML Page
+
+The HTML is very simple. 
+
+1. Read in the stylesheet.
+2. Write the `div` to hold each chart.
 3. Load the javascript.
 
 ```html
@@ -231,69 +255,35 @@ The HTML is also simple.
 </html>
 ```
 
+#### The JavaScript (jqplot) Code
 
-### Part 3: Set up the bottle Server {: .article-title}
+The complete code is in the GitHub project, but here is a snippet of how `jqplot` is set up to show the data. The machine `example01` runs the web server that will return the json load data. Again, the web server could be on any machine; in my example, it happens to be one of the machines being monitored. 
 
-Create a `bottle` application to tie everything together. 
+The complete code is in the file `psmonitor.js` and it follows the same pattern for each plot:
 
-Connect to MongoDb and when it receives a request for server data, return the formatted data for the appropriate server in the response.  
+1. Make the AJAX call to the server
+2. Put the data you want to chart into a variable
+3. Pass the variable to `jqplot`.
 
-```python
-from bottle import Bottle
-import pymongo
-load = Bottle()
+```javascript
+$(document).ready(function(){
+    var jsonData = $.ajax({
+      async: false,
+      url: "http://example01/load/example01",
+      dataType:"json"
+    });
 
-conn = pymongo.MongoReplicaSetClient(
-    'example01.com, example02.com',
-    replicaSet='rs1',
-    read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
-)
-db = conn.reports
+    var cpu_user = [jsonData.responseJSON['cpu_user']];
+
+    $.jqplot('cpu_user',  cpu_user, {
+        title: "CPU User Percent: EXAMPLE01",
+        highlighter: {show: true, sizeAdjust: 7.5},
+        cursor: {show: false},
+        axes:{xaxis:{renderer:$.jqplot.DateAxisRenderer, 
+              tickOptions:{formatString:"%a %H:%M"}}},
+        series:[{lineWidth:1, showMarker: false}]
+    });
+});
 ```
-
-This is a url connection. When a request comes in, *get* the servername from the url (`server`) and create and return the proper data structure.
-
-```python
-@load.get('/<server>')
-def get_loaddata(server):
-    cpu_user = list()
-    cpu_nice = list()
-    cpu_system = list()
-    cpu_idle = list()
-    cpu_irq = list()
-
-    disk_root_free = list()
-    phymem_free = list()
-
-    if server == 'example02':
-        data = db.example02.find()
-    elif server == 'example01':
-        data = db.example01.find()
-
-    for data in data_cursor:
-        date = data['date']
-
-        cpu_user.append([date, data['cpu']['user']])
-        cpu_nice.append([date, data['cpu']['nice']])
-        cpu_system.append([date, data['cpu']['system']])
-        cpu_idle.append([date, data['cpu']['idle']])
-        cpu_irq.append([date, data['cpu']['irq']])
-
-        disk_root_free.append([date, data['disk_root']['free']])
-        phymem_free.append([date, data['phymem']['free']])
-        
-    return {
-            'cpu_user': cpu_user,
-            'cpu_irq': cpu_irq,
-            'cpu_system': cpu_system,
-            'cpu_nice': cpu_nice,
-            'cpu_idle': cpu_idle,
-            'disk_root_free': disk_root_free,
-            'phymem_free': phymem_free
-            }
-```
-
-
-
 [monitor01]: ../images/monitor01.png
 
