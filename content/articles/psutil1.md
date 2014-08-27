@@ -11,7 +11,10 @@ At the end of the process, you will have a web page for each machine that displa
 
 [TOC]
 
-I need to watch a couple of FreeBSD machines to make sure they're healthy and not running into memory or disk space issues. Their names are `example01` and `example02`.
+I need to watch a couple of FreeBSD machines to make sure they're healthy and not running into memory or disk space issues. Their names are, for the purposes of the article, `example01` and `example02`.  
+
+#### Note {: .callout}
+These happen to be the same machines that run the MongoDB replication set and one of them runs the web server. There is no reason they all have to be the same machines--you can have MongoDB running on completely different machines than the ones you want to monitor. The same is true for the web server--it can be on any machine, not necessarily one you're monitoring.
 
 I don't want to go to each machine and run `top` or `ds` to find out what's going on, I want a web page with up-to-date charts that I can glance at, one page per machine.
 
@@ -58,7 +61,7 @@ The [jqplot](http://www.jqplot.com/) `jquery` plugin makes producing the charts 
 
 ### Part 1: Get the Data {: .article-title}
 
-We want to create a data structure that follows this pattern. The main thing is to create time series so getting the timestamp to along with the data is the point here. You can add or remove any data that psutil supports in this step. 
+We want to create a data structure that follows this pattern. You can add or remove any data that psutil supports in this step. 
 
 As my first step I wasn't sure of what I needed and would use and I had a few more measurements. I figured that as time went by and I saw the actual needs of the machine this would change, and could be easily changed. 
 
@@ -76,7 +79,7 @@ Here is the python code for getting data from the system (using `psutil`) into t
 
 #### About the MongoDB Collection.
 
-I have a three-member replicaset for MongoDb. It isn't necessary but it is recommended to have a replicaset for production. The machines that hold the data happen to be the same ones I am monitoring, `example01` and `example02`.
+I have a three-member replicaset for MongoDb. The machines that hold the data happen to be the same ones I am monitoring, `example01` and `example02`.
 The third member is just an arbiter and doesn't keep the data. These mongoDB server machines don't have to be the ones that are monitored, they could be anywhere.
 
 Now for the collection that will contain the data for a single machine:
@@ -99,55 +102,57 @@ So I created a capped collection for each machine with a maximum size of 1179648
 
 First, do the necessary imports and make the connection to the MongoDb instance.
 
-```python
-#!/usr/bin/env python
-from datetime import datetime
-import psutil
-import pymongo
-import socket
+    
+    #!/usr/bin/env python
+    from datetime import datetime
+    import psutil
+    import pymongo
+    import socket
 
-conn = pymongo.MongoReplicaSetClient(
-    'example01.com, example02.com',
-    replicaSet='rs1',
-    read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
-)
-db = conn.reports
-```
+    conn = pymongo.MongoReplicaSetClient(
+        'example01.com, example02.com',
+        replicaSet='rs1',
+        read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
+    )
+    db = conn.reports
+
 
 Now call psutil for every piece of data you want.
 
-```python
-def main():
-    cpu = psutil.cpu_times_percent()
-    disk_root = psutil.disk_usage('/')
-    phymem = psutil.phymem_usage()
-```
+    !python
+    def main():
+        cpu = psutil.cpu_times_percent()
+        disk_root = psutil.disk_usage('/')
+        phymem = psutil.phymem_usage()
+
 
  Create a dictionary to contain the data in the time-series structure you need.
 
-```python
-    doc = dict()
-    doc['server'] = socket.gethostname()
-    doc['date'] = datetime.now()
-    doc['cpu'] = {
-        'user': cpu.user, 
-        'nice': cpu.nice,
-        'system': cpu.system, 
-        'idle': cpu.idle,
-        'irq': cpu.irq
-    }
-    doc['disk_root'] = disk_root.free, 
-    doc['phymem'] = phymem.free, 
-```
+    !python
+        doc = dict()
+        doc['server'] = socket.gethostname()
+        doc['date'] = datetime.now()
+        doc['disk_root'] = disk_root.free, 
+        doc['phymem'] = phymem.free
+        
+        doc['cpu'] = {
+            'user': cpu.user, 
+            'nice': cpu.nice,
+            'system': cpu.system, 
+            'idle': cpu.idle,
+            'irq': cpu.irq
+        }
+       
+
 
  Finally, add that dictionary as a document into the corresponding MongoDb collection.
 
-```python
-    if doc['server'] == 'example01.com':
-        db.example01.insert(doc)
-    elif doc['server'] == 'example02':
-        db.example02.insert(doc)
-```
+    !python
+        if doc['server'] == 'example01.com':
+            db.example01.insert(doc)
+        elif doc['server'] == 'example02':
+            db.example02.insert(doc)
+
 
 Now you have the code to get the data and the database collections in which to store it. All that's left to do for this part is to automatically run the code:
 Set up a cron job to run the script every 5 minutes on each server you want to monitor:
@@ -164,59 +169,56 @@ Create a `bottle` application to query the mongoDb collection.
 
 Connect to MongoDb. On receipt of a request for server data, return the formatted data for the appropriate server in the response.  
 
-```python
-from bottle import Bottle
-import pymongo
-load = Bottle()
+    !python
+    from bottle import Bottle
+    import pymongo
+    load = Bottle()
 
-conn = pymongo.MongoReplicaSetClient(
-    'example01.com, example02.com',
-    replicaSet='rs1',
-    read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
-)
-db = conn.reports
-```
+    conn = pymongo.MongoReplicaSetClient(
+        'example01.com, example02.com',
+        replicaSet='rs1',
+        read_preference=pymongo.ReadPreference.SECONDARY_PREFERRED,
+    )
+    db = conn.reports
 
 This is a url connection. When a request comes in, *get* the servername from the url (`server`) and create and return the proper data structure.
 
-```python
-@load.get('/<server>')
-def get_loaddata(server):
-    cpu_user = list()
-    cpu_nice = list()
-    cpu_system = list()
-    cpu_idle = list()
-    cpu_irq = list()
-    disk_root_free = list()
-    phymem_free = list()
-
-    if server == 'example02':
-        data = db.example02.find()
-    elif server == 'example01':
-        data = db.example01.find()
-
-    for data in data_cursor:
-        date = data['date']
-
-        cpu_user.append([date, data['cpu']['user']])
-        cpu_nice.append([date, data['cpu']['nice']])
-        cpu_system.append([date, data['cpu']['system']])
-        cpu_idle.append([date, data['cpu']['idle']])
-        cpu_irq.append([date, data['cpu']['irq']])
-
-        disk_root_free.append([date, data['disk_root'])
-        phymem_free.append([date, data['phymem'])
+    !python
+    @load.get('/<server>')
+    def get_loaddata(server):
+        disk_root_free = list()
+        phymem_free = list()
+        cpu_user = list()
+        cpu_nice = list()
+        cpu_system = list()
+        cpu_idle = list()
+        cpu_irq = list()
         
-    return {
-            'cpu_user': cpu_user,
-            'cpu_irq': cpu_irq,
-            'cpu_system': cpu_system,
-            'cpu_nice': cpu_nice,
-            'cpu_idle': cpu_idle,
-            'disk_root_free': disk_root_free,
-            'phymem_free': phymem_free
-            }
-```
+        data_cursor = list()
+        if server == 'example02':
+            data_cursor = db.example02.find()
+        elif server == 'example01':
+            data_cursor = db.example01.find()
+            
+        for data in data_cursor:
+            date = data['date']
+            disk_root_free.append([date, data['disk_root'])
+            phymem_free.append([date, data['phymem'])
+            cpu_user.append([date, data['cpu']['user']])
+            cpu_nice.append([date, data['cpu']['nice']])
+            cpu_system.append([date, data['cpu']['system']])
+            cpu_idle.append([date, data['cpu']['idle']])
+            cpu_irq.append([date, data['cpu']['irq']])
+            
+        return {
+                'disk_root_free': disk_root_free,
+                'phymem_free': phymem_free
+                'cpu_user': cpu_user,
+                'cpu_irq': cpu_irq,
+                'cpu_system': cpu_system,
+                'cpu_nice': cpu_nice,
+                'cpu_idle': cpu_idle,
+                }
 
 ### Part 3: Display the Data with jqplot {: .article-title}
 
