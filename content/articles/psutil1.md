@@ -1,11 +1,11 @@
-Title: psutil and MongoDB for Monitoring
+Title: psutil and MongoDB for System Monitoring
 Category: Python
 Status: Draft
 Date: 2014-Aug-24
 Tags: sysadmin, python, web
 Summary: How to use psutil and MongoDB for monitoring system health.
 
-This article describes how you can create a set of charts for monitoring one or more machines. It uses Python (psutil and bottle), MongoDb, and jquery. The general idea is the same no matter if you use a different database or web framework.
+This article describes how you can create a set of charts for monitoring the load on one or more servers. It uses Python (psutil and bottle), MongoDb, and jquery. The general idea is the same no matter if you use a different database or web framework.
 
 At the end of the process, you will have a web page for each machine that displays charts showing cpu, memory, and disk usage.
 
@@ -28,11 +28,11 @@ The overall workflow follows these three steps:
 
 You can get all the code in the GitHub project [psmonitor](https://github.com/tiarno/psmonitor). I use snippets of that code in this article.
 
-In the first part, you use the `psutil` package inside a `cron` job to write system information to a capped collection in MongoDB every 5 minutes.
+In the first part, you use the `psutil` Python package inside a `cron` job to write system load information to a capped collection in MongoDB every 5 minutes. The 5 minutes is totally arbitrary--you can pick whatever period you like. With the systems I'm looking at, a few minutes provides a fine enough granularity.
 
 In the second part, the `bottle` application makes a request to MongoDB and responds with the JSON data.
 
-In the third part, you have an HTML file corresponding to each machine. The file loads `jqplot` and makes an AJAX request to the MongoDB collection via `bottle`.
+In the third part, you have an HTML file corresponding to each machine. The file loads `jqplot` and makes an AJAX request to the `bottle` application.
 
 This is an example of one of the charts we will create:
 ![monitor01][monitor01]
@@ -53,7 +53,7 @@ The following tools are the ones to install for this implementation, but you can
 
 The `psutil` Python package is a great cross-platform tool for system monitoring. Read more about it on its [project page](http://pythonhosted.org/psutil/). You can install it with `pip`.
 
-The NOSQL database [mongoDB](http://www.mongodb.org/) is an open-source document database. If you have data that naturally fits a JSON-style structure, mongoDB is a great fit for data storage. It has become a natural tool for me anytime I find I need a JSON store.
+The NOSQL database [mongoDB](http://www.mongodb.org/) is an open-source document database. If you have data that naturally fits a JSON-style structure, mongoDB is a great fit for data storage. It has become a natural tool for me anytime I find I need a JSON store. The funny thing is, the more I use it, the more I find new uses for it. The structure of a MongoDB *document* is suprising useful and can provide a map for lots of information types.
 
 The `bottle` web [framework](http://bottlepy.org/docs/dev/index.html) is a tiny framework written in Python with no other dependencies. You can install it with `pip`. You can use the included development server to get things going and put it under a different backend server later. I put mine under my Apache server once I got things like I wanted them. I'll write an article about that setup later on.
 
@@ -61,7 +61,11 @@ The [jqplot](http://www.jqplot.com/) `jquery` plugin makes producing the charts 
 
 ### Part 1: Get the Data {: .article-title}
 
-We want to create a data structure that follows this pattern. You can add or remove any data that psutil supports in this step. 
+We want to create a data structure that follows this pattern. You can add or remove any data that psutil supports in this step. The end point is the user, who will be looking at a jqplot chart, so it is good to keep that data structure in the back of your mind. What jqplot will want is a list of two-element lists, one of which is a datetime, something like this:
+
+    [[datetime1, y-value1], [datetime2, y-value2], [datetime3, y-value3], and so on.]
+
+That structure isn't the most efficient way to gather the data, but it's always important to remember where you're going.
 
 As my first step I wasn't sure of what I needed and would use and I had a few more measurements. I figured that as time went by and I saw the actual needs of the machine this would change, and could be easily changed. 
 
@@ -75,7 +79,9 @@ As my first step I wasn't sure of what I needed and would use and I had a few mo
     }
 
 
-Here is the python code for getting data from the system (using `psutil`) into the MongoDb database. I created a collection in MongoDb for each machine to be monitored. You could create a single document in MongoDb that contains data for each machine; it depends on your needs. Since I want a separate page for each machine, I divided the data in the same way. You might want the data for all machines in one document if you want to render one page with charts for all the machines.
+What follows is the python code for getting data from the system (using `psutil`) into the MongoDb database. I created a collection in MongoDb for each machine to be monitored. 
+
+You could create a single document in MongoDb that contains data for each machine; it depends on your needs. Since I want a separate page for each machine, I divided the data in the same way. You might want the data for all machines in one document if you want to render one page with charts for all the machines.
 
 #### About the MongoDB Collection.
 
@@ -144,7 +150,7 @@ Now call `psutil` for every piece of data you want.
        
 
 
- Finally, add that dictionary as a document into the corresponding MongoDb collection.
+ Finally, add that dictionary as a document into the corresponding MongoDb collection. It is converted to a BSON document when it is inserted into the database, but the structure is the same.
 
     :::python
         if doc['server'] == 'example01.com':
@@ -152,14 +158,15 @@ Now call `psutil` for every piece of data you want.
         elif doc['server'] == 'example02':
             db.example02.insert(doc)
 
-Now you have the code to get the data and the database collections in which to store it. All that's left to do for this part is to automatically run the code:
+There you have the code to get the data and the database collections in which to store it. All that's left to do for this part is to automatically run the code:
+
 Set up a cron job to run the script every 5 minutes on each server you want to monitor:
 
     :::bash
     */5 * * * * /path/to/psutil_script
 
 
-Each mongoDB collection contains 48 hours of system performance data about the corresponding server. 
+Each mongoDB collection contains 48 hours of system performance data about the corresponding server. This part is so simple you can set it and forget it.
 
 ### Part 2: Set up the bottle Server {: .article-title}
 
