@@ -1,11 +1,10 @@
 Title: psutil and MongoDB for System Monitoring
 Category: Python
-Status: Draft
-Date: 2014-Aug-24
-Tags: sysadmin, python, web
+Date: 2014-Sep-03
+Tags: sysadmin, how-to, web
 Summary: How to use psutil and MongoDB for monitoring system health.
 
-This article describes how you can create a set of charts for monitoring the load on one or more servers. It uses Python (psutil and bottle), MongoDb, and jquery. The general idea is the same no matter if you use a different database or web framework.
+This how-to article describes how you can create a set of charts for monitoring the load on one or more servers. It uses Python (psutil and bottle), MongoDb, and jquery. The general idea is the same no matter if you use a different database or web framework.
 
 At the end of the process, you will have a web page for each machine that displays charts showing cpu, memory, and disk usage.
 
@@ -13,7 +12,7 @@ At the end of the process, you will have a web page for each machine that displa
 
 I need to watch a couple of FreeBSD machines to make sure they're healthy and not running into memory or disk space issues. Their names are, for the purposes of the article, `example01` and `example02`.  
 
-<span class="note">Note: </span>These happen to be the same machines that run the MongoDB replication set and one of them runs the web server. There is no reason they all have to be the same machines--you can have MongoDB running on completely different machines than the ones you want to monitor. The same is true for the web server--it can be on any machine, not necessarily one you're monitoring.
+<span class="note">Note: </span>These happen to be the same machines that run the MongoDB replica set and one of them runs the web server. There is no reason they all have to be the same machines--you can have MongoDB running on completely different machines than the ones you want to monitor. The same is true for the web server--it can be on any machine, not necessarily one you're monitoring.
 {: .callout}
 
 I don't want to go to each machine and run `top` or `ds` to find out what's going on, I want a web page with up-to-date charts that I can glance at, one page per machine.
@@ -28,11 +27,11 @@ The overall workflow follows these three steps:
 
 You can get all the code in the GitHub project [psmonitor](https://github.com/tiarno/psmonitor). I use snippets of that code in this article.
 
-In the first part, you use the `psutil` Python package inside a `cron` job to write system load information to a capped collection in MongoDB every 5 minutes. The 5 minutes is totally arbitrary--you can pick whatever period you like. With the systems I'm looking at, a few minutes provides a fine enough granularity.
+In the first part, you use the `psutil` Python package inside a `cron` job to write system load information to a capped collection in MongoDB every 5 minutes. The 5 minutes is totally arbitrary--you can pick whatever period you like. With the systems I'm looking at, a few minutes provides a fine enough granularity. This part puts the data into MongoDB.
 
-In the second part, the `bottle` application makes a request to MongoDB and responds with the JSON data.
+In the second part, the `bottle` application makes a request to MongoDB and responds with the JSON data. This creates the broker between the client HTML page and the MongoDB data.
 
-In the third part, you have an HTML file corresponding to each machine. The file loads `jqplot` and makes an AJAX request to the `bottle` application.
+In the third part, you have an HTML file corresponding to each machine you want to monitor. The file loads `jqplot` and makes an AJAX request to the `bottle` application. This part is the reason for the exercise--we get the time-series chart of the load data that we've stored in MongoDB.
 
 This is an example of one of the charts we will create:
 ![monitor01][monitor01]
@@ -61,7 +60,7 @@ The [jqplot](http://www.jqplot.com/) `jquery` plugin makes producing the charts 
 
 ### Part 1: Get the Data {: .article-title}
 
-We want to create a data structure that follows this pattern. You can add or remove any data that psutil supports in this step. The end point is the user, who will be looking at a jqplot chart, so it is good to keep that data structure in the back of your mind. What jqplot will want is a list of two-element lists, one of which is a datetime, something like this:
+We want to create a data structure that follows this pattern. You can add or remove any data that psutil supports in this step. The end point is the user, who will be looking at a `jqplot` chart, so it is good to keep that data structure in the back of your mind. What `jqplot` will want is a list of two-element lists, one of which is a datetime, something like this:
 
     [[datetime1, y-value1], [datetime2, y-value2], and so on.]
 
@@ -85,7 +84,7 @@ You could create a single document in MongoDb that contains data for each machin
 
 #### About the MongoDB Collection.
 
-I have a three-member MongoDB replicaset named `rs1`. The machines that hold the data happen to be the same ones I am monitoring, `example01` and `example02`.
+I have a three-member MongoDB replica set named `rs1`. The machines that hold the data happen to be the same ones I am monitoring, `example01` and `example02`.
 The third member is an arbiter and doesn't keep the data. These mongoDB servers don't have to be the ones that are monitored, they could be anywhere.
 
 I have a database called `reports` and it is in that database we will put the new collections. For each machine we will have one collection to contain its load data:
@@ -93,7 +92,7 @@ With 1440 minutes per day, sampling every 5 minutes, and keeping two days worth 
 
     (1440/5)*2 = 576 records per server 
 
-I wasn't sure how much data I would eventually use, so I estimated 2k per document. I estimated a generous size for the documents because this is just a start and I may want to gather more data later on. Turns out that 2k is extremely generous. The average size of a record in around 200 bytes but I haven't included any networking data (and disk space is cheap). 
+I wasn't sure how much data I would eventually use, so I estimated 2k per document. I estimated a generous size for the documents because this is just a start and I may want to gather more data later on. Turns out that 2k is extremely generous. The average size of a record is around 200 bytes but I haven't included any networking data (and disk space is cheap). 
 
     576 documents @ 2048 bytes per doc = 1,179,648 bytes
 
@@ -185,7 +184,7 @@ Connect to MongoDb. On receipt of a request for server data, return the formatte
     )
     db = conn.reports
 
-This is a route, a url connection. When a request comes in, *get* the servername from the url (`server`) and create and return the proper data structure (the structure that `jqplot` will need).
+This is a route, a url connection. When a request comes in, *get* the servername from the url (`<server>`) and create and return the proper data structure (the structure that `jqplot` will need).
 
     :::python
     @load.get('/<server>')
@@ -232,7 +231,7 @@ This is a route, a url connection. When a request comes in, *get* the servername
 The HTML is very simple. 
 
 1. Read in the stylesheet.
-2. Write the `div` to hold each chart. In the example below I display only the `cpu_user` data.
+2. Write the `div` to hold each chart. In the example below I display only the `cpu_user` data. The pattern is the same for all the variables.
 3. Load the javascript.
 
 You can put the javascript from `psmonitor.js` directly into the page or call it as a file (as shown in the example).
@@ -278,7 +277,7 @@ The `url` in the code contains the string 'example01':
 
     url: "http://example01/load/example01"
 
- The first instance of `example01` is addressing the web server since that is the machine running the `bottle` app. The second instance is the name of the machine we want the data for. That is the server name that is passed to the `bottle` route (`get_loaddata`) for retrieving the MongoDB records (documents).
+ The first instance of `example01` is addressing the web server since that is the machine running the `bottle` app. The second instance is the name of the machine we want the data for. That is the server name (`<server>`) that is passed to the `bottle` route (`get_loaddata`) for retrieving the MongoDB records (documents).
 
     :::javascript
     $(document).ready(function(){
