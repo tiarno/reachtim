@@ -63,11 +63,11 @@ The [jqplot](http://www.jqplot.com/) `jquery` plugin makes producing the charts 
 
 We want to create a data structure that follows this pattern. You can add or remove any data that psutil supports in this step. The end point is the user, who will be looking at a jqplot chart, so it is good to keep that data structure in the back of your mind. What jqplot will want is a list of two-element lists, one of which is a datetime, something like this:
 
-    [[datetime1, y-value1], [datetime2, y-value2], [datetime3, y-value3], and so on.]
+    [[datetime1, y-value1], [datetime2, y-value2], and so on.]
 
-That structure isn't the most efficient way to gather the data, but it's always important to remember where you're going.
+That structure isn't the most efficient way to gather the data, but it's always important to remember where you're going. We'll gather the data and then change the structure to give `jqplot` the structure it needs.
 
-As my first step I wasn't sure of what I needed and would use and I had a few more measurements. I figured that as time went by and I saw the actual needs of the machine this would change, and could be easily changed. 
+As my first step I wasn't sure of what I needed and would use and I had a few more measurements. I figured that as time went by and I saw the actual needs of the machine this would change, and it could be easily changed. 
 
     :::python
     {
@@ -93,7 +93,7 @@ With 1440 minutes per day, sampling every 5 minutes, and keeping two days worth 
 
     (1440/5)*2 = 576 records per server 
 
-I wasn't sure how much data I would eventually use, so I estimated 2k per document. I estimated a generous size for the documents because this is just a start and I may want to gather more data later on. Turns out that 2k is extremely generous.
+I wasn't sure how much data I would eventually use, so I estimated 2k per document. I estimated a generous size for the documents because this is just a start and I may want to gather more data later on. Turns out that 2k is extremely generous. The average size of a record in around 200 bytes but I haven't included any networking data (and disk space is cheap). 
 
     576 documents @ 2048 bytes per doc = 1,179,648 bytes
 
@@ -166,7 +166,7 @@ Set up a cron job to run the script every 5 minutes on each server you want to m
     */5 * * * * /path/to/psutil_script
 
 
-Each mongoDB collection contains 48 hours of system performance data about the corresponding server. This part is so simple you can set it and forget it.
+Each mongoDB collection contains 48 hours of system performance data about the corresponding server; you can set it and forget it.
 
 ### Part 2: Set up the bottle Server {: .article-title}
 
@@ -185,11 +185,17 @@ Connect to MongoDb. On receipt of a request for server data, return the formatte
     )
     db = conn.reports
 
-This is a route, a url connection. When a request comes in, *get* the servername from the url (`server`) and create and return the proper data structure.
+This is a route, a url connection. When a request comes in, *get* the servername from the url (`server`) and create and return the proper data structure (the structure that `jqplot` will need).
 
     :::python
     @load.get('/<server>')
     def get_loaddata(server):
+        data_cursor = list()
+        if server == 'example02':
+            data_cursor = db.example02.find()
+        elif server == 'example01':
+            data_cursor = db.example01.find()
+        
         disk_root_free = list()
         phymem_free = list()
         cpu_user = list()
@@ -197,13 +203,7 @@ This is a route, a url connection. When a request comes in, *get* the servername
         cpu_system = list()
         cpu_idle = list()
         cpu_irq = list()
-
-        data_cursor = list()
-        if server == 'example02':
-            data_cursor = db.example02.find()
-        elif server == 'example01':
-            data_cursor = db.example01.find()
-
+        
         for data in data_cursor:
             date = data['date']
             disk_root_free.append([date, data['disk_root'])
@@ -274,7 +274,11 @@ The code follows the same pattern for each plot:
 2. Put the data you want to chart into a variable.
 3. Pass the variable to `jqplot`.
 
-The `url` in the code contains the string 'example01'. The first instance is addressing the web server since the machine `example01` is running the `bottle` app. The second instance is the name of the machine we want the data for. That is the name that is passed to the `bottle` route for retrieving the MongoDB records (documents).
+The `url` in the code contains the string 'example01':
+
+    url: "http://example01/load/example01"
+
+ The first instance of `example01` is addressing the web server since that is the machine running the `bottle` app. The second instance is the name of the machine we want the data for. That is the server name that is passed to the `bottle` route (`get_loaddata`) for retrieving the MongoDB records (documents).
 
     :::javascript
     $(document).ready(function(){
@@ -285,7 +289,7 @@ The `url` in the code contains the string 'example01'. The first instance is add
         });
 
         var cpu_user = [jsonData.responseJSON['cpu_user']];
-
+         
         $.jqplot('cpu_user',  cpu_user, {
             title: "CPU User Percent: EXAMPLE01",
             highlighter: {show: true, sizeAdjust: 7.5},
