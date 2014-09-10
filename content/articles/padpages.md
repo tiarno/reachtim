@@ -1,5 +1,6 @@
 Title: How To Pad a Book to an *N* Page Signature
 Category: LaTeX
+Slug: PadPages
 Date: 2014-Sep-20
 Status: Draft
 Tags: how-to
