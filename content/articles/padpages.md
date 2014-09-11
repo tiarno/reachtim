@@ -1,20 +1,41 @@
-Title: How To Pad a Book to an *N* Page Signature
+Title: How To Pad a PDF to an N Page Signature
 Category: LaTeX
 Slug: PadPages
 Date: 2014-Sep-20
 Status: Draft
 Tags: how-to
-Summary: How to force a book to have a multiple of *n* pages
+Summary: How to use LaTeX to force a PDF to have a multiple of *n* pages.
 
-Does your printer want the number of pages in your PDFs to be an integer multiple? Mine does. The number of pages in my documents must be a multiple of four. That isn't exactly a **signature**, but that's the first word that comes to mind. Of course this is easy to do by hand if you have Adobe Acrobat or a similar tool, but this short article shows how to create and use a LaTeX command that will do it for you automatically.
+This how-to article describes how you can create a LaTeX command to pad a PDF with blank pages so the page number is an integer multiple (to satisify a printer's request).
 
-This example depends on the `ifthen`, `calc`, and `pageslts` packages. As usual with TeX and LaTeX there are multiple ways to solve this problem; this is just one.
+Does your printer want the number of pages in your PDFs to be an integer multiple? Mine does. The number of pages in my documents must be a multiple of four. That isn't exactly a **signature**, but that's the first word that comes to mind. Of course this is easy to do by hand when you have Adobe Acrobat or a similar tool, but this short article shows how to create and use a LaTeX command that will do it for you automatically.
 
-What is a real **signature**? A signature is group of pages printed on a large sheet in such a way that you can fold and cut to the finished page size. This [article](http://www.designersinsights.com/designer-resources/understanding-and-working-with-print) describes in detail what `signature` means in the print world. 
+This example depends on the `ifthen`, `calc`, and `pageslts` packages. 
 
-What this article is about is not that; we will create a LaTeX command to pad a PDF with blank pages until the total number of pages is a multiple of four. Usually the printer will set up the signature, but in many cases they do prefer that the number of pages is an integer multiple of the final signature. 
+* [`ifthen`](http://ctan.org/pkg/ifthen) package provide the `ifthenelse` and `whiledo` commands.
+* [`calc`](http://ctan.org/pkg/calc) package enables us to do infix math to easily set a counter.
+* [`pageslts`](http://ctan.org/pkg/pageslts) package provides the counter `CurrentPage`.
 
-Given the problem, it's pretty clear we're going to need a [modulo](http://en.wikipedia.org/wiki/Modulo_operation) function and LaTeX doesn't come with one built in. We can program it since $a \mod n$ is given by $a - n (a\\n)$ where the $\\$ is the `integer division` operator. When TeX does division on integers, the fractional part is discarded, which is a form (`truncated`) of integer division. Here is a little example you might enjoy playing with:
+As usual with TeX and LaTeX there are multiple ways to solve this problem; this is just one. Other packages that are helpful in this situation but not used in this article are :
+
+* [`intcalc`](http://www.ctan.org/pkg/intcalc)
+* [`fp`](http://ctan.org/pkg/fp)
+* [`pgf`](http://ctan.org/pkg/pgf)
+* [`calculator`](http://ctan.org/pkg/calculator)
+
+[TOC]
+
+What is a real **signature**? It is group of pages printed on a large sheet in such a way that you can fold and cut to the finished page size. This [article](http://www.designersinsights.com/designer-resources/understanding-and-working-with-print) from *Designers Insights* describes in detail what `signature` means in the print world.{: .callout}
+
+What this article is about is not that; we will create a LaTeX command to pad a PDF with blank pages until the total number of pages is a multiple of four. Usually the printer will set up the signature, but some, like mine, prefer that the number of pages is an integer multiple of the final signature. 
+
+### The Modulo Function{: .article-title}
+
+Given the problem, it's pretty clear we're going to need a [modulo](http://en.wikipedia.org/wiki/Modulo_operation) function and LaTeX doesn't come with one built in. We can program it since
+\[
+ a\mod n = a - n\times(a//n)
+ \]
+ where the $//$ is the `integer division` operator. When TeX does division on integers, the fractional part is discarded, which is a form of integer division (*truncated division*). Here is a little example you might enjoy: 
 
     :::latex
     \documentclass{article}
@@ -36,9 +57,15 @@ Given the problem, it's pretty clear we're going to need a [modulo](http://en.wi
     }
     \end{document}
 
+![moduloex][moduloex]
+
+
+### The LaTeX Macro `padpages` {: .article-title}
+
 Now for the macro. We'll name it `padpages`. First, create a new counter, `modpage`. 
 
-If you use the the `memoir` class, you can take advantage of the command `thesheetsequence`, which provides the number of the current page; not necessarily the same as the page number that is printed on the page, but the actual number of the page as counted from the beginning of the document. In this example, we'll use the [`pageslts`](http://ctan.org/pkg/pageslts) package to get the same result.
+
+<span class="note">Note: </span>If you use the the `memoir` class, you can take advantage of the command `thesheetsequence`, which provides the number of the current page; not necessarily the same as the page number that is printed on the page, but the actual number of the page as counted from the beginning of the document. In this example, we'll use the [`pageslts`](http://ctan.org/pkg/pageslts) package to get the same result.{: .callout}
 
 For the blank pages we're going to insert, we don't want headings or page numbers so set the page style to `empty`.
 
@@ -50,10 +77,11 @@ For the blank pages we're going to insert, we don't want headings or page number
 
 Manipulate the `modpage` counter to be the real page number *mod* 4. Since 
 \[
-a \mod(n) = a - n (a\\n)
+a \mod n = a - n (a\\n)
 \]
+or,
 \[
-\text{pagenum} \mod(4) = \text{pagenum} - 4 (\text{pagenum}\\4)
+\text{pagenum} \mod 4 = \text{pagenum} - 4 (\text{pagenum}//4)
 \] 
 
 Use the `modpage` counter to hold the intermediate calculation and at the end we have the modulo:
@@ -67,7 +95,7 @@ If it is zero, we don't need to anything since the page number is already a mult
     \ifthenelse{\themodpage=0}%
         {\relax}%
 
-Otherwise, we need to add $4 - \text{pagenum}\mod(4)$ pages:
+Otherwise, we need to add $4 - (\text{pagenum}\mod 4)$ pages:
 
     :::latex
         {\setcounter{modpage}{4 - \themodpage}%
@@ -81,6 +109,8 @@ Otherwise, we need to add $4 - \text{pagenum}\mod(4)$ pages:
 The `\mbox{}\clearpage\mbox{}` forces a blank page to be added. 
 
 The `\padpages` macro should come at the very end of the document; depending on what other packages you use, you might find the [`atveryend`](http://www.ctan.org/pkg/atveryend) package useful.
+
+### The Complete Macro {: .article-title}
 
 Finally, here is the entire code and this time it takes an argument--the integer which the number of pages should be a multiple of.
 
@@ -100,11 +130,20 @@ Finally, here is the entire code and this time it takes an argument--the integer
             }% end ifthenelse
     }% end padpages
 
- For example, if $p = 121$ then $p \% 4 = 1$ which is defined as
+#### Example {: .article-title}
+
+For example, say the current number of page is 121 and we need the final number of pages to be a multiple of 4. $p \mod 4 = 1$ which is defined as
+
+\[ 
+    pages \mod 4 = pages - 4\times(pages//4)
+\]
+or, substituting ($30 = 121//4$):
 \[
   121 - 4(\text{floor}(\frac{121}{4})) = 121-4*30 = 1
 \]
 
-    * The `ifthen` package provide the `ifthenelse` and `whiledo` commands.
-    * The `calc` package enables us to do infix math to set the `modpage counter easily`
-    * The `pageslts` package provides the counter `CurrentPage`
+With 1 as the remainder (solution to the modulo operation), we use it to calculate the number of pages to add. 
+
+In the `setcounter` just before the `whiledo` loop begins, we subtract the remainder from the initial integer multiple: $4-1=3$ so we add three blank pages to the document so it goes from 121 pages to 124 pages, a multiple of 4.
+
+[moduloex]: ../images/modulo_example.png
