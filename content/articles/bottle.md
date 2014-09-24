@@ -85,8 +85,8 @@ To add a new application:
 1. create the application code file in the root directory, like `people.py`
 2. mount the application in the `bottle_adapter.wsgi` file
 3. add the template path in the `bottle_adapter.wsgi` file
-4. add a `css`, `js` file if needed
-5. add `view` subdirectory to contain the application templates. 
+4. add `css`, `js` files if needed
+5. add a `view` subdirectory to contain the application templates. 
 
 In this example we don't use any javascript or even css, but in real life you will probably want to add that in. This directory layout keeps things simple and separated, and it's easy to extend.
 
@@ -181,7 +181,7 @@ The last route for this example responds to a POST request. It creates a new dic
         db['people'].save(person)
         return 'Thanks for your data.'
 
-Keep in mind that this is just a simple toy example; if you have a bazillion records or a gazillion requests per second, you'll want to do a lot of reading on MongoDB index creation, aggregation and filtering techiniques.
+Keep in mind that this is just a simple toy example; if you have a bazillion records or a gazillion requests per second, you'll want to do a lot of reading on MongoDB index creation, aggregation and filtering techniques.
 {: .callout}
 
 ### Summary: What We Have So Far {: .article-title}
@@ -202,22 +202,22 @@ If the request is a `POST`, the data is read from the request form, the `_id` is
 
 <span class="note">Note: </span>
 With this smidgen of code and a rational directory structure, before even talking about the HTML side, we have an simple, easy-to-understand API that can send and receive JSON documents, interacting with a MongoDB backend database.
-{: .call-out}
+{: .callout}
 
 ### A Sample Template File  {: .article-title}
 
 You can use plain HTML to display and update records if your underlying data has a simple structure. 
 
-This is the template `people.tpl` which displays the data after on a GET request to `http://example02/service/people`:
+This is the view-only template `people.tpl` which displays the data after on a GET request to `http://example02/service/people`:
 
     :::html
     <!doctype html>
     <html>
     <head>
-      <title>List of People</title>
+      <title>People</title>
     </head>
     <body>
-         <h1>List of People</h1>
+         <h1>People</h1>
          <table>
             <tr><th>Name</th><th>Age</th></tr>
             %for person in results:
@@ -255,15 +255,17 @@ To view a particular person, the logic is similar, except we get back a single r
 
 If the url is `http://example01/service/people/Alphonse`, here is the result:
 
-[!person][person]
+![person][person]
 
 ### CRUD Operations {: .article-title}
 
 Performing updates, deletes, or creating data can get tricky, depending on the complexity of your document records. If you have nested JSON documents, you will need some Javascript to serialize the user-input data so the result has the correct structure when it gets back to MongoDB.  More on that later. For now let's write a form that enables us to update a simple record and save it. 
 
+#### Simple Case {: .article-title}
+
 First we need to view the data in a prepopulated form, then we need to update the database record with whatever changes were made in the HTML client.
 
-We already have the python code written (the `person` and `update_person` functions), we just need the HTML page. You might call it `person_update.tpl`, and change the `@app.get(/<name>)` route to use that instead of the view-only template `person.tpl`. 
+We have  already written the Python code (the `person` and `update_person` functions), so we just need the HTML page. You might call it `person_update.tpl`, and change the `@app.get(/<name>)` route to use that instead of the view-only template `person.tpl`. 
 
 This page displays the data just as the `person` template did, but now it is inside an HTML form. We keep the `_id` value because we must have it in order to update the database. If we don't include the `_id`, our changed data will be added to the database as a new record instead of updating the original record.
 
@@ -293,6 +295,9 @@ This page displays the data just as the `person` template did, but now it is ins
       </form>
     </body>
     </html>
+
+
+#### Complex Case {: .article-title}
 
 If you have nested JSON data you will probably have to use Javascript. There are so many solutions that I'll just point out some links. The library I use (and I have deeply nested JSON) is [form2js](https://github.com/maxatwork/form2js). 
 
@@ -338,7 +343,7 @@ In the template, the form itself is identical but the *submit* button now calls 
     </form>
 
 When the user clicks the `submit` button, the `save_data` function is called.
-In turn, `save_date` gets the JSON data from the form, stringifies it and fires an AJAX POST back to our URL route for updating a person (the only route in our app that accepts a POST request).
+In turn, `save_data` gets the JSON data from the form, stringifies it and fires an AJAX POST back to our URL route for updating a person (the only route in our app that accepts a POST request).
 
     :::javascript
     <script type="text/javascript" src="/js/jquery.min.js"></script>
@@ -365,7 +370,7 @@ In turn, `save_date` gets the JSON data from the form, stringifies it and fires 
     </body>
     </html>
 
-The main change to the `people` app is the `update_person` function, which now looks like the following. The `loads` is a function included in the `pymongo` package that provides conversion from a string instance to a BSON document.
+The main change to the `people` app is the `update_person` function, which now looks like the following. The function `loads` is included in the `pymongo` package that provides conversion from a string instance to a BSON document.
 
     :::python
     @app.post('/')
