@@ -1,11 +1,14 @@
-Title: How to Start Using the BAM Short Stack
+Title: BAM! A Web App Framework "Short Stack" 
+Slug: BAM-Short-Stack
 Category: Python
 Date: 2014-Sep-30
 Status: Draft
 Tags: how-to, web
 Summary: Use BAM (Bottle, Apache, and MongoDB) to create a quick website.
 
-This how-to article describes how you can use Bottle, Apache, and MongoDB to create a simple, understandable, and fast website. In real life applications, it will also use JavaScript, but BAMJ doesn't sound as cool. If you want to play with the code in this example, it is available on [github](https://github.com/tiarno/bam_example). The example is kept very simple to show the general workflow. 
+This how-to article describes how you can use Bottle, Apache, and MongoDB to create a simple, understandable, and fast website. In real life applications that support CRUD operations, it will most likely also use JavaScript, but BAMJ doesn't sound as cool. If you want to play with the code in this example, it is available on [GitHub](https://github.com/tiarno/bam_example). The example is kept very simple to show the general workflow. 
+
+**Table of Contents**
 
 [TOC]
 
@@ -31,15 +34,18 @@ This is what we're going to do:
 
 I'm assuming you have installed Bottle, the Apache HTTP server with `mod_wsgi`, and  MongoDB.
 
-* [Bottle](http://bottlepy.org/docs/dev/index.html) This is the smallest and simplest Python web framework I have found. Django has just about everything you could ever want in a framework and this is on the other end of the spectrum. I see that Flask is really popular in the area of small footprint frameworks and I would suspect it is the most competitive framework with Bottle. I like simple things, so I chose Bottle. You might find this [question](http://stackoverflow.com/questions/4941145/python-flask-vs-bottle) on `stackoverflow` helpful if you're trying to decide.
-* [Apache](http://httpd.apache.org/) Over time Apache has lost its cool factor I guess, and Node is the hot topic now. But it is a hardy, stable, and very popular tool. It is easy to install and not too hard to configure. You also need to follow the `modwsgi` installation [guide](https://code.google.com/p/modwsgi/wiki/QuickInstallationGuide).
-* [MongoDB](http://www.mongodb.org/) I really like the JSON-like structure of MongoDB documents (records). For my own needs, that structure fits much better than an SQL database.
+* [Bottle](http://bottlepy.org/docs/dev/index.html) This is the smallest and simplest Python web framework I have found. 
+ When I first started out, I used Django, which supports just about everything you could ever want in a framework. I found that it was great to get a lot accomplished in a short time; it is called *the web framework for perfectionists with deadlines* for a reason. But I always felt uneasy about using it because I never fully understood what was going on under the covers.
 
-You can change out any of these if you like, the basic idea is the same.
+ Bottle is on the other end of the spectrum.  While I have to program the stuff I need, that gives me confidence because there's no magic. If it doesn't work, it's my code that broke it and I know where to look.  On the other hand, my needs are simple. You might find this [question](http://stackoverflow.com/questions/4941145/python-flask-vs-bottle) on `stackoverflow` helpful if you're trying to decide on a web framework.
+
+* [Apache](http://httpd.apache.org/) Over time Apache has lost some of its cool factor I guess, and Node/Express, Lighttpd, and Nginx are hot now. But Apache is a hardy, stable, and very popular tool. It is easy to install and not too hard to configure. You also need to follow the `modwsgi` installation [guide](https://code.google.com/p/modwsgi/wiki/QuickInstallationGuide) since that is the bridge between Apache and Bottle.
+
+* [MongoDB](http://www.mongodb.org/) I really like the JSON-like structure of MongoDB documents (records). For my own needs (configuration database, build reports, and system monitoring) that structure fits much better than an SQL database. 
 
 ### Create the Database {: .article-title}
 
-Create our toy `people` database in the mongo shell. We'll use a collection called `test`. Here is what it looks like from a terminal window:
+First, create a toy `people` database in the mongo shell. We'll use a collection called `test`. Here is what it looks like from a terminal window:
 
     :::javascript
     > mongo servername
@@ -59,7 +65,7 @@ Create our toy `people` database in the mongo shell. We'll use a collection call
     { "_id" : ObjectId("..."), "name" : "Sam", "age" : "12", "height" : "64.3", "weight" : "123.25" }
     { "_id" : ObjectId("..."), "name" : "Ursula", "age" : "14", "height" : "62.8", "weight" : "104.0" }
 
-That is the data we'll connect to via Bottle/Apache.
+The data is a set of height and weight measurements on children of various ages. That's the data we'll connect to via Bottle/Apache.
 
 ### Bottle Directory Structure {: .article-title}
 
@@ -88,23 +94,26 @@ To add a new application:
 4. add `css`, `js` files if needed
 5. add a `view` subdirectory to contain the application templates. 
 
-In this example we don't use any javascript or even css, but in real life you will probably want to add that in. This directory layout keeps things simple and separated, and it's easy to extend.
+In this example we won't use any javascript or even css, but in real life you will probably want to add that in. This directory layout keeps things simple and separated, and it's easy to extend.
 
 ### Apache Configuration {: .article-title}
 
 In the Apache `httpd.conf` file, set the `WSGIScriptAlias` and `WSGIDaemonProcess`. 
 For details on `wsgi` configuration, see the [guide](https://code.google.com/p/modwsgi/wiki/QuickConfigurationGuide).
-When a request comes in to our server with a url that begins with `service` the request is passed on to our bottle application.
+When a request comes in to our server with a url that begins with `service`, the request is passed on to our bottle application.
 
+    :::bash
     LoadModule wsgi_module /usr/lib/apache2/modules/mod_wsgi.so
     WSGIScriptAlias /service /var/www/bottle/bottle_adapter.wsgi
     WSGIDaemonProcess example02 processes=5 threads=25 
 
-You may need to set other parameters depending on your platform. I am on a FreeBSD machine and needed to set `WSGIAcceptMutex posixsem` in addition to the settings above.
+You may need to set other parameters depending on your platform. I am on a FreeBSD machine and needed to set `WSGIAcceptMutex posixsem` in addition to the settings above. The `wsgi` guide is well written and indispensable.
 
 ### The `wsgi` Adapter {: .article-title}
 
-When the Apache server gets a request that begins with `service`, the `httpd` daemon calls the bottle application; that is, it executes the `bottle_adapter.wsgi` script. As you can see below, the script imports the application code, adds to the template path and "mounts" the applications on a specific URL path. Now that `people` is mounted on the path `/people`, the application will get called for any URL that starts with `/service/people`. 
+When the Apache server gets a request that begins with `service`, the `httpd` daemon calls the bottle application; that is, it executes the `bottle_adapter.wsgi` script. As you can see below, the script imports the application code, adds to the template path and "mounts" the application on a specific URL path. 
+
+Now that the `people` application is mounted on the URL path `/people`, the application will get called for any URL that starts with `/service/people`. 
 
 The debug attribute is set to `True` until we're ready to go production.
 
@@ -135,12 +144,11 @@ Every application will have a similar skeleton. This is the `people` application
         replicaSet='rs1')
     db = conn.test
 
-    :::python
     app = Bottle()
 
 And there we have it--our `people.app` Bottle application, all wired up but not able to do anything yet. Let's add some abilities so we can respond to URL requests. For example, when a `GET` request comes in on `service/people`, we'll send back a response with a list of the people in the database. 
 
-In the following code block, the `@app.get` decorator corresponds to a URL *route*; it responds to a `GET` request with no further arguments (`/`); by the time the request makes it here, the URL is actually `service/people`; that is what the root URL looks like to the `people` app.
+In the following code block, the `@app.get` decorator corresponds to a URL *route*; it responds to a `GET` request with no further arguments (`/`); however, by the time the request makes it to this point, the URL is actually `service/people`; that is what the root URL looks like to the `people` app.
 
 The `@view` decorator specifies the template to use to display the data in the response (that is, the template `views/people/people.tpl` ) 
 
@@ -157,9 +165,11 @@ The `sort` function in `pymongo` operates differently from the `mongo` shell; it
         p = db.people.find().sort([('name', 1)])
         return {'results': list(p)}
 
-Here is another route using the `@app` decorator which responds to a GET request of the form `service/people/somename`. It executes the `person` function and renders the resulting data using the `person` template (`views/people/person.tpl`).
+Next, here is a route using the `@app.get` decorator which responds to a GET request of the form `service/people/somename`. It executes the `person` function and renders the resulting data using the `person` template (`views/people/person.tpl`).
 
 The `person` function gets the single (or first) document with a matching `name`, converts the `_id` value to a string and renders the data with the `person` template, using the results under the key named `person`. 
+
+Why convert the `_id` from an ObjectID (as it exists in the MongDB database) to a string? If all you want to do is display the record, you could just delete the key, but if you want to interact with the record (possibly updating or deleting it through the client), you have to keep track of that `_id`. Otherwise there's no way to map back to the record in the database.  So we transform it to a string on the way out to the client and as you'll see, we transform it back to an ObjectID on the way back to the database.
 
     @app.get('/<name>')
     @view('person')
@@ -168,7 +178,7 @@ The `person` function gets the single (or first) document with a matching `name`
         person['_id'] = str(person['_id'])
         return {'person': person}
 
-The last route for this example responds to a POST request. It creates a new dictionary populated with values from the request, converts the string `_id` value back to an ObjectID, and saves the record back to the database. It returns a bare string ("Thanks...") so the user knows the data was updated.
+The last route in this example uses the `app.post` decorator to respond to a POST request. It creates a new dictionary populated with values from the request, converts the string `_id` value back to an ObjectID, and saves the record back to the database. It returns a bare string ("Thanks...") so the user knows the data was updated.
 
     @app.post('/<name>')
     def update_person(name):
@@ -186,7 +196,7 @@ Keep in mind that this is just a simple toy example; if you have a bazillion rec
 
 ### Summary: What We Have So Far {: .article-title}
 
-When a request comes in with this url:
+When a GET request comes in with this url:
 
     http://example01/service/people
 
@@ -208,7 +218,7 @@ With this smidgen of code and a rational directory structure, before even talkin
 
 You can use plain HTML to display and update records if your underlying data has a simple structure. 
 
-This is the view-only template `people.tpl` which displays the data after on a GET request to `http://example02/service/people`:
+This is the view-only template `people.tpl` which displays the data on a GET request to `http://example02/service/people`:
 
     :::html
     <!doctype html>
@@ -259,15 +269,15 @@ If the url is `http://example01/service/people/Alphonse`, here is the result:
 
 ### CRUD Operations {: .article-title}
 
-Performing updates, deletes, or creating data can get tricky, depending on the complexity of your document records. If you have nested JSON documents, you will need some Javascript to serialize the user-input data so the result has the correct structure when it gets back to MongoDB.  More on that later. For now let's write a form that enables us to update a simple record and save it. 
+Performing updates, deletes, or creating records can get tricky, depending on the complexity of your data. If you have nested JSON data, you will need some Javascript to serialize the user-input data so the result has the correct structure when it gets back to MongoDB.  More on that later. For now let's write a form that enables us to update a simple record and save it. 
 
 #### Simple Case {: .article-title}
 
-First we need to view the data in a prepopulated form, then we need to update the database record with whatever changes were made in the HTML client.
+First we need to view the data in a prepopulated form and then we need to update the database record with the changes made in the HTML client.
 
-We have  already written the Python code (the `person` and `update_person` functions), so we just need the HTML page. You might call it `person_update.tpl`, and change the `@app.get(/<name>)` route to use that instead of the view-only template `person.tpl`. 
+We have  already written the Python code (the `person` and `update_person` functions), so we just need the HTML page. You might call the page `person_update.tpl`, and change the `@app.get(/<name>)` route to use it instead of the view-only template `person.tpl`. 
 
-This page displays the data just as the `person` template did, but now it is inside an HTML form. We keep the `_id` value because we must have it in order to update the database. If we don't include the `_id`, our changed data will be added to the database as a new record instead of updating the original record.
+This page displays the data just as the `person` template did, but now it is inside an HTML form. We keep the `_id` value because we must have it in order to update the database. If we don't include the `_id` on the way back in to the database, our changed data will be added to the database as a new record instead of updating the original record.
 
     :::html
     <!doctype html>
@@ -299,19 +309,29 @@ This page displays the data just as the `person` template did, but now it is ins
 
 #### Complex Case {: .article-title}
 
-If you have nested JSON data you will probably have to use Javascript. There are so many solutions that I'll just point out some links. The library I use (and I have deeply nested JSON) is [form2js](https://github.com/maxatwork/form2js). 
+If you have nested JSON data you will probably have to use Javascript. There are so many solutions that I'll just point out some links. The library I use (and I have deeply nested JSON) is [form2js](https://github.com/maxatwork/form2js). It is a Javascript library for collecting form data and converting it to a Javascript object.
 
 In no particular order, here are some similar libraries that address the same situation:
 
-* [jquery-json](https://github.com/Krinkle/jquery-json)
-* [forminator](https://github.com/DubFriend/forminator)
-* [domajax](http://www.domajax.com/)
-* [jquery.form.serializer](https://github.com/rdiazv/jquery.form.serializer)
-* [form](https://github.com/rdiazv/jquery.form.serializer)
+* [jquery-json](https://github.com/Krinkle/jquery-json) jQuery plugin for conversion to and from JSON.
+* [forminator](https://github.com/DubFriend/forminator) uses class names and data attributes to build ajax interfaces.
+* [domajax](http://www.domajax.com/) jQuery plugin, enables ajax calls without javascript.
+* [jquery.form.serializer](https://github.com/rdiazv/jquery.form.serializer) jQuery extension to serialize HTML forms to JSON.
 
-The following is an example of using the `form2js` library and `jquery`. You can use the library with arbitrarily nested JSON documents. However, you need to make a couple of changes to your Bottle app. This example template and the changed app code are in the GitHub files `alt_people.py` and `alt_person_update.tpl`.
 
-In the template, the form itself is identical but the *submit* button now calls a Javascript function.
+The following is an example of using the `form2js` library and jQuery. You can use the library with arbitrarily nested JSON documents. However, you need to make a couple of changes to your Bottle app. This example template and the changed app code are in the GitHub files `alt_people.py` and `alt_person_update.tpl`.
+
+The main change to the `people` app is the `update_person` function, which now looks like the following. It reads the JSON string from the request and converts it (the function `loads` is included in the `pymongo` package that provides conversion from a string instance to a BSON document). Finally, it converts the `_id` to an ObjectId and saves the record back to the database.
+
+    :::python
+    @app.post('/')
+    def update_person():
+        data = request.body.read()
+        person = loads(data)
+        person['_id'] = ObjectId(person['_id'])
+        db['people'].save(person)
+
+In the template, the form itself is identical but the **submit** button now calls a Javascript function.
 
     :::html
     <!doctype html>
@@ -343,42 +363,35 @@ In the template, the form itself is identical but the *submit* button now calls 
     </form>
 
 When the user clicks the `submit` button, the `save_data` function is called.
-In turn, `save_data` gets the JSON data from the form, stringifies it and fires an AJAX POST back to our URL route for updating a person (the only route in our app that accepts a POST request).
+In turn, `save_data` gets the JSON data from the form (`json_data`), stringifies it (`jsonstr`), and fires an AJAX POST back to our URL route for updating a person (the only route in our app that accepts a POST request).
 
     :::javascript
     <script type="text/javascript" src="/js/jquery.min.js"></script>
     <script type="text/javascript" src="/js/form2js.js"></script>
     <script type="text/javascript">
-            save_data = function(evt){
-                var json_data = form2js('persondata', skipEmpty=false);
-                var jsonstr = JSON.stringify(json_data, null, '\t');
-                $.ajax({
-                    type:"POST",
-                    url: 'http://example02/service/people',
-                    data: jsonstr,
-                    success: function(){
-                        alert('Configuration saved.')
-                    }
-                });
-            };
-          (function($){
-             $(function(){
-            $('input[type=submit]').val('Submit').click(save_data);
-          });
-           })(jQuery);
+        save_data = function(evt){
+            var json_data = form2js('persondata', skipEmpty=false);
+            var jsonstr = JSON.stringify(json_data, null, '\t');
+            $.ajax({
+                type:"POST",
+                url: 'http://example02/service/people',
+                data: jsonstr,
+                success: function(){
+                    alert('Configuration saved.')
+                }
+            });
+        };
+      (function($){
+         $(function(){
+        $('input[type=submit]').val('Submit').click(save_data);
+      });
+       })(jQuery);
        </script>
     </body>
     </html>
 
-The main change to the `people` app is the `update_person` function, which now looks like the following. The function `loads` is included in the `pymongo` package that provides conversion from a string instance to a BSON document.
+![person_complex][person_complex]
 
-    :::python
-    @app.post('/')
-    def update_person():
-        data = request.body.read()
-        person = loads(data)
-        person['_id'] = ObjectId(person['_id'])
-        db['people'].save(person)
 
 Check it out on [GitHub](https://github.com/tiarno/bam_example) if you want to play around with it. It is very easy to add applications and get CRUD operations going on any mongoDB database.
 
@@ -387,3 +400,4 @@ Let me know if you have any questions or if something needs changing on the GitH
 
 [peoplelist]: ../images/peoplelist.png
 [person]: ../images/person.png
+[person_complex]: ../images/person_complex.png
