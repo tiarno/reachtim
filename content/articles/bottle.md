@@ -1,8 +1,8 @@
 Title: BAM! A Web App Framework "Short Stack" 
 Slug: BAM-Short-Stack
 Category: Python
-Date: 2014-Sep-30
-Status: Draft
+Date: 2014-Sep-25
+Status: draft
 Tags: how-to, web
 Summary: Use BAM (Bottle, Apache, and MongoDB) to create a quick website.
 
@@ -34,10 +34,11 @@ This is what we're going to do:
 
 I'm assuming you have installed Bottle, the Apache HTTP server with `mod_wsgi`, and  MongoDB.
 
-* [Bottle](http://bottlepy.org/docs/dev/index.html) This is the smallest and simplest Python web framework I have found. 
- When I first started out, I used Django, which supports just about everything you could ever want in a framework. I found that it was great to get a lot accomplished in a short time; it is called *the web framework for perfectionists with deadlines* for a reason. But I always felt uneasy about using it because I never fully understood what was going on under the covers.
+* [Bottle](http://bottlepy.org/docs/dev/index.html) 
+     This is the smallest and  simplest Python web framework I have found. 
+     When I first started out, I used Django, which supports just about everything you could ever want in a framework. I found that it was great to get a lot accomplished in a short time; it is called *the web framework for perfectionists with deadlines* for a reason. But I always felt uneasy about using it because I never fully understood what was going on under the covers.
 
- Bottle is on the other end of the spectrum.  While I have to program the stuff I need, that gives me confidence because there's no magic. If it doesn't work, it's my code that broke it and I know where to look.  On the other hand, my needs are simple. You might find this [question](http://stackoverflow.com/questions/4941145/python-flask-vs-bottle) on `stackoverflow` helpful if you're trying to decide on a web framework.
+     Bottle is on the other end of the spectrum.  While I have to program the stuff I need, that gives me confidence because there's no magic. If it doesn't work, it's my code that broke it and I know where to look.  On the other hand, my needs are simple. You might find this [question](http://stackoverflow.com/questions/4941145/python-flask-vs-bottle) on `stackoverflow` helpful if you're trying to decide on a web framework.
 
 * [Apache](http://httpd.apache.org/) Over time Apache has lost some of its cool factor I guess, and Node/Express, Lighttpd, and Nginx are hot now. But Apache is a hardy, stable, and very popular tool. It is easy to install and not too hard to configure. You also need to follow the `modwsgi` installation [guide](https://code.google.com/p/modwsgi/wiki/QuickInstallationGuide) since that is the bridge between Apache and Bottle.
 
@@ -132,7 +133,7 @@ The debug attribute is set to `True` until we're ready to go production.
 
 ### The Skeleton of an App {: .article-title}
 
-Every application will have a similar skeleton. This is the `people` application. First make the necessary imports, get a connection to the MongoDB database `test` collection and instantiate our application, `app` (known as `people.app` to the `wsgi` adapter).
+Every application will have a similar skeleton; all my apps have the same things at the beginning. The following code block displays the beginning of  the `people` application. First, we make the necessary imports, get a connection to the MongoDB database `test` collection and instantiate our application, `app` (known as `people.app` to the `wsgi` adapter).
 
     :::python
     from bottle import Bottle, view, request
@@ -148,15 +149,11 @@ Every application will have a similar skeleton. This is the `people` application
 
 And there we have it--our `people.app` Bottle application, all wired up but not able to do anything yet. Let's add some abilities so we can respond to URL requests. For example, when a `GET` request comes in on `service/people`, we'll send back a response with a list of the people in the database. 
 
-In the following code block, the `@app.get` decorator corresponds to a URL *route*; it responds to a `GET` request with no further arguments (`/`); however, by the time the request makes it to this point, the URL is actually `service/people`; that is what the root URL looks like to the `people` app.
+In the following code block, the `@app.get` decorator corresponds to a URL *route*; it responds to a `GET` request with no further arguments (`'/'`); however, by the time the request makes it to this point, the URL is actually `service/people`; that is what the root URL looks like to the `people` app.
 
 The `@view` decorator specifies the template to use to display the data in the response (that is, the template `views/people/people.tpl` ) 
 
 The `people` function creates a cursor which gets all the records (*documents* in the MongoDB world) from the database, sorts those records on the `name` and returns them as a list under the key named `results`. 
-
-<span class="note">Note: </span>
-The `sort` function in `pymongo` operates differently from the `mongo` shell; it uses a list of tuples to sort on instead of a document. This tripped me up at first. The [documentation](http://api.mongodb.org/python/current/api/pymongo/cursor.html#pymongo.cursor.Cursor.sort) explains it well.
-{: .callout}
 
     :::python
     @app.get('/')
@@ -165,11 +162,14 @@ The `sort` function in `pymongo` operates differently from the `mongo` shell; it
         p = db.people.find().sort([('name', 1)])
         return {'results': list(p)}
 
+
+<span class="note">Note: </span>
+The `sort` function in `pymongo` operates differently from the `mongo` shell; it uses a list of tuples to sort on instead of a document. This tripped me up at first. The [documentation](http://api.mongodb.org/python/current/api/pymongo/cursor.html#pymongo.cursor.Cursor.sort) explains it well.
+{: .callout}
+
 Next, here is a route using the `@app.get` decorator which responds to a GET request of the form `service/people/somename`. It executes the `person` function and renders the resulting data using the `person` template (`views/people/person.tpl`).
 
-The `person` function gets the single (or first) document with a matching `name`, converts the `_id` value to a string and renders the data with the `person` template, using the results under the key named `person`. 
-
-Why convert the `_id` from an ObjectID (as it exists in the MongDB database) to a string? If all you want to do is display the record, you could just delete the key, but if you want to interact with the record (possibly updating or deleting it through the client), you have to keep track of that `_id`. Otherwise there's no way to map back to the record in the database.  So we transform it to a string on the way out to the client and as you'll see, we transform it back to an ObjectID on the way back to the database.
+The `person` function gets the single (or first) document with a matching `name`, converts the `_id` value to a string and returns the data under the key named `person`. 
 
     @app.get('/<name>')
     @view('person')
@@ -177,6 +177,8 @@ Why convert the `_id` from an ObjectID (as it exists in the MongDB database) to 
         person = db['people'].find_one({'name':name})
         person['_id'] = str(person['_id'])
         return {'person': person}
+
+Why convert the `_id` from an ObjectID (as it exists in the MongDB database) to a string? If all you want to do is display the record, you could just delete the key, but if you want to interact with the record (possibly updating or deleting it through the client), you have to keep track of that `_id`. Otherwise there's no way to map back to the record in the database.  So we transform it to a string on the way out to the client and as you'll see in the next route function, we transform it back to an ObjectID on the way back to the database.
 
 The last route in this example uses the `app.post` decorator to respond to a POST request. It creates a new dictionary populated with values from the request, converts the string `_id` value back to an ObjectID, and saves the record back to the database. It returns a bare string ("Thanks...") so the user knows the data was updated.
 
@@ -389,6 +391,12 @@ In turn, `save_data` gets the JSON data from the form (`json_data`), stringifies
        </script>
     </body>
     </html>
+
+When a request comes in at this URL:
+
+    http://example01/service/people/Janice
+
+The result is displayed in a form:
 
 ![person_complex][person_complex]
 
