@@ -40,7 +40,7 @@ I'm assuming you have installed Bottle, the Apache HTTP server with `mod_wsgi`, 
 
      Bottle is on the other end of the spectrum.  While I have to program the stuff I need, that gives me confidence because there's no magic. If it doesn't work, it's my code that broke it and I know where to look.  On the other hand, my needs are simple. You might find this [question](http://stackoverflow.com/questions/4941145/python-flask-vs-bottle) on `stackoverflow` helpful if you're trying to decide on a web framework.
 
-* [Apache](http://httpd.apache.org/) Over time Apache has lost some of its cool factor I guess, and Node/Express, Lighttpd, and Nginx are hot now. But Apache is a hardy, stable, and very popular tool. It is easy to install and not too hard to configure. You also need to follow the `modwsgi` installation [guide](https://code.google.com/p/modwsgi/wiki/QuickInstallationGuide) since that is the bridge between Apache and Bottle.
+* [Apache](http://httpd.apache.org/) Over time Apache has lost some of its cool factor I guess, and Node/Express, Lighttpd, and Nginx, etc. are hot now. But Apache is a hardy, stable, and very popular tool. It is easy to install and not too hard to configure. You also need to follow the `modwsgi` installation [guide](https://code.google.com/p/modwsgi/wiki/QuickInstallationGuide) since that is the bridge between Apache and Bottle.
 
 * [MongoDB](http://www.mongodb.org/) I really like the JSON-like structure of MongoDB documents (records). For my own needs (configuration database, build reports, and system monitoring) that structure fits much better than an SQL database. 
 
@@ -70,7 +70,7 @@ The data is a set of height and weight measurements on children of various ages.
 
 ### Bottle Directory Structure {: .article-title}
 
-In `/var/www/bottle` the directory structure looks like this. Notice the pattern? This layout makes it easy to add new applications as you need them. We have the main `wsgi` script (`bottle_adapter.wsgi`), and a single application, `people`. For every application you write, you may also have a `css` file, a `javascript` file and templates in the `views` subdirectory.
+In `/var/www/bottle`, the directory structure looks like this. This layout makes it easy to add new applications as you need them. We have the main `wsgi` script (`bottle_adapter.wsgi`), and a single application, `people`. For every application you write, you may also have a `css` file, a `javascript` file and templates in the `views` subdirectory.
 
 
     bottle_adapter.wsgi
@@ -112,11 +112,11 @@ You may need to set other parameters depending on your platform. I am on a FreeB
 
 ### The `wsgi` Adapter {: .article-title}
 
-When the Apache server gets a request that begins with `service`, the `httpd` daemon calls the bottle application; that is, it executes the `bottle_adapter.wsgi` script. As you can see below, the script imports the application code, adds to the template path and "mounts" the application on a specific URL path. 
+When the Apache server gets a request that begins with `service`, the `httpd` daemon calls the bottle application adapter script, `bottle_adapter.wsgi`. As you can see below, the script imports the application code, adds to the template path and "mounts" the application on a specific URL path. 
 
 Now that the `people` application is mounted on the URL path `/people`, the application will get called for any URL that starts with `/service/people`. 
 
-The debug attribute is set to `True` until we're ready to go production.
+The debug attribute is set to `True` until we're ready to go production. Bottle provides its own development server when you're getting started; I've commented out that line but it is helpful to use it when debugging your application code.
 
     :::python
     import sys, bottle
@@ -133,7 +133,7 @@ The debug attribute is set to `True` until we're ready to go production.
 
 ### The Skeleton of an App {: .article-title}
 
-Every application will have a similar skeleton; all my apps have the same things at the beginning. The following code block displays the beginning of  the `people` application. First, we make the necessary imports, get a connection to the MongoDB database `test` collection and instantiate our application, `app` (known as `people.app` to the `wsgi` adapter).
+Every application will have a similar skeleton; all my apps have the same things at the beginning. The following code block displays the beginning of  the `people` application. First, we make the necessary imports, get a connection to the MongoDB database `test` collection and instantiate our application, `app`, which is known as `people.app` to the `wsgi` adapter.
 
     :::python
     from bottle import Bottle, view, request
@@ -178,7 +178,7 @@ The `person` function gets the single (or first) document with a matching `name`
         person['_id'] = str(person['_id'])
         return {'person': person}
 
-Why convert the `_id` from an ObjectID (as it exists in the MongDB database) to a string? If all you want to do is display the record, you could just delete the key, but if you want to interact with the record (possibly updating or deleting it through the client), you have to keep track of that `_id`. Otherwise there's no way to map back to the record in the database.  So we transform it to a string on the way out to the client and as you'll see in the next route function, we transform it back to an ObjectID on the way back to the database.
+Why convert the `_id` from an ObjectID (as it exists in the MongDB database) to a string? If all you want to do is display the record, you could just delete the key, but if you want to interact with the record (possibly updating or deleting it through the client), you have to keep track of that `_id`. Otherwise there's no way to map back to the record in the database.  So we transform it to a string on the way out to the client and as you'll see in the next route function, we transform it back to an ObjectID on the way back in to the database.
 
 The last route in this example uses the `app.post` decorator to respond to a POST request. It creates a new dictionary populated with values from the request, converts the string `_id` value back to an ObjectID, and saves the record back to the database. It returns a bare string ("Thanks...") so the user knows the data was updated.
 
@@ -202,13 +202,13 @@ When a GET request comes in with this url:
 
     http://example01/service/people
 
-that url is routed from Apache to the Bottle `wsgi` script and on to the `people.app` Bottle application and finally to the `/people` route. That route, in turn, invokes the `people` function, which retrieves all the MongoDB documents in the `people` database and returns them in the response under a key named `results`. Then the template view `people` takes that JSON data and renders it as the response.
+that url is routed from Apache to the Bottle `wsgi` script and on to the `people.app` Bottle application and finally to the `/people` route. That route, in turn, invokes the `people` function, which retrieves all the MongoDB documents in the `people` database. The JSON data is returned in the response under the key named `results` and rendered by the `people` template.
 
 When a request comes in with this url:
 
     http://example01/service/people/Sam
 
-If the request is a `GET`, the document with `name` = `Sam` is retrieved, the `_id` is converted to a string instead of an object (it is saved as an ObjectId in the MongoDB database). The JSON data is is returned in the response under the key named `results` and rendered by the `person` template.
+If the request is a `GET`, the document with `name` = `Sam` is retrieved, the `_id` is converted to a string instead of an object (it is saved as an ObjectId in the MongoDB database). The JSON data is returned in the response under the key named `results` and rendered by the `person` template.
 
 If the request is a `POST`, the data is read from the request form, the `_id` is turned back into an `ObjectId` and the document is saved to the database.
 
@@ -218,7 +218,7 @@ With this smidgen of code and a rational directory structure, before even talkin
 
 ### A Sample Template File  {: .article-title}
 
-You can use plain HTML to display and update records if your underlying data has a simple structure. 
+You can use plain HTML to display and update records if your underlying data has a simple structure, as our example data does.
 
 This is the view-only template `people.tpl` which displays the data on a GET request to `http://example02/service/people`:
 
@@ -277,9 +277,9 @@ Performing updates, deletes, or creating records can get tricky, depending on th
 
 First we need to view the data in a prepopulated form and then we need to update the database record with the changes made in the HTML client.
 
-We have  already written the Python code (the `person` and `update_person` functions), so we just need the HTML page. You might call the page `person_update.tpl`, and change the `@app.get(/<name>)` route to use it instead of the view-only template `person.tpl`. 
+We already have the Python code (the `person` and `update_person` functions), so we just need to write the HTML page. You might call the page `person_update.tpl`, and change the `@app.get(/<name>)` route to use that instead of the view-only template `person.tpl` from before.
 
-This page displays the data just as the `person` template did, but now it is inside an HTML form. We keep the `_id` value because we must have it in order to update the database. If we don't include the `_id` on the way back in to the database, our changed data will be added to the database as a new record instead of updating the original record.
+This page displays the data  but now inside an HTML form. We keep the `_id` value because we must have it in order to update the database. If we don't include the `_id` on the way back in to the database, our changed data will be added to the database as a new record instead of updating the original record.
 
     :::html
     <!doctype html>
@@ -320,10 +320,9 @@ In no particular order, here are some similar libraries that address the same si
 * [domajax](http://www.domajax.com/) jQuery plugin, enables ajax calls without javascript.
 * [jquery.form.serializer](https://github.com/rdiazv/jquery.form.serializer) jQuery extension to serialize HTML forms to JSON.
 
-
 The following is an example of using the `form2js` library and jQuery. You can use the library with arbitrarily nested JSON documents. However, you need to make a couple of changes to your Bottle app. This example template and the changed app code are in the GitHub files `alt_people.py` and `alt_person_update.tpl`.
 
-The main change to the `people` app is the `update_person` function, which now looks like the following. It reads the JSON string from the request and converts it (the function `loads` is included in the `pymongo` package that provides conversion from a string instance to a BSON document). Finally, it converts the `_id` to an ObjectId and saves the record back to the database.
+The main change to the `people` app is the `update_person` function, which now looks like the following. It reads the JSON string from the request body and converts it. The `loads` function is included in the `pymongo` package that provides conversion from a string instance to a BSON document). Finally, it converts the `_id` to an ObjectId and saves the record back to the database.
 
     :::python
     @app.post('/')
@@ -365,7 +364,9 @@ In the template, the form itself is identical but the **submit** button now call
     </form>
 
 When the user clicks the `submit` button, the `save_data` function is called.
-In turn, `save_data` gets the JSON data from the form (`json_data`), stringifies it (`jsonstr`), and fires an AJAX POST back to our URL route for updating a person (the only route in our app that accepts a POST request).
+
+First we load jQuery and the `form2js` library. Finally, we have two functions--one that executes when the submit button is clicked, and the `save_data` function.
+The `save_data` function reads the JSON data from the form into `json_data`, stringifies it to `jsonstr`, and fires an AJAX POST back to our URL route for updating a person (the only route in our app that accepts a POST request).
 
     :::javascript
     <script type="text/javascript" src="/js/jquery.min.js"></script>
