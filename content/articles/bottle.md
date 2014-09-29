@@ -327,7 +327,7 @@ In no particular order, here are some similar libraries that address the same si
 
 The following is an example of using the `form2js` library and jQuery. You can use the library with arbitrarily nested JSON documents. However, you need to make a couple of changes to your Bottle app. This example template and the changed app code are in the GitHub files `alt_people.py` and `alt_person_update.tpl`.
 
-The main change to the `people` app is the `update_person` function, which now looks like the following. It reads the JSON string from the request body and converts it. The `loads` function is included in the `pymongo` package that provides conversion from a string instance to a BSON document). Finally, it converts the `_id` to an ObjectId and saves the record back to the database.
+The main change to the `people` app is the `update_person` function, which now looks like the following. It reads the JSON string from the request body and converts it. The `loads` function is included in the `pymongo` package; it provides conversion from a string instance to a BSON document. Finally, our function converts the `_id` to an ObjectId and saves the record back to the database.
 
     :::python
     @app.post('/')
@@ -371,7 +371,7 @@ In the template, the form itself is identical but the **submit** button now call
 When the user clicks the `submit` button, the `save_data` function is called.
 
 First we load jQuery and the `form2js` library. Finally, we have two functions--one that executes when the submit button is clicked, and the `save_data` function.
-The `save_data` function reads the JSON data from the form into `json_data`, stringifies it to `jsonstr`, and fires an AJAX POST back to our URL route for updating a person (the only route in our app that accepts a POST request).
+The `save_data` function reads the JSON data from the form into the variable `json_data`, stringifies it to the variable `jsonstr`, and fires an AJAX POST back to our URL route for updating a person (the only route in our app that accepts a POST request).
 
     :::javascript
     <script type="text/javascript" src="/js/jquery.min.js"></script>
