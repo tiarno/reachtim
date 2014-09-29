@@ -1,8 +1,7 @@
-Title: BAM! A Web App Framework "Short Stack" 
+Title: BAM! A Web Framework "Short Stack" 
 Slug: BAM-Short-Stack
 Category: Python
-Date: 2014-Sep-25
-Status: draft
+Date: 2014-Sep-29
 Tags: how-to, web
 Summary: Use BAM (Bottle, Apache, and MongoDB) to create a quick website.
 
@@ -149,6 +148,12 @@ Every application will have a similar skeleton; all my apps have the same things
 
 And there we have it--our `people.app` Bottle application, all wired up but not able to do anything yet. Let's add some abilities so we can respond to URL requests. For example, when a `GET` request comes in on `service/people`, we'll send back a response with a list of the people in the database. 
 
+Most capabilities you code will have three parts:
+
+* a URL route that matches and responds to an HTPP request
+* a view (template) to render as the response
+* a function to get the data that the view expects.
+
 In the following code block, the `@app.get` decorator corresponds to a URL *route*; it responds to a `GET` request with no further arguments (`'/'`); however, by the time the request makes it to this point, the URL is actually `service/people`; that is what the root URL looks like to the `people` app.
 
 The `@view` decorator specifies the template to use to display the data in the response (that is, the template `views/people/people.tpl` ) 
@@ -279,7 +284,7 @@ First we need to view the data in a prepopulated form and then we need to update
 
 We already have the Python code (the `person` and `update_person` functions), so we just need to write the HTML page. You might call the page `person_update.tpl`, and change the `@app.get(/<name>)` route to use that instead of the view-only template `person.tpl` from before.
 
-This page displays the data  but now inside an HTML form. We keep the `_id` value because we must have it in order to update the database. If we don't include the `_id` on the way back in to the database, our changed data will be added to the database as a new record instead of updating the original record.
+This page displays the data but now inside an HTML form. We keep the `_id` value because we must have it in order to update the database. If we don't include the `_id` on the way back in to the database, our changed data will be added to the database as a new record instead of updating the original record.
 
     :::html
     <!doctype html>
