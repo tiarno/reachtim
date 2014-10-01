@@ -59,8 +59,8 @@ CATEGORY_FEED_ATOM = 'feeds/%s.atom.xml'
 
 LINKS = (
          ('Planet Python', 'http://planet.python.org/'),
-         ('lxml', 'http://lxml.de/'),
          ('CTAN', 'http://ctan.org/'),
+         ('LaTeX Community', 'http://latex-community.org'),
          ('DocBook', 'http://www.docbook.org/'),
          ('DocBook XSL', 'http://www.sagehill.net/'),
          )
