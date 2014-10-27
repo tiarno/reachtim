@@ -5,6 +5,14 @@ Date: 2014-Oct-30
 Tags: how-to, pdf
 Summary: How to manipulate PDFs using Python
 
+overview
+watermark, rotated
+merge
+doc info
+
+
+
+
 When working with PDFs using Python, there are two popular libraries you can use. **PDFMiner** works well for extracting information (like converting to text); **pyPDF** works well for splitting, cropping, and merging. It is also useful for getting information about the objects in the PDF.
 
 This article shows how you can use these libraries to manipulate your PDF files. You can install both packages using `pip`, but note that `pyPDF` is no longer developed; development continues under new management and a new name `pyPDF2` (so that's the one to install if you don't have `pyPDF`).
