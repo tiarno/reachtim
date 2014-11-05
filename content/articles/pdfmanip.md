@@ -19,10 +19,10 @@ If you cannot get access to the information further upstream, this tutorial will
 
 # Survey of Tools
 
-There are several Python packages that can help. The following list displays some of the most popular ones (undoubtedly I've omitted some tools).
+There are several Python packages that can help. The following list displays some of the most popular ones although undoubtedly I've omitted some tools.
 
  ``pdfrw`` 
- : Last update: 2012. Read and write PDF files; watermarking, copying images from one PDF to another. Includes sample code. Python 2.5--2.7. MIT License.[repo](https://code.google.com/p/pdfrw/)
+ : Last update: 2012. Read and write PDF files; watermarking, copying images from one PDF to another. Includes sample code. Python 2.5--2.7. MIT License. [repo](https://code.google.com/p/pdfrw/)
 
  ``slate``
  : Active development. Simplifies extracting text from PDF files. Wrapper around ``PDFMiner``. Includes documentation on GitHub and PyPI. Python 2.6. GPL License.  [repo](https://github.com/timClicks/slate)
@@ -38,13 +38,15 @@ There are several Python packages that can help. The following list displays som
 
 ## Related Tools
 
-There are several non-Python tools available for manipulating PDF files in one way or another. If none of the Python solutions fit your situation, see the section [Other Tools][] for more information.
+This article focuses on extracting information with PDFMiner and manipulating PDFs with PyPDF2.
+
+There are other Python projects for creating PDFs, and several non-Python tools available for manipulating PDF. If none of the Python solutions described here fit your situation, see the section [Other Tools][] for more information.
 
 # Extracting: PDFMiner
 
 The **PDFMiner** library excels at extracting data and coordinates from a PDF. In most cases, you can use the included command-line scripts to extract text (``pdf2txt.py``) or find objects and their coordinates (``dumppdf.py``). If you're dealing with a particularly nasty PDF and you need to get more detailed , you can import the package and use it as library. Install with ``pip``.
 
-## PDFMiner: the ``pdf2txt.py`` command 
+## The ``pdf2txt.py`` command 
 
 The package includes the ``pdf2txt.py`` command-line command, which you can use to extract text and images. The command supports many options and is very flexible. Some popular options are shown below. See the usage information for complete details.
 
@@ -67,7 +69,7 @@ pdf2txt.py -O myoutput -o myoutput/myfile.html -t html -p 1,3 myfile.pdf
 
 Note that the package cannot recognize text drawn as images because that would require optical character recognition. It does extract the corresponding locations, font names, font sizes, etc., for each bit of text. Often this is good enough--you can extract the text and use typical Python patterns for text processing to get the text or data into a usable form.
 
-## PDFMiner: the ``dumppdf.py`` command 
+## The ``dumppdf.py`` command 
 
 The package also includes the ``dumppdf.py`` command-line command, which you can use to find the objects and their coordinates inside a PDF file.
 
@@ -91,7 +93,7 @@ This is very useful when you have a problematic PDF and you want to know the exa
 
 You run the command with ``-a`` option first so you can review the objects and their IDs, find the object you want (images have a ``SubType`` of ``Image``), then re-run the command with the ``-i`` option to extract only that object.
 
-## PDFMiner: Use as a Library
+## Use as a Library
 
 If you are writing Python code and you don't want to shell out to the command line with ``os.system`` or ``subprocess``, you use the package as a library. For example, to extract text from a PDF:
 
@@ -127,9 +129,13 @@ The above function ``convert`` is called with the name of the PDF file to conver
     :::python
     convert('myfile.pdf', pages=[5,7])
 
-PDFMiner provides functions to access the document's table of contents. We know these as bookmarks or "Outlines". If your PDF file contains bookmarks, you can retrieve them easily:
+todo:
 
-    :::!python
+    show code to extract images as a library
+
+PDFMiner provides functions to access the document's table of contents. If your PDF has bookmarks or "Outlines", you can extract the table of contents easily:
+
+    #!python
     from pdfminer.pdfparser import PDFParser
     from pdfminer.pdfdocument import PDFDocument
 
@@ -161,7 +167,7 @@ You can manipulate PDF files in a variety of ways using the pure-Python PyPDF2 t
 
 Want to merge two PDFs? Merge can mean a couple of things--you can merge, in the sense of inserting the contents of one PDF *after* the content of another, or you can merge by applying one PDF page *on top of* another. 
 
-## PyPDF2: Merge (layer)
+## Merge (layer)
 For an example of the latter case, if you have a one-page PDF containing a watermark, you can layer it onto each page of another PDF.
 Say you've created a PDF with transparent watermark text (using Photoshop, Gimp, or LaTeX). If this PDF is named ``wmark.pdf``, the following python code will stamp each page of the target PDF with the watermark.
 
@@ -183,7 +189,7 @@ Say you've created a PDF with transparent watermark text (using Photoshop, Gimp,
 
 If your watermark PDF is not transparent it will hide the underlying text. In that case, make sure the content of the watermark displays on the header or margin so that when it is merged, no text is masked. For example, you can use this technique to stamp a logo or letterhead on each page of the target PDF.
 
-## pyPDF2: Merge (append)
+## Merge (append)
 
 This snippet takes all the PDFs in a subdirectory named ``mypdfs`` and puts them in name-sorted order into a new PDF called ``output.pdf``
 
@@ -201,7 +207,7 @@ This snippet takes all the PDFs in a subdirectory named ``mypdfs`` and puts them
 
 ## Delete
 
-If you want to delete pages, just skip over them as you write your new PDF. For example, if you want to get rid of blank pages in ``source.pdf``:
+If you want to delete pages, iterate over the pages in your source PDF and skip over the pages to be deleted as you write your new PDF. For example, if you want to get rid of blank pages in ``source.pdf``:
 
     :::Python
     from PyPDF2 import PdfFileWriter, PdfFileReader
@@ -219,7 +225,7 @@ If you want to delete pages, just skip over them as you write your new PDF. For 
 Since blank pages are not added to the output file, the result is that the new output file is a copy of the source but with no blank pages.
 
 ## Split
-You want to split one PDF into separate one-page PDFs. Create a new file for each page and write that file as you iterate through the source PDF.
+You want to split one PDF into separate one-page PDFs. Create a new file for each page and write it to disk as you iterate through the source PDF.
 
     :::python
     from PyPDF2 import PdfFileWriter, PdfFileReader 
@@ -256,44 +262,47 @@ Say you have two PDFs resulting from scanning odd and even pages of a source doc
     with open('all.pdf', 'wb') as f:
         all.write(f)
 
-The first ``addBlankPage`` (line 5) insures that the output PDF begins with a blank page so that the first content page is on the right-hand side. This is useful when your PDFs are laid out for a two-page (book-like) spread.
+The first ``addBlankPage`` (line 5) insures that the output PDF begins with a blank page so that the first content page is on the right-hand side. Alternatively, you might add a title page as the first page. In any case, putting the first content page on the right-hand side (odd numbered) is useful when your PDFs are laid out for a two-page (book-like) spread.
 
 The last ``addBlankPage`` sequence (lines 11-12) insures there is an even number of pages in the final PDF. Like the first ``addBlankPage``, this is an optional step of course, but could be important depending on how the final PDF will be used (for example, a print shop will appreciate that your PDFs do not end on an odd page).
 
-## PyPDF2: Metadata
+## Metadata
 
 You can set your own metadata in a PDF:
 
     :::python
-    from PyPDF2 import PdfFileMerger, PdfFileReader
+    from PyPDF2 import PdfFileMerger
     
-    def add_metadata(name, **kwargs):
+    def add_metadata(name, data):
         merger = PdfFileMerger()
         with open('%s.pdf' % name, 'rb') as f0:
             merger.append(f0)
         
-        merger.addMetadata(kwargs)
+        merger.addMetadata(data)
         
         with open('%s_update.pdf' % name, 'wb') as f1:
             merger.write(f1)
 
     metadata = {u'/hey':u'there', u'/la':'deedah'}
-    add_metadata('myfile', **metadata)
+    add_metadata('myfile', metadata)
 
-The function ``add_metadata`` opens the source PDF file and appends it to a new PdfFileMerger instance, resulting in a copy of the PDF. Then it adds a special dictionary of key-value pairs into the new PDF metadata dictionary and writes the new PDF out to disk.  The dictionary keys and values are unicode strings; also, the ``key`` string begins with a forward slash.
+The function ``add_metadata`` opens the source PDF file and appends it to a new PdfFileMerger instance, resulting in a copy of the original PDF. Then it adds a special dictionary of key-value pairs into the new PDF metadata dictionary and writes the new PDF out to disk.  The dictionary keys and values are unicode strings; also, the ``key`` string begins with a forward slash.
 
-Why would you want to add metadata to a PDF? I'm sure there are a lot of reasons, but when I have needed this ability, it was to make sure I only processed each PDF one time. So when I processed a PDF I checked for my metadata key. If it was present I skipped it and went to the next PDF. Otherwise I processed the PDF and added the metadata key to show that it had been processed. 
+Why would you want to add metadata to a PDF? One situation is when you are processing PDFs as part of a larger workflow in which each PDF file must be processed exactly once. In that case, when you open a file for processing, you first check for the custom metadata key; if it is not present, you add the key and continuing processing the file. If it is already present, the file has already been processed, so you skip it and continue with the next file.
 
+## Other Operations
 
-## PyPDF2: Other Operations
-
-With PyPDF2, you can crop pages, add Javascript code, encrypt, rotate, scale, and transform pages. The documentation covers most uses and the sample code that comes with it shows you how to do each operation.
+With the **PyPDF2** package, you can also crop pages, add Javascript code, encrypt, rotate, scale, and transform pages. The documentation covers these uses and the sample code that comes with the package shows you how to do each operation.
 
 The distribution contains a subdirectory called ``Sample_Code`` with several scripts that show you how.
 
+todo:
+
+    show example using pdfcat command
+
 # Other Tools
 
-If you deal with PDFs, you need a good toolbox to turn to. In addition to the tools Python provides for manipulating PDFs, the following libraries, packages, and programs enable you to do other types of tasks.
+If you commonly deal with PDFs, you need a good toolbox to turn to. In addition to the tools Python provides for manipulating PDFs, the following libraries, packages, and programs enable you to do other types of tasks.
 
 ``reportlab``
 : Python package. Create PDF documents as well as vector and bitmap images. [info](http://www.reportlab.com/opensource/)
@@ -312,20 +321,27 @@ If you deal with PDFs, you need a good toolbox to turn to. In addition to the to
 
 ``XPDF``
 : Open source project. Contains several useful tools such as ``pdffonts`` and ``pdfinfo``. [repo](http://www.foolabs.com/xpdf/)
-    + ``pdffonts`` lists fonts used in a PDF file including information on font type, whether the font is embedded, etc. Part of the open-source ``Xpdf`` project. Licensed under GPL v2.
-    
-    ```bash
-    > pdffonts filename.pdf
-    name                                 type              emb sub uni object ID
-    ------------------------------- ----------------- --- --- --- ---------
-    LFIGJB+ArialMT                  Type 1C           yes yes no      39  0
-    LFIGLB+Arial-BoldMT             Type 1C           yes yes no      41  0
-    ```
 
-    + ``pdfinfo`` extracts contents of ``Info`` dictionary in a PDF file. Another part of the ``Xpdf`` project.
-    
-    ```bash
-    > pdfinfo filename.pdf
+``pdffonts``
+: lists fonts used in a PDF file including information on font type, whether the font is embedded, etc. Part of the open-source ``Xpdf`` project. Licensed under GPL v2.
+
+Example:
+
+    :::bash
+    pdffonts filename.pdf
+    name                            type          emb sub uni object ID
+    ------------------------------- ------------- --- --- --- ---------
+    LFIGJB+ArialMT                  Type 1C       yes yes no      39  0
+    LFIGLB+Arial-BoldMT             Type 1C       yes yes no      41  0
+  
+
+``pdfinfo``
+: extracts contents of ``Info`` dictionary in a PDF file. Another part of the ``Xpdf`` project.
+
+Example:
+
+    :::bash
+    pdfinfo filename.pdf
     Title:          HILs.pdf
     Subject:
     Keywords:
@@ -341,7 +357,6 @@ If you deal with PDFs, you need a good toolbox to turn to. In addition to the to
     File size:      39177 bytes
     Optimized:      yes
     PDF version:    1.5
-    ```
 
 # Summary
 
