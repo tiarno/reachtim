@@ -15,7 +15,7 @@ That means that in the end, a beautiful PDF document is really meant to be read 
 
 Still, the best advice if you have to extract or add information to a PDF is: **don't do it**. Well, don't do it if there is any way you can get access to the information further upstream. If you want to scrape that spreadsheet data in a PDF, see if you can get access to it before it became part of the PDF. Chances are, now that is is inside the PDF, it is just a bunch of lines and numbers  with no connection to its former structure of cells, formats, and headings. 
 
-If you cannot get access to the information further upstream, this tutorial will show you some of the ways you can get to it inside the PDF using Python.
+If you cannot get access to the information further upstream, this tutorial will show you some of the ways you can get inside the PDF using Python.
 
 # Survey of Tools
 
@@ -44,7 +44,7 @@ There are other Python projects for creating PDFs, and several non-Python tools 
 
 # Extracting: PDFMiner
 
-The **PDFMiner** library excels at extracting data and coordinates from a PDF. In most cases, you can use the included command-line scripts to extract text (``pdf2txt.py``) or find objects and their coordinates (``dumppdf.py``). If you're dealing with a particularly nasty PDF and you need to get more detailed , you can import the package and use it as library. Install with ``pip``.
+The **PDFMiner** library excels at extracting data and coordinates from a PDF. In most cases, you can use the included command-line scripts to extract text and images (``pdf2txt.py``) or find objects and their coordinates (``dumppdf.py``). If you're dealing with a particularly nasty PDF and you need to get more detailed , you can import the package and use it as library. Install with ``pip``.
 
 ## The ``pdf2txt.py`` command 
 
@@ -124,16 +124,12 @@ If you are writing Python code and you don't want to shell out to the command li
         output.close
         return text 
 
-The above function ``convert`` is called with the name of the PDF file to convert, and optionally, a list of pages to convert. By default, all pages are converted to text. The function returns a string containing the text. To retrieve the text extracted from ``myfile.pdf`` on pages 6 and 8, call the function as follows (internal page numbering starts at zero).
+The ``convert`` function is called with the name of the PDF file to convert, and optionally, a list of pages to convert. By default, all pages are converted to text. The function returns a string containing the text. To retrieve the text extracted from ``myfile.pdf`` on pages 6 and 8, call the function as follows (internal page numbering starts at zero).
 
     :::python
     convert('myfile.pdf', pages=[5,7])
 
-todo:
-
-    show code to extract images as a library
-
-PDFMiner provides functions to access the document's table of contents. If your PDF has bookmarks or "Outlines", you can extract the table of contents easily:
+PDFMiner provides functions to access the document's table of contents. If your PDF has bookmarks or "Outlines", you can extract the table of contents with this code snippet:
 
     #!python
     from pdfminer.pdfparser import PDFParser
@@ -153,7 +149,7 @@ PDFMiner provides functions to access the document's table of contents. If your 
 **Note:** If you change line 11 to read ``toc.append((level, title, a.resolve()))``, the resulting list will contain the actual internal destinations for bookmarks. A typical entry looks like this:
 
     (1, u'Other Commands', {'S': /GoTo, 'D': 'section.8'})
-where the section "Other Commands" is a first level section and it is the 8th section in the PDF. You can use this information to construct a URL that opens the PDF at that destination. In this example, the URL would look like this:
+where the section "Other Commands" is a first level section and it is the 8th section in the PDF. You can use this information to construct an HTML URL that opens the PDF at that destination. In this example, the URL would look like this:
 
     <a href="path/to/myfile.pdf#section.8">link text</a>
 
@@ -264,7 +260,7 @@ Say you have two PDFs resulting from scanning odd and even pages of a source doc
 
 The first ``addBlankPage`` (line 5) insures that the output PDF begins with a blank page so that the first content page is on the right-hand side. Alternatively, you might add a title page as the first page. In any case, putting the first content page on the right-hand side (odd numbered) is useful when your PDFs are laid out for a two-page (book-like) spread.
 
-The last ``addBlankPage`` sequence (lines 11-12) insures there is an even number of pages in the final PDF. Like the first ``addBlankPage``, this is an optional step of course, but could be important depending on how the final PDF will be used (for example, a print shop will appreciate that your PDFs do not end on an odd page).
+The last ``addBlankPage`` sequence (lines 11-12) insures there is an even number of pages in the final PDF. Like the first ``addBlankPage``, this is an optional step, but could be important depending on how the final PDF will be used (for example, a print shop will appreciate that your PDFs do not end on an odd page).
 
 ## Metadata
 
@@ -294,15 +290,22 @@ Why would you want to add metadata to a PDF? One situation is when you are proce
 
 With the **PyPDF2** package, you can also crop pages, add Javascript code, encrypt, rotate, scale, and transform pages. The documentation covers these uses and the sample code that comes with the package shows you how to do each operation.
 
-The distribution contains a subdirectory called ``Sample_Code`` with several scripts that show you how.
+The distribution contains a subdirectory called ``Sample_Code`` with several scripts that show you how. The script ``pdfcat`` is particularly interesting as it enables you to concatenate specified pages from multiple PDF files into one single PDF. For example (from the ``pdfcat`` documentation):
 
-todo:
+    :::bash
+     pdfcat -o output.pdf head.pdf content.pdf :6 7: tail.pdf -1
+        Concatenate all of head.pdf, all but page seven of content.pdf, 
+        and the last page of tail.pdf, producing output.pdf.
 
-    show example using pdfcat command
+    pdfcat chapter*.pdf >book.pdf
+        You can specify the output file by redirection.
+
+    pdfcat chapter?.pdf chapter10.pdf >book.pdf
+        In case you don't want chapter 10 before chapter 2.
 
 # Other Tools
 
-If you commonly deal with PDFs, you need a good toolbox to turn to. In addition to the tools Python provides for manipulating PDFs, the following libraries, packages, and programs enable you to do other types of tasks.
+If you commonly deal with PDFs, you need a deep toolbox to turn to. In addition to the tools Python provides for manipulating PDFs, the following libraries, packages, and programs enable you to do other types of tasks.
 
 ``reportlab``
 : Python package. Create PDF documents as well as vector and bitmap images. [info](http://www.reportlab.com/opensource/)
