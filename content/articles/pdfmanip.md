@@ -196,7 +196,7 @@ This snippet takes all the PDFs in a subdirectory named ``mypdfs`` and puts them
     merger = PdfFileMerger()
     files = [x for x in os.listdir('mypdfs') if x.endswith('.pdf')]
     for fname in sorted(files):
-        merger.append(PdfFileReader(open(fname, 'rb')))
+        merger.append(PdfFileReader(open(os.path.join('mypdfs', fname), 'rb')))
 
     merger.write("output.pdf")
 
@@ -213,7 +213,7 @@ If you want to delete pages, iterate over the pages in your source PDF and skip 
     for i in xrange(infile.getNumPages()):
         p = infile.getPage(i)
         if p.getContents(): # getContents is None if  page is blank
-            output.add(p)
+            output.addPage(p)
 
     with open('newfile.pdf', 'wb') as f:
        output.write(f)
@@ -246,7 +246,7 @@ Say you have two PDFs resulting from scanning odd and even pages of a source doc
     even = PdfFileReader(open('even.pdf', 'rb'))
     odd = PdfFileReader(open('odd.pdf', 'rb'))
     all = PdfFileWriter()
-    all.addBlankPage()
+    all.addBlankPage(612, 792)
 
     for x,y in zip(odd.pages, even.pages):
         all.addPage(x)
@@ -258,7 +258,9 @@ Say you have two PDFs resulting from scanning odd and even pages of a source doc
     with open('all.pdf', 'wb') as f:
         all.write(f)
 
-The first ``addBlankPage`` (line 5) insures that the output PDF begins with a blank page so that the first content page is on the right-hand side. Alternatively, you might add a title page as the first page. In any case, putting the first content page on the right-hand side (odd numbered) is useful when your PDFs are laid out for a two-page (book-like) spread.
+The first ``addBlankPage`` (line 5) insures that the output PDF begins with a blank page so that the first content page is on the right-hand side.   
+Note that, when you add a blank page, the default page dimensions are set to the previous page. In this case, because there is no previous page, you must set the dimensions explicitly; 8.5 inches is 612 points, 11 inches is 792 points).
+Alternatively, you might add a title page as the first page. In any case, putting the first content page on the right-hand side (odd numbered) is useful when your PDFs are laid out for a two-page (book-like) spread.
 
 The last ``addBlankPage`` sequence (lines 11-12) insures there is an even number of pages in the final PDF. Like the first ``addBlankPage``, this is an optional step, but could be important depending on how the final PDF will be used (for example, a print shop will appreciate that your PDFs do not end on an odd page).
 
