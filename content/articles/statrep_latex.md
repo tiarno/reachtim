@@ -1,7 +1,9 @@
 Title: SAS Generated LaTeX Output with the StatRep Package
 Status: Draft
+Category: LaTeX
 Slug: statrep-latex
 Date: 11-16-2014
+Tags: how-to
 Summary: How to use StatRep with SAS-generated LaTeX output for reproducible research.
 
 **Table of Contents**
