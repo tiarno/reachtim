@@ -9,38 +9,65 @@ Summary: Methods for testing PDFs using Python
 
 # Overview
 
-# External Links
+# Internal and External Links
 
     :::python
     from PyPDF2 import PdfFileReader
     import requests
+    import sys
 
-    def get_urls(pdf):
-        badurls = list()
+    def check_url(url, auth=None):
+        headers = {'User-Agent': 'Mozilla/5.0', 'Accept': '*/*'}
+        try:
+            response = requests.get(url, timeout=6, auth=auth, headers=headers)
+        except (requests.ConnectionError,
+                requests.HTTPError,
+                requests.Timeout) as e:
+            result, reason = False, e
+        else:
+            if response.text:
+                result, reason = response.status_code, response.reason
+            else:
+                result, reason = False, 'Empty Page'
+
+        return result, reason
+
+    def check_pdf(pdf):
         links = list()
-        url_checker = URLChecker() # a helper to test the URL (urllib2)
-        for pg in range(pdf.getNumPages()):
-            page = pdf.getPage(pg)
-            obj = page.getObject()
+        urls = list()
+        badurls = list()
 
-            for a in obj.get('/Annots', []):
-                u = a.getObject()
-                lnk = u['/A'].get('/D')
-                url = u['/A'].get('/URI')
-                if lnk:
-                    links.append(lnk)
-                if url:
+        for page in pdf.pages:
+            obj = page.getObject()
+            for annot in [x.getObject() for x in obj.get('/Annots', [])]:
+                dst = annot['/A'].get('/D')
+                url = annot['/A'].get('/URI')
+                if dst:
+                    links.append(dst)
+                elif url:
                     urls.append(url)
-                    result, reason = url_checker.check(url)
+                    result, reason = check_url(url)
                     if not result:
                         badurls.append({'url':url, 'reason': '%r' % reason})
 
         anchors = pdf.getNamedDestinations().keys()
         badlinks = [x for x in links if x not in anchors]
-        return urls, badurls, badlinks
+        return links, badlinks, urls, badurls
 
 
-# Internal Links
+
+    if __name__ == '__main__':
+        fname = sys.argv[1]
+        print 'Checking %s' % fname
+        pdf = PdfFileReader(fname)
+        links, badlinks, urls, badurls = check_pdf(pdf)
+        print 'urls: ', urls
+        print
+        print 'bad links: ', badlinks
+        print
+        print 'bad urls: ',badurls
+
+
 
 # Font Embedding
 
