@@ -12,8 +12,7 @@ Summary: How to use StatRep with the SAS University Edition or SAS Studio
 
 ### Overview {: .article-title}
 
-This article describes how you can use the **StatRep** package with SAS University Edition and SAS Studio. 
-It only describes how to use **StatRep** with the new SAS web-based interface; if you want general information on how to use **StatRep**, see the links listed below.
+This article describes how you can use the **StatRep** package with SAS University Edition and SAS Studio. If you want general information on how to use **StatRep**, see the links listed below.
 
 The **StatRep system** uses SAS and the LaTeX typesetting system to create documents with reproducible results. With **StatRep**, all of your data, code, and output is in a single source, your LaTeX file.  The system consists of a LaTeX package, a suite of SAS macros and the *User's Guide*. You can find more details here:
 - [SAS Global Forum (2012) paper](http://support.sas.com/resources/papers/proceedings12/324-2012.pdf)
@@ -65,12 +64,13 @@ Now you have your working directory and SAS knows that there is such a location.
     \def\SRmacropath{/folders/myshortcuts/mydocs/statrep_macros.sas}
     \begin{document}
 
-This document preamble performs the following functions:
+This document preamble performs the following:
+
 1. Specifies that the document use the `article` class.
 2. Loads the `geometry` package and specifies 1 inch margins on all sides.
 3. Loads the `statrep` package and specifies that outputs can include color.
 4. Defines the `\SRrootdir` path (the path to the working directory) as the shared folder you created in the previous steps.
-5. Defines the `\SRmacropath` that contains the full path and file name of the `statrep_macros.sas` file that is part of the **StatRep** package. This example shows that it is in the same directory as the LaTeX file, but you can put the macros anywhere you like, as long as SAS can find the file (that is, the macros are in a shared folder)
+5. Defines the `\SRmacropath` that contains the full path and file name of the `statrep_macros.sas` file that is part of the **StatRep** package. This example shows that it is in the same directory as the LaTeX file, but you can put the macros anywhere you like, as long as SAS can find the file (that is, as long as the macros are in a shared folder)
 
 With this preamble, you can start writing your content; when **StatRep** automatically generates the SAS program to create your output, the paths you have defined here are used so SAS can find the macros it needs and so it can write the requested outputs to your working directory.
 
@@ -97,11 +97,11 @@ The **StatRep** system enables you to create dynamic documents with SAS and LaTe
 
 By defining the working directory as a shared folder and the defining the location of the **StatRep** macros, you can use SAS Studio and SAS University Edition to create reports with reproducible results and share it with others.
 
-Leave a comment!
+Have a question or suggestion? Leave a comment!
 
 ### Save the StatRep Tagset Permanently {: .article-title}
 
-If you prefer, instead of the ODS Listing output, you can generate LaTeX output with the **StatRep** ODS tagset. You generate the tagset when you run the included program `statrep_tagset.sas`. You can generate the tagset each time you need to generate output and it is available in the WORK library during the current SAS session.
+If you prefer, instead of the ODS Listing output, you can generate LaTeX output with the **StatRep** ODS tagset. You generate the tagset when you run the included program `statrep_tagset.sas`. You can generate the tagset each time you need to generate output and it is available during the current SAS session.
 
 That is all you need to do, but if you'd rather not have to run the file `statrep_tagset.sas` every time you want to generate your output, you can save the tagset in a permanent location.
 
