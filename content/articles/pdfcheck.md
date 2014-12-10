@@ -23,20 +23,36 @@ The `check_url` function is simple: Attempt to `get` the url with some timeout v
     from PyPDF2 import PdfFileReader
     import requests
     import sys
+    import urllib
+
+    def check_ftp(url):
+        try:
+            response = urllib.urlopen(url)
+        except IOError as e:
+            result, reason = False, e
+        else:
+            if response.read():
+                result, reason = True, 'okay'
+            else:
+                result, reason = False, 'Empty Page'
+        return result, reason
 
     def check_url(url, auth=None):
         headers = {'User-Agent': 'Mozilla/5.0', 'Accept': '*/*'}
-        try:
-            response = requests.get(url, timeout=6, auth=auth, headers=headers)
-        except (requests.ConnectionError,
-                requests.HTTPError,
-                requests.Timeout) as e:
-            result, reason = False, e
+        if url.startswith('ftp://'):
+            result, reason = check_ftp(url)
         else:
-            if response.text:
-                result, reason = response.status_code, response.reason
+            try:
+                response = requests.get(url, timeout=6, auth=auth, headers=headers)
+            except (requests.ConnectionError,
+                    requests.HTTPError,
+                    requests.Timeout) as e:
+                result, reason = False, e
             else:
-                result, reason = False, 'Empty Page'
+                if response.text:
+                    result, reason = response.status_code, response.reason
+                else:
+                    result, reason = False, 'Empty Page'
 
         return result, reason
 
@@ -93,8 +109,6 @@ Finally, make the code into a callable script that takes a single argument, the 
         print 'bad links: ', badlinks
         print
         print 'bad urls: ',badurls
-
-
 
 # Test for Embedded Fonts
 
@@ -158,11 +172,7 @@ Print the fonts used in the PDF file and if there are unembedded fonts, print th
 2. isencrypted
 3. page count, orientation?, dimens?
 4. version
-5. color space?
-6. compression, image compression?
 7. number of images?
-8. compare raster images of pages
-
 
 # Summary
 
