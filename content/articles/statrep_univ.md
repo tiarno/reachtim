@@ -1,10 +1,10 @@
-Title: StatRep and SAS University Edition/SAS Studio
+Title: StatRep and SAS Studio/SAS University Edition
 Category: LaTeX
 Slug: statrep-university
 Tags: how-to, statrep
 Status: Draft
-Date: 12-23-2014
-Summary: How to use StatRep with the SAS University Edition or SAS Studio
+Date: 01-30-2015
+Summary: How to use StatRep with SAS Studio or SAS University Edition
 
 **Table of Contents**
 
@@ -12,7 +12,7 @@ Summary: How to use StatRep with the SAS University Edition or SAS Studio
 
 ### Overview {: .article-title}
 
-This article describes how you can use the **StatRep** package with SAS University Edition and SAS Studio. If you want general information on how to use **StatRep**, see the links listed below.
+This article describes how you can use the **StatRep** package with SAS Studio or SAS University Edition. If you want general information on how to use **StatRep**, see the links listed below.
 
 The **StatRep system** uses SAS and the LaTeX typesetting system to create documents with reproducible results. With **StatRep**, all of your data, code, and output is in a single source, your LaTeX file.  The system consists of a LaTeX package, a suite of SAS macros and the *User's Guide*. You can find more details here:
 - [SAS Global Forum (2012) paper](http://support.sas.com/resources/papers/proceedings12/324-2012.pdf)
@@ -27,10 +27,11 @@ Additionally, information on the SAS Studio web-based interface and SAS Universi
 [SAS Studio](http://support.sas.com/software/products/sasstudio/)
 :is a developmental web application for SAS that you access through your web browser.
 
-The main thing to keep in mind is that, with a web interface, there is no concept of a "current directory" so you must let SAS know where your files are located. In order to use **StatRep**, SAS needs to know the following locations:
+With a web interface, there is no concept of a "current directory," so you must let SAS know where your files are located. In order to use **StatRep**, SAS needs to know the following locations:
+
 1. the directory that contains your LaTeX file.
 2. the full path to the file `statrep_macros.sas`.
-3. if you prefer LaTeX output (instead of Listing output), the **StatRep** ODS tagset. See the last section of this article for details on how to create and use this tagset.
+3. if you prefer LaTeX output (instead of Listing output), you can use the **StatRep** ODS tagset. SAS needs to know where to locate that tagset. See the last section of this article for details on how to create and use this tagset.
 
 ### A Place to Work: The Shared Folder {: .article-title}
 
@@ -54,7 +55,7 @@ The LIBNAME statement in the code window assigns the `mytempl` libref to your sh
 
 ### The Bridge Between LaTeX and SAS {: .article-title}
 
-Now you have your working directory and SAS knows that there is such a location. The final bit is to bridge between your LaTeX document and SAS. You connect the two by defining a LaTeX tag called `\SRrootdir`, which contains the path to your shared folder as displayed in the following LaTeX code:
+Now you have your working directory and SAS knows that there is such a location. The final bit is to define a bridge between your LaTeX document and SAS. You connect the two by defining a LaTeX tag called `\SRrootdir`, which contains the path to your shared folder as displayed in the following LaTeX code:
 
     :::latex
     \documentclass{article}

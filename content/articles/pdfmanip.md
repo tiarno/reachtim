@@ -1,7 +1,8 @@
 Title: Manipulate PDFs with Python
-Status: Draft
-Date: 11-07-2014
+Date: 01-12-2015
 Summary: Methods for manipulating and extracting information from PDF documents using Python
+
+This article was originally published on [BinPress.com](https://www.binpress.com/tutorial/manipulating-pdfs-with-python/167)
 
 **Table of Contents**
 
