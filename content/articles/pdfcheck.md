@@ -1,6 +1,9 @@
 Title: Test PDF Links with Python
 Status: Draft
-Date: 01-20-2016
+Date: 01-20-2015
+Slug: PDF-Testing
+Category: Python
+Tags: how-to, pdf
 Summary: Methods for testing PDFs using Python
 
 **Table of Contents**
