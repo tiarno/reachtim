@@ -1,6 +1,6 @@
 Title: Test PDF Links with Python
 Status: Draft
-Date: 01-20-2015
+Date: 01-19-2015
 Slug: PDF-Testing
 Category: Python
 Tags: how-to, pdf
@@ -12,21 +12,27 @@ Summary: Methods for testing PDFs using Python
 
 # Overview
 
-When you are generating PDFs, you need a way to test them for integrity--not only must they be valid, but they should behave correctly and display the same even on different platforms. This article describes how you can test your PDF files for broken links (both internal and external), and to find fonts that are not embedded in the PDF.
+When you generate PDFs, you need a way to test them for integrity--not only must they be valid, but they should behave correctly and display consistently, even on different platforms. This article describes how you can test your PDF files for broken links (both internal and external), and how to find fonts that are not embedded in the PDF.
 
-Some PDF viewers are smart and will create a live hyperlink from a string of text that looks like a URL, even though the text is not coded as a URL in the PDF file. The technique described in this article does not address the reader--it only looks at the actual URLs present in the PDF file.
+Note that some PDF readers are smart and will create a live hyperlink from a string of text that looks like a URL, even though the text is not coded as a URL in the PDF file. The technique described in this article does not address this issue--it only tests the actual URLs present in the PDF file.
+
+Code from this article is available as a `gist` on GitHub:
+https://gist.github.com/tiarno/dea01f70a54cac52f6a6#file-pdf-testing-md
 
 # Testing Internal and External Links
 
-First, create a function to check the urls you'll find inside the PDF file. This function uses the `requests` library, which you can install with `pip`. 
+To test the links, first create a function to check the urls found inside the PDF file. This function uses the `requests` library, which you can install with `pip`. 
 
-The `check_url` function is simple: Attempt to `get` the url with some timeout value using typical header values. Return the response along with the reason it succeeded or failed.
+There may be some `ftp` links, which are not directly supported by the `requests` library. You can either use the `urllib` package as in the following code, or you can use the `requests-ftp` package, available on `pypi`.
 
     :::python
     from PyPDF2 import PdfFileReader
+    from pprint import pprint
     import requests
     import sys
     import urllib
+
+The `check_ftp` function checks a given url for a response. If it fails, or if the response is empty, it returns `False`, along with the reason; otherwise it returns `True`.
 
     def check_ftp(url):
         try:
@@ -39,6 +45,8 @@ The `check_url` function is simple: Attempt to `get` the url with some timeout v
             else:
                 result, reason = False, 'Empty Page'
         return result, reason
+
+The `check_url` function is also simple: If the url starts with `ftp`, it delegates to the `check_ftp` function. Otherwise, it attempts to `get` the url with some timeout value using typical header values. The the function returns the response along with the reason it succeeded or failed.
 
     def check_url(url, auth=None):
         headers = {'User-Agent': 'Mozilla/5.0', 'Accept': '*/*'}
@@ -59,18 +67,21 @@ The `check_url` function is simple: Attempt to `get` the url with some timeout v
 
         return result, reason
 
-Now check the PDF file. You will create four lists:
+Now that we have this utility, we can check the PDF file. We will create four lists:
 
 links
 : the internal PDF links in the file
-badlinks
-: of the internal links in the file, these links target a missing destination (broken link)
-urls
-: the external links from the PDF to some other location
-badurls
-: of the external links in the file, these urls target a missing destination (broken url)
 
-The following function loops over the pages in the PDF file and walks through the `Annots` dictionary of each page. If that dictionary has an action (`\A`) with a key of `\D` (destination?), we have an internal link, so update the `links` list.
+badlinks
+: of the internal links in the file, the links that target a missing destination (broken link)
+
+urls
+: the links from the PDF to an external location
+
+badurls
+: of the external links in the file, the urls that target a missing destination (broken url)
+
+The following `check_pdf` function loops over the pages in the PDF file object. It walks through the `Annots` dictionary of each page. If that dictionary has an action (`\A`) with a key of `\D` (destination?), that is an internal link, so update the `links` list with the destination.
 
 If the dictionary has an action with a key of `\URI`, it is an external link. Check the external links with the `check_url` function and update the `urls` and `bad_urls` lists.
 
@@ -115,13 +126,13 @@ Finally, make the code into a callable script that takes a single argument, the 
 
 # Test for Embedded Fonts
 
-Test to make sure that the fonts used in the PDF file are embedded. If a font is not embedded, your PDF file may display differently on different machines, even if it is a font that is supposedly "standard", like `Times Roman` or `Helvetica`. To insure that your PDF displays as intended on any machine, all fonts must be embedded.
+Test to make sure that the fonts used in the PDF file are embedded. If a font is not embedded, your PDF file may display differently on different machines, even if it is a font that is putatively "standard", like `Times Roman` or `Helvetica`. To insure that your PDF displays as intended on any machine, all fonts must be embedded.
 
-In the code below, the `walk` function is a recursive function that takes a dictionary (`obj`) and two sets (`fnt` and `emb`). It walks the given dictionary object: for every key in the given dictionary, the function calls itself on the corresponding value.
+In the following code, the `walk` function is a recursive function that takes a dictionary (`obj`) and two sets (`fnt` and `emb`). It walks the given dictionary object: for every key in the given dictionary, the function calls itself on the corresponding value (if that value is a nested dictionary).
 
-If the dictionary has a key called `BaseFont`, the value corresponding to that key is the name of a font used in the PDF; add that font name to the `fnt` set of fonts used.
+If the dictionary has a key called `BaseFont`, the value corresponding to that key is the name of a font used in the PDF; add that font name to the `fnt` set of **fonts used**.
 
-If the dictionary has a key called `FontName`, the dictionary is a descriptor for that font, so check for another key in the same font descriptor dictionary that begins with `FontFile` (the key could be `FontFile`, `FontFile2`, or `FontFile3`). If that key exists, the font is embedded; add that font name to the set of fonts embedded.
+If the dictionary has a key called `FontName`, the dictionary is a descriptor for that font, so check for another key in the same font descriptor dictionary that begins with `FontFile` (the key could be `FontFile`, `FontFile2`, or `FontFile3`). If that key exists, the font is embedded; add that font name to the set of **fonts embedded**.
 
 If the two sets are not identical, there are unembedded fonts in the PDF.
 
@@ -129,25 +140,23 @@ If the two sets are not identical, there are unembedded fonts in the PDF.
     fontkeys = set(['/FontFile', '/FontFile2', '/FontFile3'])
     
     def walk(obj, fnt, emb):
-        if not hasattr(obj, 'keys'):
-            return None, None
-        
         if '/BaseFont' in obj:
             fnt.add(obj['/BaseFont'])
-        elif '/FontName' in obj:
-            if [x for x in fontkeys if x in obj]:
-                emb.add(obj['/FontName'])
-     
-        for k in obj.keys():
-            walk(obj[k], fnt, emb)
-        
+
+        elif '/FontName' in obj and fontkeys.intersection(set(obj)):
+            emb.add(obj['/FontName'])
+
+        for k in obj:
+            if hasattr(obj[k], 'keys'):
+                walk(obj[k], fnt, emb)
+
         return fnt, emb
 
 Finally, make the code into a callable script that takes a single argument, the path to the PDF file. 
 
-Start with two empty sets, `fonts` and `embedded`. Loop over each page in the PDF, passing the page's `Resources` dictionary to the `walk` function. Add the corresponding results to the two sets and calculate the unembedded fonts by differecing the sets.
+Start with two empty sets, `fonts` and `embedded`. Loop over each page in the PDF, passing the page's `Resources` dictionary to the `walk` function. Add the corresponding results to the two sets and calculate the unembedded fonts by differencing the sets.
 
-Print the fonts used in the PDF file and if there are unembedded fonts, print their names as well.
+Print the fonts used in the PDF file and if there are unembedded fonts, print their names as well. Of course here you can do anything you want with the information such as save it to test database, print a report, and so on.
 
     :::python
     if __name__ == '__main__':
@@ -164,7 +173,7 @@ Print the fonts used in the PDF file and if there are unembedded fonts, print th
         
         unembedded = fonts - embedded
         print 'Font List'
-        print(sorted(list(fonts)))
+        pprint(sorted(list(fonts)))
         if unembedded:
             print '\nUnembedded Fonts'
             pprint(unembedded)
@@ -173,7 +182,7 @@ Print the fonts used in the PDF file and if there are unembedded fonts, print th
 
 Obviously, the more you can specify about the PDFs you produce, the more you can test. For example, you may know that your PDF should have specific metadata, should be encrypted, contain a certain number of pages, and so on.
 
-You can test for those conditions with the built-in tools that the PDFFileReader in pyPDF2 provides. If you have a PDFFileReader instance named `mypdf`, you can use the following properties for testing:
+You can test for those conditions with the built-in tools that the PDFFileReader in pyPDF2 provides. If you have a PDFFileReader instance, you can use the following properties for testing:
 
 documentInfo
 : returns the document metadata such as author, creator, producer, subject, and title.
@@ -187,6 +196,11 @@ numPages
 
 # Summary
 
-If you produce PDF documents, you need to test them. This article describes how you can test that the links (internal and external) are valid and that the fonts used in the document are embedded.
+If you produce PDF documents, you need to test them. The more you can specify about your PDFs, the more you can test. This article describes how you can test that the links (internal and external) are valid and that the fonts used in the document are embedded.
+
+Get a copy of this code and play:
+
+Code from this article is available as a `gist` on GitHub:
+https://gist.github.com/tiarno/dea01f70a54cac52f6a6#file-pdf-testing-md
 
 Do you test other things in your own PDF documents? Leave a comment!
