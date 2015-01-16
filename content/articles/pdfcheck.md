@@ -14,7 +14,7 @@ Summary: Methods for testing PDFs using Python
 
 When you generate PDFs, you need a way to test them for integrity--not only must they be valid, but they should behave correctly and display consistently, even on different platforms. This article describes how you can test your PDF files for broken links (both internal and external), and how to find fonts that are not embedded in the PDF.
 
-Note that some PDF readers are smart and will create a live hyperlink from a string of text that looks like a URL, even though the text is not coded as a URL in the PDF file. The technique described in this article does not address this issue--it only tests the actual URLs present in the PDF file.
+Note that some PDF readers are `smart' and will create a live hyperlink from a string of text that looks like a URL, even though the text is not coded as a URL in the PDF file. The technique described in this article does not address this issue--it only tests the actual URLs present in the PDF file.
 
 Code from this article is available as a `gist` on GitHub:
 https://gist.github.com/tiarno/dea01f70a54cac52f6a6#file-pdf-testing-md
