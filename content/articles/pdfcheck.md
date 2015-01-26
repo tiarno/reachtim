@@ -1,6 +1,6 @@
 Title: Test PDF Links with Python
 Status: Draft
-Date: 01-19-2015
+Date: 01-26-2015
 Slug: PDF-Testing
 Category: Python
 Tags: how-to, pdf
@@ -106,7 +106,7 @@ After checking each page, get a list of all the anchors in the PDF with the `get
                     if not result:
                         badurls.append({'url':url, 'reason': '%r' % reason})
 
-        anchors = pdf.namedDestinations().keys()
+        anchors = pdf.namedDestinations.keys()
         badlinks = [x for x in links if x not in anchors]
         return links, badlinks, urls, badurls
 
