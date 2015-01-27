@@ -1,4 +1,4 @@
-Title: Test PDF Links with Python
+Title: Testing PDFs with Python
 Date: 01-26-2015
 Slug: PDF-Testing
 Category: Python
