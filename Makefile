@@ -1,4 +1,4 @@
-PY?=python
+PY?=python3
 PELICAN?=pelican
 PELICANOPTS=
 
@@ -12,10 +12,10 @@ FTP_HOST=reachtim.com
 FTP_USER=tiarno
 FTP_TARGET_DIR=webapps/reachtim
 
-SSH_HOST=localhost
+SSH_HOST=reachtim.com
 SSH_PORT=22
-SSH_USER=root
-SSH_TARGET_DIR=/var/www
+SSH_USER=tiarno
+SSH_TARGET_DIR=/webapps/reachtim
 
 S3_BUCKET=my_s3_bucket
 
@@ -30,6 +30,11 @@ GITHUB_PAGES_BRANCH=gh-pages
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
 	PELICANOPTS += -D
+endif
+
+RELATIVE ?= 0
+ifeq ($(RELATIVE), 1)
+	PELICANOPTS += --relative-urls
 endif
 
 help:
@@ -70,6 +75,13 @@ else
 	cd $(OUTPUTDIR) && $(PY) -m pelican.server
 endif
 
+serve-global:
+ifdef SERVER
+	cd $(OUTPUTDIR) && $(PY) -m pelican.server 80 $(SERVER)
+else
+	cd $(OUTPUTDIR) && $(PY) -m pelican.server 80 0.0.0.0
+endif
+
 devserver:
 ifdef PORT
 	$(BASEDIR)/develop_server.sh restart $(PORT)
@@ -78,8 +90,7 @@ else
 endif
 
 stopserver:
-	kill -9 `cat pelican.pid`
-	kill -9 `cat srv.pid`
+	$(BASEDIR)/develop_server.sh stop
 	@echo 'Stopped Pelican and SimpleHTTPServer processes running in background.'
 
 publish:

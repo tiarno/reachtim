@@ -4,8 +4,7 @@ from __future__ import unicode_literals
 
 AUTHOR = u'Tim Arnold'
 SITENAME = u'ReachTim'
-SITESUBTITLE = 'Python, LaTeX, and XML: coding together.'
-SITEURL = 'http://reachtim.com'
+SITEURL = 'https://reachtim.com'
 TIMEZONE = 'America/New_York'
 DEFAULT_LANG = u'en'
 PATH = 'content'
@@ -29,9 +28,10 @@ PAGE_URL = 'pages/{slug}.html'
 PAGE_SAVE_AS = 'pages/{slug}.html'
 
 THEME = '../themes/zurb-F5-basic'
-PLUGIN_PATHS=['../plugins',]
+PLUGIN_PATHS=['../pelican-plugins',]
 PLUGINS = [
 	'neighbors',
+    'extract_toc',
     'pelican_fontawesome',
     'pelican_gist',
 	'render_math',
@@ -58,23 +58,20 @@ FEED_ALL_ATOM = 'feeds/all.atom.xml'
 CATEGORY_FEED_ATOM = 'feeds/%s.atom.xml'
 
 LINKS = (
-         ('Planet Python', 'http://planet.python.org/'),
-         ('CTAN', 'http://ctan.org/'),
-         ('LaTeX Community', 'http://latex-community.org'),
-         ('DocBook', 'http://www.docbook.org/'),
-         ('DocBook XSL', 'http://www.sagehill.net/'),
+         ('Planet Python', 'https://planet.python.org/'),
+         ('CTAN', 'https://ctan.org/'),
          )
 SOCIAL = (
           ('Github', 'https://github.com/tiarno'),
           ('Gists', 'https://gist.github.com/tiarno/'),
           ('LinkedIn', 'https://www.linkedin.com/in/jtimarnold'),
+          ('Twitter', 'https://twitter.com/jtimarnold')
          )
 
 DEFAULT_PAGINATION = 10
-
 TYPOGRIFY = True
-MD_EXTENSIONS= [
-	'codehilite(css_class=highlight)',
-	'extra',
+MARKDOWN_EXTENSIONS = [
+    'codehilite(css_class=highlight)',
+    'extra',
     'toc',
-	]
+    ]
