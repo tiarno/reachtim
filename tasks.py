@@ -19,7 +19,7 @@ ssh_target_dir = '/home/tiarno/webapps/reachtim'
 
 CONFIG = {
     'deploy_path': 'reachtim',
-    'production': f'{ssh_user}@{ssh_host}:{ssh_port}',
+    'production': f'{ssh_user}@{ssh_host}',
     'dest_path': ssh_target_dir,
     'port': 8000,
     }
@@ -76,8 +76,7 @@ def preview(c):
 def publish(c):
     """Publish to production via rsync"""
     c.run('pelican -s publishconf.py')
-    c.run(
-        'rsync --delete --exclude ".DS_Store" -pthrvz -c '
-        '{} {production}:{dest_path}'.format(
-            CONFIG['deploy_path'].rstrip('/') + '/',
-            **CONFIG))
+    cmd = 'rsync --delete --exclude ".DS_Store" -pthrvz -c '
+    cmd += '{} {production}:{dest_path}'.format(CONFIG['deploy_path'].rstrip('/') + '/',**CONFIG)
+    print(cmd)
+    c.run(cmd)

@@ -17,7 +17,7 @@ You can find me here:
 
    :fa:`fa-linkedin-square fa-3x` LinkedIn_ Profile
 
-   :fa:`fa-twitter-square fa-3x` Twitter_
+   :fa:`fa-twitter-square fa-3x` Twitter_ Profile
 
    :fa:`fa-envelope fa-3x` or Email_ me
 

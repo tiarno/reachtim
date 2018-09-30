@@ -27,13 +27,13 @@ ARTICLE_SAVE_AS = 'articles/{slug}.html'
 PAGE_URL = 'pages/{slug}.html'
 PAGE_SAVE_AS = 'pages/{slug}.html'
 
-THEME = '../themes/zurb-F5-basic'
+THEME = '../pelican-themes/zurb-F5-basic'
 PLUGIN_PATHS=['../pelican-plugins',]
 PLUGINS = [
 	'neighbors',
-    'extract_toc',
+    'pelican-toc',
     'pelican_fontawesome',
-    'pelican_gist',
+    'pelican-gist',
 	'render_math',
 	'sitemap',
 	]
@@ -70,8 +70,15 @@ SOCIAL = (
 
 DEFAULT_PAGINATION = 10
 TYPOGRIFY = True
-MARKDOWN_EXTENSIONS = [
-    'codehilite(css_class=highlight)',
-    'extra',
-    'toc',
-    ]
+MARKDOWN = {
+  'extension_configs': {
+    'markdown.extensions.toc': {
+      'title': 'Table of contents:' 
+    },
+    
+    'markdown.extensions.codehilite': {'css_class': 'highlight'},
+    'markdown.extensions.extra': {},
+    'markdown.extensions.meta': {},
+  },
+  'output_format': 'html5',
+}

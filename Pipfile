@@ -11,6 +11,7 @@ pelican-fontawesome = "*"
 pelican-gist = "*"
 "bs4" = "*"
 invoke = "*"
+"beautifulsoup4" = "*"
 
 [dev-packages]
 pylint = "*"
