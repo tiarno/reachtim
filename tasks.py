@@ -3,26 +3,18 @@
 import os
 import shutil
 import sys
-try:
-    import socketserver
-except ImportError:
-    import SocketServer as socketserver
+import datetime
 
 from invoke import task
 from invoke.util import cd
-from pelican.server import ComplexHTTPRequestHandler
-
-ssh_user = 'tiarno'
-ssh_host = 'reachtim.com'
-ssh_port = 22
-ssh_target_dir = '/home/tiarno/webapps/reachtim'
+from pelican.server import ComplexHTTPRequestHandler, RootedHTTPServer
 
 CONFIG = {
-    'deploy_path': 'reachtim',
-    'production': f'{ssh_user}@{ssh_host}',
-    'dest_path': ssh_target_dir,
+    # Local path configuration (can be absolute or relative to tasks.py)
+    'deploy_path': 'output',
+    # Port for `serve`
     'port': 8000,
-    }
+}
 
 @task
 def clean(c):
@@ -49,12 +41,12 @@ def regenerate(c):
 @task
 def serve(c):
     """Serve site at http://localhost:8000/"""
-    os.chdir(CONFIG['deploy_path'])
 
-    class AddressReuseTCPServer(socketserver.TCPServer):
+    class AddressReuseTCPServer(RootedHTTPServer):
         allow_reuse_address = True
 
     server = AddressReuseTCPServer(
+        CONFIG['deploy_path'],
         ('', CONFIG['port']),
         ComplexHTTPRequestHandler)
 
@@ -72,11 +64,14 @@ def preview(c):
     """Build production version of site"""
     c.run('pelican -s publishconf.py')
 
+
 @task
 def publish(c):
     """Publish to production via rsync"""
     c.run('pelican -s publishconf.py')
-    cmd = 'rsync --delete --exclude ".DS_Store" -pthrvz -c '
-    cmd += '{} {production}:{dest_path}'.format(CONFIG['deploy_path'].rstrip('/') + '/',**CONFIG)
-    print(cmd)
-    c.run(cmd)
+    c.run(
+        'rsync --delete --exclude ".DS_Store" -pthrvz -c '
+        '{} {production}:{dest_path}'.format(
+            CONFIG['deploy_path'].rstrip('/') + '/',
+            **CONFIG))
+

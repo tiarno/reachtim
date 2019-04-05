@@ -7,7 +7,8 @@ Contact
 :slug: contact
 :summary: contact information
 
-Hello! My name is Tim Arnold. I work mainly with LaTeX and Python and sometimes do web development, system security, and system administration.
+Hello! My name is Tim Arnold. I work mainly with security, LaTeX, and Python and 
+sometimes do web development, system security, and system administration.
 
 I live in North Carolina, USA and my day job is at SAS_ Institute Inc.
 

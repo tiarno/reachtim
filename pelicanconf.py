@@ -2,14 +2,12 @@
 # -*- coding: utf-8 -*- #
 from __future__ import unicode_literals
 
-AUTHOR = u'Tim Arnold'
-SITENAME = u'ReachTim'
+AUTHOR = 'Tim Arnold'
+SITENAME = 'reachtim'
 SITEURL = 'https://reachtim.com'
-TIMEZONE = 'America/New_York'
-DEFAULT_LANG = u'en'
 PATH = 'content'
-
-OUTPUT_PATH = 'reachtim/'
+TIMEZONE = 'America/New_York'
+DEFAULT_LANG = 'en'
 ARTICLE_PATHS = ['articles',]
 STATIC_PATHS = ['images', 'extra',]
 
@@ -31,9 +29,7 @@ THEME = '../pelican-themes/zurb-F5-basic'
 PLUGIN_PATHS=['../pelican-plugins',]
 PLUGINS = [
 	'neighbors',
-    'pelican-toc',
-    'pelican_fontawesome',
-    'pelican-gist',
+  'pelican_fontawesome',
 	'render_math',
 	'sitemap',
 	]
@@ -55,7 +51,7 @@ SITEMAP = {
 DISQUS_SITENAME = 'reachtim'
 FEED_DOMAIN = SITEURL
 FEED_ALL_ATOM = 'feeds/all.atom.xml'
-CATEGORY_FEED_ATOM = 'feeds/%s.atom.xml'
+CATEGORY_FEED_ATOM = 'feeds/{slug}.atom.xml'
 
 LINKS = (
          ('Planet Python', 'https://planet.python.org/'),
@@ -68,7 +64,6 @@ SOCIAL = (
           ('Twitter', 'https://twitter.com/jtimarnold')
          )
 
-DEFAULT_PAGINATION = 10
 TYPOGRIFY = True
 MARKDOWN = {
   'extension_configs': {
@@ -82,3 +77,8 @@ MARKDOWN = {
   },
   'output_format': 'html5',
 }
+
+DEFAULT_PAGINATION = 5
+
+# Uncomment following line if you want document-relative URLs when developing
+RELATIVE_URLS = True

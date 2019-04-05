@@ -5,10 +5,6 @@ Tags: Python, Security
 Category: Security
 Summary: Enumerate a Web Framework with Python.
 
-**Table of Contents**
-
-[TOC]
-
 # Overview {: .article-title}
 
 stuff
