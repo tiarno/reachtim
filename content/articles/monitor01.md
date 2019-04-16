@@ -1,7 +1,7 @@
 Title: DIY System Monitoring, Part 1: Python
 Category: Python
 Status: Draft
-Date: 2019-Apr-13
+Date: 2019-Apr-23
 Tags: sysadmin, how-to, web
 Summary: How to use Python3, psutil, and MongoDB with Javascript for monitoring system health.
 
@@ -10,15 +10,17 @@ This is an update to the original (several years old now)
 
 ### What's changed  {: .article-title}
 
-- updated psutil
+- updated psutil, pymongo
 - changed web server from `bottle.py` to NodeJs/Express
 - changed from jquery to CDN + Chart.js
 
-The code for this article and the next two parts are available now on my
+The code for this article and the next two parts will become available on my
 [GitHub Repo](https://github.com/tiarno/psmonitor)
 
 The old version is the `python2` branch. The default branch (`master`) has the code
-we're going over in this article.
+we're going over in this article. This first (python) part is there now.
+
+### Introduction {: .article-title}
 
 This three-part article enables you to create your own system-monitoring web page.
 You'll use Python (the `psutil` package), NodeJS, and HTML+ChartJs. 
@@ -31,9 +33,9 @@ You'll see how you can add capabilities to suit your own monitoring app as we go
 This is going to be a simple dashboard app that displays the disk space, memory and cpu usage
 for one or more servers.  
 
-There are more complete options like Grafana or Nagios; this
-little app is not in that league.  I'm writing about it because it's an app
-I use every day and I didn't need more capabilities. And it provides a good look
+There are certainly much more complete options like Nagios; this
+little app is not in that league.  I'm writing about it because 
+I use it every day and serves my purpose. As a project, it provides a good look
 at writing your own apps using Python, NodeJS and plain Javascript.
 
 There are four steps to get this going, and we'll cover the first two in
@@ -47,13 +49,16 @@ The steps:
 - set up a web page with HTML + Chart.js to visualize the data
 
 
-### A Note on the Infrastucture
+#### A Note on the Infrastucture
 
-There's a lot you can do with a MongoDB database and a web server 
-to interact with it. I use the two together for all kinds of things.
+There's a lot you can do with a MongoDB database and a web server.
+I use the two together for all kinds of things.
+
 This project might seem to be a lot of work to just come up with a
 method for monitoring some servers. But if you already have the database
-and web server it's simple and fast. I find that having these two
+and web server it's a simple and fast project to get up and running. 
+
+I find that having these two
 tools provides me with the power to come up with new ideas and implement
 them quickly.
 
@@ -90,8 +95,6 @@ similar need but want it to be more flexible (if, say, you have multiple
 services running you want to check for). Or you can leave the function
 out of your code if you don't need it.
 
-
-
 ```python
     def is_up(name):
         up = False
@@ -105,9 +108,9 @@ out of your code if you don't need it.
         return up
 ```
 
-The `psutil.net_connections' function returns a list of named tuples.
-The `psutil` library is easy to work with. Run this code on your own server
-to see the `net_connections` data.
+The `psutil.net_connections` function returns a list of named tuples.
+The `psutil` library is easy to work with. Run this code in an
+interactive python session to see the `net_connections` data.
 
 ```python
     from pprint import pprint
@@ -116,14 +119,15 @@ to see the `net_connections` data.
 ```
 
 Each tuple has properties:
-file descriptor, address family, type, listening address, remote address, status, and process id.
+file descriptor, address family, type, local link address, 
+remote link address, status, and process id.
 
 In the earlier article, I had a MongoDB collection for each server I monitored.
 Once the number of servers started growing, I changed up so that now I put all the 
 data into the same collection, `monitor`. 
 
 The `main` function is where we really take advantage of the power of `psutil`.
-Checkout all the measurements available through the package:
+Checkout all the measurements you can request through the package:
 [psutil docs](https://psutil.readthedocs.io/en/latest/)
 
 We populate a data document, `doc`, and insert it into the MongoDB database. `monitor` collection.
@@ -146,6 +150,16 @@ We populate a data document, `doc`, and insert it into the MongoDB database. `mo
         main()
 
 ```
+
+Each data document has:
+
+ - the server name
+ - a timestamp
+ - the percent CPU being used
+ - the disk usage on a mounted disk (under `/Apps`)
+ - the disk usage on the local drive
+ - the amount of free memory
+ - a boolean showing whether my app is listening on port 10000
 
 #### CRON
 
@@ -171,8 +185,18 @@ file and give a command for each server::
 
 So we have data coming into the collection from all our servers every five minutes.
 How do you keep the collection from growing too big? Make it a capped collection.
+From the MongoDB docs:
+
+> Capped collections are fixed-size collections that support
+> high-throughput operations that insert and retrieve documents
+> based on insertion order. Capped collections work in a way
+> similar to circular buffers: once a collection fills its allocated
+> space, it makes room for new documents by overwriting the oldest
+> documents in the collection.
+
+
 You have to specify the size you're willing to let it grow, so I needed to 
-do some calcuations::
+do some calcuations:
 
 - 1 record = 250 bytes
 - 12 records an hour (cronjob fires every 5 minutes)

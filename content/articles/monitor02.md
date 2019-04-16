@@ -36,7 +36,7 @@ if (cluster.isMaster) {
     if (!res.getHeader('Cache-Control')) {
       res.setHeader('Cache-Control', 'public, max-age=600');
     }
-    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Origin", "localhost:80");
     res.header('Access-Control-Allow-Methods', 'DELETE, PUT, GET, POST');
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();

@@ -56,7 +56,7 @@ We have a bunch of data coming at us in an array and this picks off
 the last one. Since this is capped collection, we get the data in order,
 so by pulling off the last item in the array, we have the latest info
 from our machine. That's what the `slice(-1)[0]['myserver']` is doing.
-That value will be 'true', 'false', or 'NA' (see the psmonitor_data.py 
+That value will be 'true', 'false', or 'null' (see the load_data.py 
 script if that doesn't make sense).
 
 
@@ -72,7 +72,7 @@ async function getApiData(machine) {
     await fetch("http://myserver/api/load/" + machine)
         .then(stream => stream.json())
         .then(mydata => {
-        data.listening = mydata.slice(-1)[0]['saslatex'];
+        data.listening = mydata.slice(-1)[0]['myapp'];
         mydata.forEach(record => {
             data.cpu.push({
             y: record.cpu.idle,
@@ -136,7 +136,7 @@ function makeChart(machine, data, kind) {
         title: {
             display: true,
             fontSize: 10,
-            fontColor: ((data.listening === 'true' || data.listening === 'NA') ? 'green': 'red'),
+            fontColor: ((data.listening === true || data.listening === null) ? 'green': 'red'),
             text: machine + ' (' + kind + ')',
         },
 
