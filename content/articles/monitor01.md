@@ -1,7 +1,6 @@
 Title: DIY System Monitoring, Part 1: Python
 Category: Python
-Status: Draft
-Date: 2019-Apr-23
+Date: 2019-Apr-16
 Tags: sysadmin, how-to, web
 Summary: How to use Python3, psutil, and MongoDB with Javascript for monitoring system health.
 
