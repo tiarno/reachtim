@@ -10,7 +10,8 @@ This is an update to the original (several years old now)
 The code for this article and the other two parts will become available on my
 [GitHub Repo](https://github.com/tiarno/psmonitor)
 
-The old version is the `python2` branch. The default branch (`master`) has the code
+The old version is the `python2` branch.
+The default branch (`master`) has the code
 we're going over in this article. The first part and second part is there now.
 
 ### Introduction {: .article-title}
@@ -36,13 +37,13 @@ you may come up with.
 
 The directory structure is as follows::
 
-  myapp/
-    server.js
-    static/
-    api/
-      utils.js
-      controllers/toolController.js
-      routes/toolRoutes.js
+    myapp/
+      server.js
+      static/
+      api/
+        utils.js
+        controllers/toolController.js
+        routes/toolRoutes.js
 
 - `server.js` file starts the server, applies middleware, and integrates the app we're working on.
 - `static/` is where I put static files (html, images, etc.)

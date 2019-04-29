@@ -120,6 +120,3 @@ ods path
 ```
 
 Once you have done that, you tell SAS where to look for your templates whenever you want to refer to the tagset. To do so, add *the same code block* to the beginning of the automatically-generated SAS program that creates the outputs. 
-
-
-
