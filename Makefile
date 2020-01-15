@@ -1,6 +1,7 @@
 PY?=python3
 PELICAN?=pelican
-
+PELICANOPTS=
+PORT=8100
 BASEDIR=$(CURDIR)
 INPUTDIR=$(BASEDIR)/content
 OUTPUTDIR=$(BASEDIR)/output
@@ -10,6 +11,11 @@ PUBLISHCONF=$(BASEDIR)/publishconf.py
 FTP_HOST=reachtim.com
 FTP_USER=tiarno
 FTP_TARGET_DIR=webapps/reachtim
+
+SSH_HOST=reachtim.com
+SSH_PORT=22
+SSH_USER=tiarno
+SSH_TARGET_DIR=/home/tiarno/webapps/reachtim
 
 
 DEBUG ?= 0
@@ -75,8 +81,14 @@ endif
 publish:
 	$(PELICAN) $(INPUTDIR) -o $(OUTPUTDIR) -s $(PUBLISHCONF) $(PELICANOPTS)
 
+ssh_upload: publish
+	scp -P $(SSH_PORT) -r $(OUTPUTDIR)/* $(SSH_USER)@$(SSH_HOST):$(SSH_TARGET_DIR)
+
+rsync_upload: publish
+	rsync -e "ssh -p $(SSH_PORT)" -P -rvzc --cvs-exclude --delete $(OUTPUTDIR)/ $(SSH_USER)@$(SSH_HOST):$(SSH_TARGET_DIR)
+
 ftp_upload: publish
 	lftp ftp://$(FTP_USER)@$(FTP_HOST) -e "mirror -R $(OUTPUTDIR) $(FTP_TARGET_DIR) ; quit"
 
 
-.PHONY: html help clean regenerate serve serve-global devserver stopserver publish ftp_upload
+.PHONY: html help clean regenerate serve serve-global devserver publish ssh_upload rsync_upload ftp_upload

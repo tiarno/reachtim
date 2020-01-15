@@ -8,8 +8,6 @@ SITEURL = 'https://reachtim.com'
 PATH = 'content'
 TIMEZONE = 'America/New_York'
 DEFAULT_LANG = 'en'
-ARTICLE_PATHS = ['articles',]
-STATIC_PATHS = ['images', 'extra',]
 
 EXTRA_PATH_METADATA = {
     'extra/404.html': {'path': '404.html'},
@@ -19,7 +17,6 @@ EXTRA_PATH_METADATA = {
     'extra/crossdomain.xml': {'path':  'crossdomain.xml'},
     'extra/favicon.ico': {'path':  'favicon.ico'},
 }
-
 ARTICLE_URL = 'articles/{slug}.html'
 ARTICLE_SAVE_AS = 'articles/{slug}.html'
 PAGE_URL = 'pages/{slug}.html'
@@ -30,8 +27,8 @@ PLUGIN_PATHS=['../pelican-plugins',]
 PLUGINS = [
 	'neighbors',
   'pelican_fontawesome',
-	'render_math',
-	'sitemap',
+	'pelican_render_math',
+	'extended_sitemap',
 	]
 
 SITEMAP = {
@@ -68,9 +65,9 @@ TYPOGRIFY = True
 MARKDOWN = {
   'extension_configs': {
     'markdown.extensions.toc': {
-      'title': 'Table of contents:' 
+      'title': 'Table of contents:'
     },
-    
+
     'markdown.extensions.codehilite': {'css_class': 'highlight'},
     'markdown.extensions.extra': {},
     'markdown.extensions.meta': {},
@@ -78,7 +75,7 @@ MARKDOWN = {
   'output_format': 'html5',
 }
 
-DEFAULT_PAGINATION = 5
+DEFAULT_PAGINATION = False
 
 # Uncomment following line if you want document-relative URLs when developing
 RELATIVE_URLS = True
