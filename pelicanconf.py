@@ -10,8 +10,6 @@ TIMEZONE = 'America/New_York'
 DEFAULT_LANG = 'en'
 
 EXTRA_PATH_METADATA = {
-    'extra/404.html': {'path': '404.html'},
-    'extra/403.html': {'path': '403.html'},
     'extra/robots.txt': {'path': 'robots.txt'},
     'extra/.htaccess': {'path':  '.htaccess'},
     'extra/crossdomain.xml': {'path':  'crossdomain.xml'},
@@ -78,4 +76,4 @@ MARKDOWN = {
 DEFAULT_PAGINATION = False
 
 # Uncomment following line if you want document-relative URLs when developing
-RELATIVE_URLS = True
+#RELATIVE_URLS = True
