@@ -1,10 +1,8 @@
 Title: Reading Binary Data with Python
-Status: Draft
-Category: Python, hacking
+Tags: Python, hacking
+Category: Python
 Date: 01-20-2020
 Summary: Two ways to read binary data into a Python data structure.
-
-**Table of Contents**
 
 [TOC]
 
@@ -82,7 +80,7 @@ if __name__ == '__main__':
 We just grab a single raw packet from the network and put it into a variable, `buff`.
 So now that we have binary data, let's look at how to use it.
 
-## `ctypes` module
+# `ctypes` module
 
 The following code snippet defines a new class, `IP` that
 can read a packet and parse the header into its separate fields.
@@ -122,7 +120,7 @@ width is handy. Our `IP` class inherits
 from the `ctypes` `Structure` class, which specifies that we must have
 a defined `_fields_` structure before any instance is created.
 
-### Class Instantiation
+## Class Instantiation
 
 The wrinkle with `ctypes` `Structure` abstract base class is the `__new__` method.
 See the documentation for full details:
@@ -138,7 +136,7 @@ you've defined the structure beforehand, just pass the `__new__` method the
 external (network packet) data, and the fields magically appear as attributes
 on your instance.
 
-## `struct` module
+# `struct` module
 
 The `struct` module provides format characters that you used to specify the structure
 of the binary data. The first character (in our case, `<`) specifies the "endianness" of the
@@ -192,13 +190,13 @@ of the individual pieces. With `struct`, there's no format character for a `nybb
 so we have to do some manipulation to get the `ver` and `hdrlen` from the first part of
 the header.
 
-### Binary Manipulations
+## Binary Manipulations
 
 The wrinkle with `struct` in this example is that we need to do some manipulation
 of `header[0]`, which contains a single byte but we need to create two variables
 from that byte, each containing a `nybble`.
 
-#### High `nybble`
+### High `nybble`
 
 We have one byte and for the `ver` variable, we want the high-order `nybble`.
 The typical way you get the
@@ -209,10 +207,11 @@ at the front so the last 4 bytes fall off, leaving us with the first `nybble`:
 
 ```bash
 0 	1 	0 	1 	0 	1 	1 	0 	>> 4
+-----------------------------
 0 	0 	0 	0 	0 	1 	0 	1 	
 ```
 
-#### Low `nybble`
+### Low `nybble`
 
 We have one byte and for the `hdrlen` variable, we  want the low-order `nybble`. 
 The typical way you get the
