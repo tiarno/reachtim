@@ -17,9 +17,9 @@ Since the renderer has complete control over which pieces of the document are re
 
 If you have standard ’plain-vanilla’ LaTeX files, plasTeX will work for you already (see the main user documentation to use the plastex command). And if you have simple customizations, plasTeX can read your package files and work as-is. But when you have more complex styles or classes, you’ll need to extend plasTeX to work with your customized files. It’s quite easily done: there are two tasks to get started:
 
-add a Python class corresponding to each macro you have defined. You’ll inherit from a standard plasTeX class; often there’s little more to it than that. You define the classes so plasTeX can understand how to parse your new commands.
+- add a Python class corresponding to each macro you have defined. You’ll inherit from a standard plasTeX class; often there’s little more to it than that. You define the classes so plasTeX can understand how to parse your new commands.
 
-add a template to render the content resulting from plasTex parsing. Your command will have some data or text that needs to be handled in some way in order to display itself correctly, depending on what format you want to render to. The template tells the renderer how to do that.
+- add a template to render the content resulting from plasTex parsing. Your command will have some data or text that needs to be handled in some way in order to display itself correctly, depending on what format you want to render to. The template tells the renderer how to do that.
 
 Once you have those tasks completed, you set your environment PATHs and run plastex. That’s all there is to it. 
 
