@@ -1,2 +1,4 @@
 # reachtim
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/tiarno/reachtim?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Pelican-based static site for reachtim.com
+

@@ -1,9 +1,6 @@
-.venv/
 .vscode
-Pipfile.lock
 pelican.pid
 srv.pid
-reachtim/
 cache/
 output/
 ### Python ###
