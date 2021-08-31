@@ -16,6 +16,7 @@ EXTRA_PATH_METADATA = {
     'favicon.ico': {'path': 'extra'},
     'robots.txt': {'path': 'extra'}
 }
+
 LINKS = (
          ('Planet Python', 'https://planet.python.org/'),
          ('CTAN', 'https://ctan.org/'),
