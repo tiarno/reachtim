@@ -10,7 +10,7 @@ Summary: Quick overview on usefulness of the contextmanager decorator and creati
 
 # Overview
 
-> Generally, you create a context manager by creating a class with `__enter__` and `__exit__` methods, but this example shows you how to use the `@contextlib.contextmanager` to create a simple context manager.
+> Generally you create a context manager by creating a class with `__enter__` and `__exit__` methods, but this example shows you how to use the `@contextlib.contextmanager` to create a simple context manager.
 
 Context managers provide a cool programming pattern, especially if you're forgetful or
 just have too much to keep track of and you want to simplify your life.
