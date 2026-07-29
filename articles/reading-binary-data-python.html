@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>reachtim — Reading Binary Data with Python</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Technical side</p>
+        <h1>Article</h1>
+      </div>
+      <nav>
+        <a href="../index.html">Home</a>
+        <a href="../tech.html" class="active">Technical</a>
+        <a href="../art.html">Art</a>
+      </nav>
+    </header>
+
+    <main class="content-page">
+      <section class="article-header intro-card">
+        <p class="eyebrow">Python</p>
+        <h1>Reading Binary Data with Python</h1>
+        <span class="article-meta-line">01-20-2020 · Python, hacking</span>
+        <p class="summary">Two ways to read binary data into a Python data structure.</p>
+      </section>
+
+      <nav class="article-toc"><p>On this page</p><ul><li><a href="#overview">Overview</a></li><li><a href="#initial-data-from-the-network">Initial Data from the Network</a></li><li><a href="#ctypes-module">ctypes module</a></li><li><a href="#class-instantiation">Class Instantiation</a></li><li><a href="#struct-module">struct module</a></li><li><a href="#binary-manipulations">Binary Manipulations</a></li><li><a href="#high-nybble">High nybble</a></li><li><a href="#low-nybble">Low nybble</a></li><li><a href="#conclusion">Conclusion</a></li></ul></nav>
+
+      <article class="article-body content-card">
+        <h2 id="overview">Overview</h2>
+<p>When you deal with external binary data in Python, there are a couple of ways to get that
+data into a data structure. You can use the <code>ctypes</code> module to define the data structure
+or you can use the <code>struct</code> python module.</p>
+<p>You will see both methods used when you explore tool repositories
+on the web. This article shows you how to use each one to read an IPv4 header off the network.
+It&#39;s up to you to decide which method you prefer; either way will work fine.</p>
+<ul>
+<li><code>ctypes</code> is a foreign function library for Python. It deals with C-based languages to provide
+      C-compatible data types, and enables you to call functions in shared libraries.</li>
+<li><code>struct</code> converts between Python values and C structs that are represented as Python bytes objects.</li>
+</ul>
+<p>So <code>ctypes</code> handles binary data types in addition to a lot of other functionality, while
+handling binary data is the main purpose of the <code>struct</code> module.</p>
+<p>Let&#39;s see how these two libraries are used when we need to decode an IPv4 header off the
+network.</p>
+<p>First, here&#39;s the structure of the IPv4 header. This is from the IETF RFC 791:</p>
+<pre><code class="language-bash">A summary of the contents of the internet header follows:
+
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |Version|  IHL  |Type of Service|          Total Length         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |         Identification        |Flags|      Fragment Offset    |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Time to Live |    Protocol   |         Header Checksum       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                       Source Address                          |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                    Destination Address                        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                    Options                    |    Padding    |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                    Example Internet Datagram Header
+</code></pre>
+<h3 id="initial-data-from-the-network">Initial Data from the Network</h3>
+<p>We need some data to work with, so let&#39;s get a single packet from the network.
+This little snippet show do fine. I ran this on Linux.</p>
+<pre><code class="language-python">import socket
+import sys
+
+def sniff(host):
+    sniffer = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+    sniffer.bind((host, 0))
+
+    sniffer.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+    # read and return a single packet
+    return sniffer.recvfrom(65535)
+
+if __name__ == &#39;__main__&#39;:
+    if len(sys.argv) == 2:
+        host = sys.argv[1]
+    else:
+        host = &#39;192.168.1.69&#39;
+
+    buff = sniff(host)
+</code></pre>
+<p>We just grab a single raw packet from the network and put it into a variable, <code>buff</code>.
+So now that we have binary data, let&#39;s look at how to use it.</p>
+<h2 id="ctypes-module"><code>ctypes</code> module</h2>
+<p>The following code snippet defines a new class, <code>IP</code> that
+can read a packet and parse the header into its separate fields.</p>
+<pre><code class="language-python">from ctypes import *
+import socket
+import struct
+
+class IP(Structure):
+    _fields_ = [
+        (&quot;ihl&quot;,           c_ubyte,   4),
+        (&quot;version&quot;,       c_ubyte,   4),
+        (&quot;tos&quot;,           c_ubyte,   8),
+        (&quot;len&quot;,           c_ushort, 16),
+        (&quot;id&quot;,            c_ushort, 16),
+        (&quot;offset&quot;,        c_ushort, 16),
+        (&quot;ttl&quot;,           c_ubyte,   8),
+        (&quot;protocol_num&quot;,  c_ubyte,   8),
+        (&quot;sum&quot;,           c_ushort, 16),
+        (&quot;src&quot;,           c_uint32, 32),
+        (&quot;dst&quot;,           c_uint32, 32)
+      ]
+    def __new__(cls, socket_buffer=None):
+        return cls.from_buffer_copy(socket_buffer)
+
+    def __init__(self, socket_buffer=None):
+        # human readable IP addresses
+        self.src_address = socket.inet_ntoa(struct.pack(&quot;&lt;L&quot;,self.src))
+        self.dst_address = socket.inet_ntoa(struct.pack(&quot;&lt;L&quot;,self.dst))
+</code></pre>
+<p>You can see that the <code>_fields_</code> structure defines each part of the header,
+giving the width in bits as the last argument. Being able to specify the bit
+width is handy. Our <code>IP</code> class inherits
+from the <code>ctypes</code> <code>Structure</code> class, which specifies that we must have
+a defined <code>_fields_</code> structure before any instance is created.</p>
+<h3 id="class-instantiation">Class Instantiation</h3>
+<p>The wrinkle with <code>ctypes</code> <code>Structure</code> abstract base class is the <code>__new__</code> method.
+See the documentation for full details:
+<a href="https://docs.python.org/3.8/library/ctypes.html#ctypes.Structure">ctypes module</a>.</p>
+<p>The <code>__new__</code> method takes the class reference as the first argument. It creates and
+returns an instance of the class, which passes to the <code>__init__</code> method.</p>
+<p>We create the instance normally, but underneath, Python invokes the class
+method <code>__new__</code>, which fills out the <code>_fields_</code> data structure immediately before
+instantiation (when the <code>__init__</code> method is called). As long as
+you&#39;ve defined the structure beforehand, just pass the <code>__new__</code> method the
+external (network packet) data, and the fields magically appear as attributes
+on your instance.</p>
+<h2 id="struct-module"><code>struct</code> module</h2>
+<p>The <code>struct</code> module provides format characters that you used to specify the structure
+of the binary data. The first character (in our case, <code>&lt;</code>) specifies the &quot;endianness&quot; of the
+data. See the documentation for full details:
+<a href="https://docs.python.org/3.8/library/struct.html">struct module</a>.</p>
+<pre><code class="language-python">import ipaddress
+import struct
+
+class IP:
+    def __init__(self, buff=None):
+        header = struct.unpack(&#39;&lt;BBHHHBBH4s4s&#39;, buff)
+        self.ver = header[0] &gt;&gt; 4
+        self.ihl = header[0] &amp; 0xF
+
+        self.tos = header[1]
+        self.len = header[2]
+        self.id = header[3]
+        self.offset = header[4]
+        self.ttl = header[5]
+        self.protocol_num = header[6]
+        self.sum = header[7]
+        self.src = header[8]
+        self.dst = header[9]
+
+        # human readable IP addresses
+        self.src_address = ipaddress.ip_address(self.src)
+        self.dst_address = ipaddress.ip_address(self.dst)
+
+        # map protocol constants to their names
+        self.protocol_map = {1: &quot;ICMP&quot;, 6: &quot;TCP&quot;, 17: &quot;UDP&quot;}
+</code></pre>
+<p>Here are the individual parts of the header.</p>
+<ol>
+<li>B 1 byte (<code>ver</code>, <code>hdrlen</code>)</li>
+<li>B 1 byte <code>tos</code></li>
+<li>H 2 bytes <code>total len</code></li>
+<li>H 2 bytes <code>identification</code></li>
+<li>H 2 bytes <code>flags + frag offset</code></li>
+<li>B 1 byte <code>ttl</code></li>
+<li>B 1 byte <code>protocol</code></li>
+<li>H 2 bytes <code>checksum</code></li>
+<li>4s 4 bytes <code>src ip</code></li>
+<li>4s 4 bytes <code>dst ip</code></li>
+</ol>
+<p>Everything is pretty straightforward, but with <code>ctypes</code>, we could specify the bit-width
+of the individual pieces. With <code>struct</code>, there&#39;s no format character for a <code>nybble</code> (4 bits),
+so we have to do some manipulation to get the <code>ver</code> and <code>hdrlen</code> from the first part of
+the header.</p>
+<h3 id="binary-manipulations">Binary Manipulations</h3>
+<p>The wrinkle with <code>struct</code> in this example is that we need to do some manipulation
+of <code>header[0]</code>, which contains a single byte but we need to create two variables
+from that byte, each containing a <code>nybble</code>.</p>
+<h4 id="high-nybble">High <code>nybble</code></h4>
+<p>We have one byte and for the <code>ver</code> variable, we want the high-order <code>nybble</code>.
+The typical way you get the
+high <code>nybble</code> of a byte is to right-shift.</p>
+<p>We right shift the byte by 4 places, which is like prepending 4 zeros
+at the front so the last 4 bytes fall off, leaving us with the first <code>nybble</code>:</p>
+<pre><code class="language-bash">0 	1 	0 	1 	0 	1 	1 	0 	&gt;&gt; 4
+-----------------------------
+0 	0 	0 	0 	0 	1 	0 	1 	
+</code></pre>
+<h4 id="low-nybble">Low <code>nybble</code></h4>
+<p>We have one byte and for the <code>hdrlen</code> variable, we  want the low-order <code>nybble</code>. 
+The typical way you get the
+low <code>nybble</code> of a byte is to <code>AND</code> it with <code>F</code> (00001111):</p>
+<pre><code class="language-bash">0 	1 	0 	1 	0 	1 	1 	0 	&amp;F
+0 	0 	0 	0 	1 	1 	1 	1 	
+-----------------------------
+0 	0 	0 	0 	0 	1 	1 	0 	
+</code></pre>
+<p>Let&#39;s look an example in the Python REPL:</p>
+<pre><code class="language-python">    &gt;&gt;&gt; m = 66
+    &gt;&gt;&gt; m
+    66
+    &gt;&gt;&gt; bin(m)
+    &#39;0b1000010&#39; # or 0100 0010
+    &gt;&gt;&gt; bin(m&gt;&gt;4)
+    &#39;0b100&#39;     # or 0100
+    &gt;&gt;&gt; bin(m&amp;0xF)
+    &#39;0b10&#39;      # or      0010
+</code></pre>
+<p>Now, more specifically to our IPv4 case, the first byte in the header is
+always <code>0x45 = 69 decimal = 01000101 binary</code>.</p>
+<p>See what that looks like when we right-shift
+it by 4 and then <code>AND</code> it with <code>F</code>:</p>
+<pre><code class="language-python">    &gt;&gt;&gt; &#39;{0:08b}&#39;.format(0x45)
+    &#39;01000101&#39;
+    &gt;&gt;&gt; &#39;{0:04b}&#39;.format(0x45&gt;&gt;4)
+    &#39;0100&#39;
+    &gt;&gt;&gt; &#39;{0:04b}&#39;.format(0x45&amp;0xF)
+    &#39;0101&#39;
+</code></pre>
+<p>You don&#39;t have to know binary manipulation backward and forward for decoding an IP header,
+but there are some patterns like these (shift and <code>AND</code>) you will see over and over again as you code and as you explore other hackers&#39; code.</p>
+<p>That seems like a lot of work doesn&#39;t it? In the case where we have to do some bit
+shifting, it does take effort. But for many cases (e.g. ICMP),
+everything works on an 8-byte boundary and so is very
+simple to set up. Here is an &quot;Echo Reply&quot; ICMP message;
+you can see that each parameter of the ICMP header can be
+defined in a <code>struct</code> with one of the existing format letters (BBHHH) (RFC777):</p>
+<pre><code class="language-bash"> Echo or Echo Reply Message
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |     Code      |          Checksum             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |           Identifier          |        Sequence Number        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Data ...
+   +-+-+-+-+-
+</code></pre>
+<p>A quick way to parse that would simply be:</p>
+<pre><code class="language-python">class ICMP:
+    def __init__(self, buff):
+        header = struct.unpack(&#39;&lt;BBHHH&#39;, buff)
+        self.type = header[0]
+        self.code = header[1]
+        self.sum = header[2]
+        self.id = header[3]
+        self.seq = header[4]
+</code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>You can use either the <code>ctypes</code> module or the <code>struct</code> module to read and parse
+binary data. Here is an example of instantiating the class no matter which method
+you use. You instantiate the <code>IP</code> class with your packet data
+in the variable <code>buff</code>:</p>
+<pre><code class="language-python">   mypacket = IP(buff)
+   print(f&#39;{mypacket.src_address} -&gt; {mypacket.dst_address}&#39;)
+</code></pre>
+<p>With <code>ctypes</code>, make sure you define your <code>_fields_</code> structure and hand
+the data to it in the <code>_new_</code> method. When you instantiate the class, you&#39;ll have the
+access to the data attributes automatically.</p>
+<p>With <code>struct</code>, you define how to read the data with a format string. For data attributes
+that don&#39;t lie on the 8-byte boundary, you may need to do some binary manipulation.</p>
+<p>In short, use whichever method fits your brain. But always be aware that you may see
+code from others that use a different method. Hopefully, now you&#39;ll see it and
+understand it.</p>
+
+      </article>
+
+      <a class="back-link" href="../tech.html">&larr; Back to Technical</a>
+    </main>
+  </body>
+</html>

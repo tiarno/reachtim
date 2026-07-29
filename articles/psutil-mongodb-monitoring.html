@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>reachtim — psutil and MongoDB for System Monitoring</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Technical side</p>
+        <h1>Article</h1>
+      </div>
+      <nav>
+        <a href="../index.html">Home</a>
+        <a href="../tech.html" class="active">Technical</a>
+        <a href="../art.html">Art</a>
+      </nav>
+    </header>
+
+    <main class="content-page">
+      <section class="article-header intro-card">
+        <p class="eyebrow">Python</p>
+        <h1>psutil and MongoDB for System Monitoring</h1>
+        <span class="article-meta-line">2014-Sep-03 · sysadmin, how-to, web</span>
+        <p class="summary">How to use psutil and MongoDB for monitoring system health.</p>
+      </section>
+
+      <nav class="article-toc"><p>On this page</p><ul><li><a href="#part-0-get-the-tools">Part 0: Get the Tools</a></li><li><a href="#part-1-get-the-data">Part 1: Get the Data</a></li><li><a href="#about-the-mongodb-collection">About the MongoDB Collection.</a></li><li><a href="#the-data-gathering-code">The Data Gathering Code</a></li><li><a href="#part-2-set-up-the-bottle-server">Part 2: Set up the bottle Server</a></li><li><a href="#part-3-display-the-data-with-jqplot">Part 3: Display the Data with jqplot</a></li><li><a href="#the-html-page">The HTML Page</a></li><li><a href="#the-javascript-jqplot-code">The JavaScript (jqplot) Code</a></li></ul></nav>
+
+      <article class="article-body content-card">
+        <p>This how-to article describes how you can create a set of charts for monitoring the load on one or more servers. It uses Python (psutil and bottle), MongoDb, and jquery. The general idea is the same no matter if you use a different database or web framework.</p>
+<p>At the end of the process, you will have a web page for each machine that displays charts showing cpu, memory, and disk usage.</p>
+<p>I need to watch a couple of FreeBSD machines to make sure they&#39;re healthy and not running into memory or disk space issues. Their names are, for the purposes of the article, <code>example01</code> and <code>example02</code>.  </p>
+<div class="callout"><p><span class="note">Note: </span>These happen to be the same machines that run the MongoDB replica set and one of them runs the web server. There is no reason they all have to be the same machines--you can have MongoDB running on completely different machines than the ones you want to monitor. The same is true for the web server--it can be on any machine, not necessarily one you&#39;re monitoring.</p></div><p>I don&#39;t want to go to each machine and run <code>top</code> or <code>ds</code> to find out what&#39;s going on, I want a web page with up-to-date charts that I can glance at, one page per machine.</p>
+<p>The overall workflow follows these three steps:</p>
+<ol>
+<li>Get the system data into MongoDB (<code>psutil</code> and <code>cron</code>).</li>
+<li>Set up a web server to query the MongoDB server (<code>bottle</code>).</li>
+<li>Write a short HTML page to display the data (<code>jqplot</code> + AJAX).</li>
+</ol>
+<p><img src="../assets/blog/psflow.png" alt="psflow"></p>
+<p>You can get all the code in the GitHub project <a href="https://github.com/tiarno/psmonitor">psmonitor</a>. I use snippets of that code in this article.</p>
+<p>In the first part, you use the <code>psutil</code> Python package inside a <code>cron</code> job to write system load information to a capped collection in MongoDB every 5 minutes. The 5 minutes is totally arbitrary--you can pick whatever period you like. With the systems I&#39;m looking at, a few minutes provides a fine enough granularity. This part puts the data into MongoDB.</p>
+<p>In the second part, the <code>bottle</code> application makes a request to MongoDB and responds with the JSON data. This creates the broker between the client HTML page and the MongoDB data.</p>
+<p>In the third part, you have an HTML file corresponding to each machine you want to monitor. The file loads <code>jqplot</code> and makes an AJAX request to the <code>bottle</code> application. This part is the reason for the exercise--we get the time-series chart of the load data that we&#39;ve stored in MongoDB.</p>
+<p>This is an example of one of the charts we will create:
+<img src="../assets/blog/monitor01.png" alt="monitor01"></p>
+<p>You can make charts for any data you want. 
+The charts I use for each machine are:</p>
+<ul>
+<li>cpu user percent</li>
+<li>cpu system percent</li>
+<li>cpu irq</li>
+<li>cpu nice percent</li>
+<li>disk space free</li>
+<li>memory free</li>
+</ul>
+<h2 id="part-0-get-the-tools">Part 0: Get the Tools</h2>
+<p>The following tools are the ones to install for this implementation, but you can use a different database or web framework if you already have one.</p>
+<p>The <code>psutil</code> Python package is a great cross-platform tool for system monitoring. Read more about it on its <a href="http://pythonhosted.org/psutil/">project page</a>. You can install it with <code>pip</code>.</p>
+<p>The NOSQL database <a href="http://www.mongodb.org/">mongoDB</a> is an open-source document database. If you have data that naturally fits a JSON-style structure, mongoDB is a great fit for data storage. It has become a natural tool for me anytime I find I need a JSON store. The funny thing is, the more I use it, the more I find new uses for it. The structure of a MongoDB <em>document</em> is suprising useful and can provide a map for lots of information types.</p>
+<p>The <code>bottle</code> web <a href="http://bottlepy.org/docs/dev/index.html">framework</a> is a tiny framework written in Python with no other dependencies. You can install it with <code>pip</code>. You can use the included development server to get things going and put it under a different backend server later. I put mine under my Apache server once I got things like I wanted them. I&#39;ll write an article about that setup later on.</p>
+<p>The <a href="http://www.jqplot.com/">jqplot</a> <code>jquery</code> plugin makes producing the charts easy, plus they look good and they are all uniform so it easy to compare charts. For example, it is easy to see on the chart when a process spins up because you can see the spike for cpu and memory at the same moment, which is the same x-axis location for both charts. There is a lot more you can do with this plugin, this exercise just scratches the surface.</p>
+<h2 id="part-1-get-the-data">Part 1: Get the Data</h2>
+<p>We want to create a data structure that follows this pattern. You can add or remove any data that psutil supports in this step. The end point is the user, who will be looking at a <code>jqplot</code> chart, so it is good to keep that data structure in the back of your mind. What <code>jqplot</code> will want is a list of two-element lists, one of which is a datetime, something like this:</p>
+<pre><code>[[datetime1, y-value1], [datetime2, y-value2], and so on.]
+</code></pre>
+<p>That structure isn&#39;t the most efficient way to gather the data, but it&#39;s always important to remember where you&#39;re going. We&#39;ll gather the data and then change the structure to give <code>jqplot</code> the structure it needs.</p>
+<p>As my first step I wasn&#39;t sure of what I needed and would use and I had a few more measurements. I figured that as time went by and I saw the actual needs of the machine this would change, and it could be easily changed. </p>
+<pre><code class="language-python">{
+  &#39;server&#39;: servername,
+  &#39;datetime&#39;: datetime.now(),
+  &#39;disk_root&#39;: ,
+  &#39;phymem&#39;:,
+  &#39;cpu&#39;: {&#39;user&#39;:, &#39;nice&#39;:, &#39;system&#39;:, &#39;idle&#39;:, &#39;irq&#39;:,},
+}
+</code></pre>
+<p>What follows is the python code for getting data from the system (using <code>psutil</code>) into the MongoDb database. I created a collection in MongoDb for each machine to be monitored. </p>
+<p>You could create a single document in MongoDb that contains data for each machine; it depends on your needs. Since I want a separate page for each machine, I divided the data in the same way. You might want the data for all machines in one document if you want to render one page with charts for all the machines.</p>
+<h3 id="about-the-mongodb-collection">About the MongoDB Collection.</h3>
+<p>I have a three-member MongoDB replica set named <code>rs1</code>. The machines that hold the data happen to be the same ones I am monitoring, <code>example01</code> and <code>example02</code>.
+The third member is an arbiter and doesn&#39;t keep the data. These mongoDB servers don&#39;t have to be the ones that are monitored, they could be anywhere.</p>
+<p>I have a database called <code>reports</code> and it is in that database we will put the new collections. For each machine we will have one collection to contain its load data:
+With 1440 minutes per day, sampling every 5 minutes, and keeping two days worth of data, we&#39;ll need 576 records (documents)</p>
+<pre><code>(1440/5)*2 = 576 records per server 
+</code></pre>
+<p>I wasn&#39;t sure how much data I would eventually use, so I estimated 2k per document. I estimated a generous size for the documents because this is just a start and I may want to gather more data later on. Turns out that 2k is extremely generous. The average size of a record is around 200 bytes but I haven&#39;t included any networking data (and disk space is cheap). </p>
+<pre><code>576 documents @ 2048 bytes per doc = 1,179,648 bytes
+</code></pre>
+<p>For each machine to be monitored, I created a capped collection with a maximum size of 1179648 and a maximum number of 576 documents:</p>
+<pre><code class="language-javascript">use reports
+db.createCollection(&#39;example01&#39;, {capped:true, size:1179648, max:576})
+db.createCollection(&#39;example02&#39;, {capped:true, size:1179648, max:576})
+</code></pre>
+<p> By using a capped collection, we are guaranteed that the data will be preserved in insertion order, and old documents are automatically removed as time goes by so we always have the latest 48 hours of data.</p>
+<h3 id="the-data-gathering-code">The Data Gathering Code</h3>
+<p>First, do the necessary imports and make the connection to the MongoDb instance.</p>
+<pre><code class="language-python">from datetime import datetime
+import psutil
+import pymongo
+import socket
+
+conn = pymongo.MongoReplicaSetClient(
+    &#39;example01.com, example02.com&#39;,
+    replicaSet=&#39;rs1&#39;,
+)
+db = conn.reports
+</code></pre>
+<p>Now call <code>psutil</code> for every piece of data you want.</p>
+<pre><code class="language-python">def main():
+    cpu = psutil.cpu_times_percent()
+    disk_root = psutil.disk_usage(&#39;/&#39;)
+    phymem = psutil.phymem_usage()
+</code></pre>
+<p> Create a dictionary to contain the data in the time-series structure you need.</p>
+<pre><code class="language-python">    doc = dict()
+    doc[&#39;server&#39;] = socket.gethostname()
+    doc[&#39;date&#39;] = datetime.now()
+    doc[&#39;disk_root&#39;] = disk_root.free, 
+    doc[&#39;phymem&#39;] = phymem.free
+
+    doc[&#39;cpu&#39;] = {
+        &#39;user&#39;: cpu.user, 
+        &#39;nice&#39;: cpu.nice,
+        &#39;system&#39;: cpu.system, 
+        &#39;idle&#39;: cpu.idle,
+        &#39;irq&#39;: cpu.irq
+    }
+</code></pre>
+<p> Finally, add that dictionary as a document into the corresponding MongoDb collection. It is converted to a BSON document when it is inserted into the database, but the structure is the same.</p>
+<pre><code class="language-python">    if doc[&#39;server&#39;] == &#39;example01.com&#39;:
+        db.example01.insert(doc)
+    elif doc[&#39;server&#39;] == &#39;example02&#39;:
+        db.example02.insert(doc)
+</code></pre>
+<p>There you have the code to get the data and the database collections in which to store it. All that&#39;s left to do for this part is to automatically run the code:</p>
+<p>Set up a cron job to run the script every 5 minutes on each server you want to monitor:</p>
+<pre><code class="language-bash">*/5 * * * * /path/to/psutil_script
+</code></pre>
+<p>Each mongoDB collection contains 48 hours of system performance data about the corresponding server; you can set it and forget it.</p>
+<h2 id="part-2-set-up-the-bottle-server">Part 2: Set up the bottle Server</h2>
+<p>Create a <code>bottle</code> application to query the mongoDb collection.</p>
+<p>Connect to MongoDb. On receipt of a request for server data, return the formatted data for the appropriate server in the response.  </p>
+<pre><code class="language-python">from bottle import Bottle
+import pymongo
+load = Bottle()
+
+conn = pymongo.MongoReplicaSetClient(
+    &#39;example01.com, example02.com&#39;,
+    replicaSet=&#39;rs1&#39;,
+)
+db = conn.reports
+</code></pre>
+<p>This is a route, a url connection. When a request comes in, <em>get</em> the servername from the url (<code>&lt;server&gt;</code>) and create and return the proper data structure (the structure that <code>jqplot</code> will need).</p>
+<pre><code class="language-python">@load.get(&#39;/&lt;server&gt;&#39;)
+def get_loaddata(server):
+    data_cursor = list()
+    if server == &#39;example02&#39;:
+        data_cursor = db.example02.find()
+    elif server == &#39;example01&#39;:
+        data_cursor = db.example01.find()
+
+    disk_root_free = list()
+    phymem_free = list()
+    cpu_user = list()
+    cpu_nice = list()
+    cpu_system = list()
+    cpu_idle = list()
+    cpu_irq = list()
+
+    for data in data_cursor:
+        date = data[&#39;date&#39;]
+        disk_root_free.append([date, data[&#39;disk_root&#39;])
+        phymem_free.append([date, data[&#39;phymem&#39;])
+        cpu_user.append([date, data[&#39;cpu&#39;][&#39;user&#39;]])
+        cpu_nice.append([date, data[&#39;cpu&#39;][&#39;nice&#39;]])
+        cpu_system.append([date, data[&#39;cpu&#39;][&#39;system&#39;]])
+        cpu_idle.append([date, data[&#39;cpu&#39;][&#39;idle&#39;]])
+        cpu_irq.append([date, data[&#39;cpu&#39;][&#39;irq&#39;]])
+
+    return {
+            &#39;disk_root_free&#39;: disk_root_free,
+            &#39;phymem_free&#39;: phymem_free
+            &#39;cpu_user&#39;: cpu_user,
+            &#39;cpu_irq&#39;: cpu_irq,
+            &#39;cpu_system&#39;: cpu_system,
+            &#39;cpu_nice&#39;: cpu_nice,
+            &#39;cpu_idle&#39;: cpu_idle,
+            }
+</code></pre>
+<h2 id="part-3-display-the-data-with-jqplot">Part 3: Display the Data with jqplot</h2>
+<h3 id="the-html-page">The HTML Page</h3>
+<p>The HTML is very simple. </p>
+<ol>
+<li>Read in the stylesheet.</li>
+<li>Write the <code>div</code> to hold each chart. In the example below I display only the <code>cpu_user</code> data. The pattern is the same for all the variables.</li>
+<li>Load the javascript.</li>
+</ol>
+<p>You can put the javascript from <code>psmonitor.js</code> directly into the page or call it as a file (as shown in the example).</p>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;Load Monitoring&lt;/title&gt;
+&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;/css/jquery.jqplot.css&quot; /&gt;
+&lt;style&gt;div {margin:auto;}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+    &lt;div id=&quot;cpu_user&quot; style=&quot;height:400px;width:800px; &quot;&gt;&lt;/div&gt;
+
+&lt;script src=&quot;http://code.jquery.com/jquery-latest.min.js&quot; &gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/jquery.jqplot.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/jqplot.json2.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/jqplot.dateAxisRenderer.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/jqplot.highlighter.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/jqplot.cursor.js&quot;&gt;&lt;/script&gt;
+&lt;!--[if lt IE 9]&gt;
+  &lt;script language=&quot;javascript&quot; type=&quot;text/javascript&quot; src=&quot;excanvas.js&quot;&gt;&lt;/script&gt;
+&lt;![endif]--&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/psmonitor.js&quot; /&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="the-javascript-jqplot-code">The JavaScript (jqplot) Code</h3>
+<p>The complete code is in the GitHub project, but here is a snippet of how <code>jqplot</code> is set up to show the data. The machine <code>example01</code> runs the web server that will return the json load data. Again, the web server could be on any machine; in my example, it happens to be one of the machines being monitored. </p>
+<p>The code follows the same pattern for each plot:</p>
+<ol>
+<li>Make the AJAX call to the server that is running the <code>bottle</code> app.</li>
+<li>Put the data you want to chart into a variable.</li>
+<li>Pass the variable to <code>jqplot</code>.</li>
+</ol>
+<p>The <code>url</code> in the code contains the string &#39;example01&#39;:</p>
+<pre><code>url: &quot;http://example01/load/example01&quot;
+</code></pre>
+<p> The first instance of <code>example01</code> is addressing the web server since that is the machine running the <code>bottle</code> app. The second instance is the name of the machine we want the data for. That is the server name (<code>&lt;server&gt;</code>) that is passed to the <code>bottle</code> route (<code>get_loaddata</code>) for retrieving the MongoDB records (documents).</p>
+<pre><code class="language-javascript">$(document).ready(function(){
+    var jsonData = $.ajax({
+      async: false,
+      url: &quot;http://example01/load/example01&quot;,
+      dataType:&quot;json&quot;
+    });
+
+    var cpu_user = [jsonData.responseJSON[&#39;cpu_user&#39;]];
+
+    $.jqplot(&#39;cpu_user&#39;,  cpu_user, {
+        title: &quot;CPU User Percent: EXAMPLE01&quot;,
+        highlighter: {show: true, sizeAdjust: 7.5},
+        cursor: {show: false},
+        axes:{xaxis:{renderer:$.jqplot.DateAxisRenderer, 
+              tickOptions:{formatString:&quot;%a %H:%M&quot;}}},
+        series:[{lineWidth:1, showMarker: false}]
+    });
+});
+</code></pre>
+<p>This javascript plots the CPU user percent; you can add the other plots in exactly the same way, changing only the variable name and the title.</p>
+
+      </article>
+
+      <a class="back-link" href="../tech.html">&larr; Back to Technical</a>
+    </main>
+  </body>
+</html>

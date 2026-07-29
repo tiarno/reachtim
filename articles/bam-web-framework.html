@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>reachtim — BAM! A Web Framework "Short Stack"</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Technical side</p>
+        <h1>Article</h1>
+      </div>
+      <nav>
+        <a href="../index.html">Home</a>
+        <a href="../tech.html" class="active">Technical</a>
+        <a href="../art.html">Art</a>
+      </nav>
+    </header>
+
+    <main class="content-page">
+      <section class="article-header intro-card">
+        <p class="eyebrow">Python</p>
+        <h1>BAM! A Web Framework "Short Stack"</h1>
+        <span class="article-meta-line">2014-Sep-29 · how-to, web</span>
+        <p class="summary">Use BAM (Bottle, Apache, and MongoDB) to create a quick website.</p>
+      </section>
+
+      <nav class="article-toc"><p>On this page</p><ul><li><a href="#overview">Overview</a></li><li><a href="#create-the-database">Create the Database</a></li><li><a href="#bottle-directory-structure">Bottle Directory Structure</a></li><li><a href="#apache-configuration">Apache Configuration</a></li><li><a href="#the-wsgi-adapter">The wsgi Adapter</a></li><li><a href="#the-skeleton-of-an-app">The Skeleton of an App</a></li><li><a href="#summary-what-we-have-so-far">Summary: What We Have So Far</a></li><li><a href="#a-sample-template-file">A Sample Template File</a></li><li><a href="#crud-operations">CRUD Operations</a></li><li><a href="#simple-case">Simple Case</a></li><li><a href="#complex-case">Complex Case</a></li></ul></nav>
+
+      <article class="article-body content-card">
+        <p>This how-to article describes how you can use Bottle, Apache, and MongoDB to create a simple, understandable, and fast website. In real life applications that support CRUD operations, it will most likely also use JavaScript, but BAMJ doesn&#39;t sound as cool. If you want to play with the code in this example, it is available on <a href="https://github.com/tiarno/bam_example">GitHub</a>. The example is kept very simple to show the general workflow. </p>
+<p>Here are the tools:</p>
+<ul>
+<li><a href="http://bottlepy.org/docs/dev/index.html">Bottle</a> Fast WSGI micro web-framework for Python</li>
+<li><a href="http://httpd.apache.org/">Apache Web Server</a> Popular, secure, open-source HTTP server</li>
+<li><a href="http://www.mongodb.com/mongodb-overview">MongoDB</a> Leading open-source NOSQL database (BSON document based)</li>
+</ul>
+<div class="callout"><p><span class="note">Note: </span>
+Be warned if you want to use a NFS file system to house your web files, logs, or database. NFS is nice if you need to share directories with clients over a network. However, file locking is slow and that can cause problems if a program finds it cannot get a lock. It is not recommended to use NFS for logging or for MongoDB.</p></div><h2 id="overview">Overview</h2>
+<p>This is what we&#39;re going to do:</p>
+<ol>
+<li>Create a simple MongoDB database.</li>
+<li>Set up the Bottle web framework.</li>
+<li>Set up Apache and WSGI to enable Bottle applications.</li>
+<li>Create a Bottle application that can connect (using GET/POST) to the MongoDB database.</li>
+<li>Create HTML to view the data. With some final notes on how to handle CRUD operations on the data.</li>
+</ol>
+<p>I&#39;m assuming you have installed Bottle, the Apache HTTP server with <code>mod_wsgi</code>, and  MongoDB.</p>
+<ul>
+<li><p><a href="http://bottlepy.org/docs/dev/index.html">Bottle</a> 
+   This is the smallest and  simplest Python web framework I have found. 
+   When I first started out, I used Django, which supports just about everything you could ever want in a framework. I found that it was great to get a lot accomplished in a short time; it is called <em>the web framework for perfectionists with deadlines</em> for a reason. But I always felt uneasy about using it because I never fully understood what was going on under the covers.</p>
+<p>   Bottle is on the other end of the spectrum.  While I have to program the stuff I need, that gives me confidence because there&#39;s no magic. If it doesn&#39;t work, it&#39;s my code that broke it and I know where to look.  On the other hand, my needs are simple. You might find this <a href="http://stackoverflow.com/questions/4941145/python-flask-vs-bottle">question</a> on <code>stackoverflow</code> helpful if you&#39;re trying to decide on a web framework.</p>
+</li>
+<li><p><a href="http://httpd.apache.org/">Apache</a> Over time Apache has lost some of its cool factor I guess, and Node/Express, Lighttpd, and Nginx, etc. are hot now. But Apache is a hardy, stable, and very popular tool. It is easy to install and not too hard to configure. You also need to follow the <code>modwsgi</code> installation <a href="https://code.google.com/p/modwsgi/wiki/QuickInstallationGuide">guide</a> since that is the bridge between Apache and Bottle.</p>
+</li>
+<li><p><a href="http://www.mongodb.org/">MongoDB</a> I really like the JSON-like structure of MongoDB documents (records). For my own needs (configuration database, build reports, and system monitoring) that structure fits much better than an SQL database.</p>
+</li>
+</ul>
+<h2 id="create-the-database">Create the Database</h2>
+<p>First, create a toy <code>people</code> database in the mongo shell. We&#39;ll use a collection called <code>test</code>. Here is what it looks like from a terminal window:</p>
+<pre><code class="language-javascript">&gt; mongo servername
+MongoDB shell version: 2.4.9
+connecting to: servername/test
+rs1:PRIMARY&gt; var people = [
+    {name:&#39;Alphonse&#39;, age: &#39;15&#39;, height: &#39;67&#39;, weight:&#39;116.5&#39;},
+    {name:&#39;Janice&#39;, age: &#39;12&#39;, height: &#39;54.3&#39;, weight:&#39;60.5&#39;},
+    {name:&#39;Sam&#39;, age: &#39;12&#39;, height: &#39;64.3&#39;, weight:&#39;123.25&#39;},
+    {name:&#39;Ursula&#39;, age: &#39;14&#39;, height: &#39;62.8&#39;, weight:&#39;104.0&#39;}
+]
+
+rs1:PRIMARY&gt; db.people.insert(people)
+rs1:PRIMARY&gt; db.people.find()
+{ &quot;_id&quot; : ObjectId(&quot;...&quot;), &quot;name&quot; : &quot;Alphonse&quot;, &quot;age&quot; : &quot;15&quot;, &quot;height&quot; : &quot;67&quot;, &quot;weight&quot; : &quot;116.5&quot; }
+{ &quot;_id&quot; : ObjectId(&quot;...&quot;), &quot;name&quot; : &quot;Janice&quot;, &quot;age&quot; : &quot;12&quot;, &quot;height&quot; : &quot;54.3&quot;, &quot;weight&quot; : &quot;60.5&quot; }
+{ &quot;_id&quot; : ObjectId(&quot;...&quot;), &quot;name&quot; : &quot;Sam&quot;, &quot;age&quot; : &quot;12&quot;, &quot;height&quot; : &quot;64.3&quot;, &quot;weight&quot; : &quot;123.25&quot; }
+{ &quot;_id&quot; : ObjectId(&quot;...&quot;), &quot;name&quot; : &quot;Ursula&quot;, &quot;age&quot; : &quot;14&quot;, &quot;height&quot; : &quot;62.8&quot;, &quot;weight&quot; : &quot;104.0&quot; }
+</code></pre>
+<p>The data is a set of height and weight measurements on children of various ages. That&#39;s the data we&#39;ll connect to via Bottle/Apache.</p>
+<h2 id="bottle-directory-structure">Bottle Directory Structure</h2>
+<p>In <code>/var/www/bottle</code>, the directory structure looks like this. This layout makes it easy to add new applications as you need them. We have the main <code>wsgi</code> script (<code>bottle_adapter.wsgi</code>), and a single application, <code>people</code>. For every application you write, you may also have a <code>css</code> file, a <code>javascript</code> file and templates in the <code>views</code> subdirectory.</p>
+<pre><code>bottle_adapter.wsgi
+people.py
+
+css/
+    person_form.css
+
+js/
+    person.js
+
+views/
+    people/
+        people.tpl
+        person.tpl
+</code></pre>
+<p>To add a new application:</p>
+<ol>
+<li>create the application code file in the root directory, like <code>people.py</code></li>
+<li>mount the application in the <code>bottle_adapter.wsgi</code> file</li>
+<li>add the template path in the <code>bottle_adapter.wsgi</code> file</li>
+<li>add <code>css</code>, <code>js</code> files if needed</li>
+<li>add a <code>view</code> subdirectory to contain the application templates.</li>
+</ol>
+<p>In this example we won&#39;t use any javascript or even css, but in real life you will probably want to add that in. This directory layout keeps things simple and separated, and it&#39;s easy to extend.</p>
+<h2 id="apache-configuration">Apache Configuration</h2>
+<p>In the Apache <code>httpd.conf</code> file, set the <code>WSGIScriptAlias</code> and <code>WSGIDaemonProcess</code>. 
+For details on <code>wsgi</code> configuration, see the <a href="https://code.google.com/p/modwsgi/wiki/QuickConfigurationGuide">guide</a>.
+When a request comes in to our server with a url that begins with <code>service</code>, the request is passed on to our bottle application.</p>
+<pre><code class="language-bash">LoadModule wsgi_module /usr/lib/apache2/modules/mod_wsgi.so
+WSGIScriptAlias /service /var/www/bottle/bottle_adapter.wsgi
+WSGIDaemonProcess example02 processes=5 threads=25 
+</code></pre>
+<p>You may need to set other parameters depending on your platform. I am on a FreeBSD machine and needed to set <code>WSGIAcceptMutex posixsem</code> in addition to the settings above. The <code>wsgi</code> guide is well written and indispensable.</p>
+<h2 id="the-wsgi-adapter">The <code>wsgi</code> Adapter</h2>
+<p>When the Apache server gets a request that begins with <code>service</code>, the <code>httpd</code> daemon calls the bottle application adapter script, <code>bottle_adapter.wsgi</code>. As you can see below, the script imports the application code, adds to the template path and &quot;mounts&quot; the application on a specific URL path. </p>
+<p>Now that the <code>people</code> application is mounted on the URL path <code>/people</code>, the application will get called for any URL that starts with <code>/service/people</code>. </p>
+<p>The debug attribute is set to <code>True</code> until we&#39;re ready to go production. Bottle provides its own development server when you&#39;re getting started; I&#39;ve commented out that line but it is helpful to use it when debugging your application code.</p>
+<pre><code class="language-python">import sys, bottle
+sys.path.insert(0,&#39;/var/www/bottle&#39;)
+import people
+
+bottle.TEMPLATE_PATH.insert(0, &#39;/var/www/bottle/views/people&#39;)
+
+application = bottle.default_app()
+application.mount(&#39;/people&#39;, people.app)
+
+bottle.debug(True)
+#bottle.run(host=&#39;example02&#39;, port=8090, debug=True)
+</code></pre>
+<h2 id="the-skeleton-of-an-app">The Skeleton of an App</h2>
+<p>Every application will have a similar skeleton; all my apps have the same things at the beginning. The following code block displays the beginning of  the <code>people</code> application. First, we make the necessary imports, get a connection to the MongoDB database <code>test</code> collection and instantiate our application, <code>app</code>, which is known as <code>people.app</code> to the <code>wsgi</code> adapter.</p>
+<pre><code class="language-python">from bottle import Bottle, view, request
+from bson.objectid import ObjectId
+import pymongo
+
+conn = pymongo.MongoReplicaSetClient(
+    &#39;example02.unx.sas.com, example01.unx.sas.com&#39;,
+    replicaSet=&#39;rs1&#39;)
+db = conn.test
+
+app = Bottle()
+</code></pre>
+<p>And there we have it--our <code>people.app</code> Bottle application, all wired up but not able to do anything yet. Let&#39;s add some abilities so we can respond to URL requests. For example, when a <code>GET</code> request comes in on <code>service/people</code>, we&#39;ll send back a response with a list of the people in the database. </p>
+<p>Most capabilities you code will have three parts:</p>
+<ul>
+<li>a URL route that matches and responds to an HTPP request</li>
+<li>a view (template) to render as the response</li>
+<li>a function to get the data that the view expects.</li>
+</ul>
+<p>In the following code block, the <code>@app.get</code> decorator corresponds to a URL <em>route</em>; it responds to a <code>GET</code> request with no further arguments (<code>&#39;/&#39;</code>); however, by the time the request makes it to this point, the URL is actually <code>service/people</code>; that is what the root URL looks like to the <code>people</code> app.</p>
+<p>The <code>@view</code> decorator specifies the template to use to display the data in the response (that is, the template <code>views/people/people.tpl</code> ) </p>
+<p>The <code>people</code> function creates a cursor which gets all the records (<em>documents</em> in the MongoDB world) from the database, sorts those records on the <code>name</code> and returns them as a list under the key named <code>results</code>. </p>
+<pre><code class="language-python">@app.get(&#39;/&#39;)
+@view(&#39;people&#39;)
+def people():
+    p = db.people.find().sort([(&#39;name&#39;, 1)])
+    return {&#39;results&#39;: list(p)}
+</code></pre>
+<div class="callout"><p><span class="note">Note: </span>
+The <code>sort</code> function in <code>pymongo</code> operates differently from the <code>mongo</code> shell; it uses a list of tuples to sort on instead of a document. This tripped me up at first. The <a href="http://api.mongodb.org/python/current/api/pymongo/cursor.html#pymongo.cursor.Cursor.sort">documentation</a> explains it well.</p></div><p>Next, here is a route using the <code>@app.get</code> decorator which responds to a GET request of the form <code>service/people/somename</code>. It executes the <code>person</code> function and renders the resulting data using the <code>person</code> template (<code>views/people/person.tpl</code>).</p>
+<p>The <code>person</code> function gets the single (or first) document with a matching <code>name</code>, converts the <code>_id</code> value to a string and returns the data under the key named <code>person</code>. </p>
+<pre><code>@app.get(&#39;/&lt;name&gt;&#39;)
+@view(&#39;person&#39;)
+def person(name):
+    person = db[&#39;people&#39;].find_one({&#39;name&#39;:name})
+    person[&#39;_id&#39;] = str(person[&#39;_id&#39;])
+    return {&#39;person&#39;: person}
+</code></pre>
+<p>Why convert the <code>_id</code> from an ObjectID (as it exists in the MongDB database) to a string? If all you want to do is display the record, you could just delete the key, but if you want to interact with the record (possibly updating or deleting it through the client), you have to keep track of that <code>_id</code>. Otherwise there&#39;s no way to map back to the record in the database.  So we transform it to a string on the way out to the client and as you&#39;ll see in the next route function, we transform it back to an ObjectID on the way back in to the database.</p>
+<p>The last route in this example uses the <code>app.post</code> decorator to respond to a POST request. It creates a new dictionary populated with values from the request, converts the string <code>_id</code> value back to an ObjectID, and saves the record back to the database. It returns a bare string (&quot;Thanks...&quot;) so the user knows the data was updated.</p>
+<pre><code>@app.post(&#39;/&lt;name&gt;&#39;)
+def update_person(name):
+    person = {&#39;name&#39;: name}
+    person[&#39;age&#39;] = request.POST.get(&#39;age&#39;)
+    person[&#39;weight&#39;] = request.POST.get(&#39;weight&#39;)
+    person[&#39;height&#39;] = request.POST.get(&#39;height&#39;)
+    person[&#39;_id&#39;] = ObjectId(request.POST.get(&#39;_id&#39;))
+    
+    db[&#39;people&#39;].save(person)
+    return &#39;Thanks for your data.&#39;
+</code></pre>
+<div class="callout"><p>Keep in mind that this is just a simple toy example; if you have a bazillion records or a gazillion requests per second, you&#39;ll want to do a lot of reading on MongoDB index creation, aggregation and filtering techniques.</p></div><h2 id="summary-what-we-have-so-far">Summary: What We Have So Far</h2>
+<p>When a GET request comes in with this url:</p>
+<pre><code>http://example01/service/people
+</code></pre>
+<p>that url is routed from Apache to the Bottle <code>wsgi</code> script and on to the <code>people.app</code> Bottle application and finally to the <code>/people</code> route. That route, in turn, invokes the <code>people</code> function, which retrieves all the MongoDB documents in the <code>people</code> database. The JSON data is returned in the response under the key named <code>results</code> and rendered by the <code>people</code> template.</p>
+<p>When a request comes in with this url:</p>
+<pre><code>http://example01/service/people/Sam
+</code></pre>
+<p>If the request is a <code>GET</code>, the document with <code>name</code> = <code>Sam</code> is retrieved, the <code>_id</code> is converted to a string instead of an object (it is saved as an ObjectId in the MongoDB database). The JSON data is returned in the response under the key named <code>results</code> and rendered by the <code>person</code> template.</p>
+<p>If the request is a <code>POST</code>, the data is read from the request form, the <code>_id</code> is turned back into an <code>ObjectId</code> and the document is saved to the database.</p>
+<div class="callout"><p><span class="note">Note: </span>
+With this smidgen of code and a rational directory structure, before even talking about the HTML side, we have an simple, easy-to-understand API that can send and receive JSON documents, interacting with a MongoDB backend database.</p></div><h2 id="a-sample-template-file">A Sample Template File</h2>
+<p>You can use plain HTML to display and update records if your underlying data has a simple structure, as our example data does.</p>
+<p>This is the view-only template <code>people.tpl</code> which displays the data on a GET request to <code>http://example02/service/people</code>:</p>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;People&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+     &lt;h1&gt;People&lt;/h1&gt;
+     &lt;table&gt;
+        &lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Age&lt;/th&gt;&lt;/tr&gt;
+        %for person in results:
+            &lt;tr&gt;
+                &lt;td&gt;{{person[&#39;name&#39;]}}&lt;/td&gt;
+                &lt;td&gt;{{person[&#39;age&#39;]}}&lt;/td&gt;
+            &lt;/tr&gt;
+        %end for
+    &lt;/table&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>And this is the (unstyled) result:</p>
+<p><img src="../assets/blog/peoplelist.png" alt="peoplelist"></p>
+<p>To view a particular person, the logic is similar, except we get back a single record: Here is the template <code>person.tpl</code>:</p>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;{{person[&#39;name&#39;]}} Stats&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;{{person[&#39;name&#39;]}} Stats&lt;/h1&gt;
+     &lt;table&gt;
+     &lt;tr&gt;&lt;th&gt;Age&lt;/th&gt;&lt;td&gt;{{person[&#39;age&#39;]}}&lt;/td&gt;&lt;/tr&gt;
+     &lt;tr&gt;&lt;th&gt;Height&lt;/th&gt;&lt;td&gt;{{person[&#39;height&#39;]}}&lt;/td&gt;&lt;/tr&gt;
+     &lt;tr&gt;&lt;th&gt;Weight&lt;/th&gt;&lt;td&gt;{{person[&#39;weight&#39;]}}&lt;/td&gt;&lt;/tr&gt;
+   &lt;/table&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>If the url is <code>http://example01/service/people/Alphonse</code>, here is the result:</p>
+<p><img src="../assets/blog/person.png" alt="person"></p>
+<h2 id="crud-operations">CRUD Operations</h2>
+<p>Performing updates, deletes, or creating records can get tricky, depending on the complexity of your data. If you have nested JSON data, you will need some Javascript to serialize the user-input data so the result has the correct structure when it gets back to MongoDB.  More on that later. For now let&#39;s write a form that enables us to update a simple record and save it. </p>
+<h3 id="simple-case">Simple Case</h3>
+<p>First we need to view the data in a prepopulated form and then we need to update the database record with the changes made in the HTML client.</p>
+<p>We already have the Python code (the <code>person</code> and <code>update_person</code> functions), so we just need to write the HTML page. You might call the page <code>person_update.tpl</code>, and change the <code>@app.get(/&lt;name&gt;)</code> route to use that instead of the view-only template <code>person.tpl</code> from before.</p>
+<p>This page displays the data but now inside an HTML form. We keep the <code>_id</code> value because we must have it in order to update the database. If we don&#39;t include the <code>_id</code> on the way back in to the database, our changed data will be added to the database as a new record instead of updating the original record.</p>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;{{person[&#39;name&#39;]}} Stats&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;{{person[&#39;name&#39;]}} Stats&lt;/h1&gt;
+  &lt;form id=&quot;persondata&quot; name=&quot;person&quot; method=&quot;post&quot; action=&quot;http://example02/service/people/{{person[&#39;name&#39;]}}&quot;&gt;
+    &lt;input type=&quot;text&quot; name=&quot;_id&quot; value=&quot;{{person[&#39;_id&#39;]}}&quot; style=&quot;display: none;&quot; /&gt;
+    &lt;input type=&quot;text&quot; name=&quot;name&quot; value=&quot;{{person[&#39;name&#39;]}}&quot; style=&quot;display: none;&quot; /&gt;
+     &lt;table&gt;
+     &lt;tr&gt;&lt;th&gt;Age&lt;/th&gt;
+      &lt;td&gt;&lt;input type=&quot;text&quot; name=&quot;age&quot; value=&quot;{{person[&#39;age&#39;]}}&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+     &lt;tr&gt;&lt;th&gt;Height&lt;/th&gt;
+      &lt;td&gt;&lt;input type=&quot;text&quot; name=&quot;height&quot; value=&quot;{{person[&#39;height&#39;]}}&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+     &lt;tr&gt;&lt;th&gt;Weight&lt;/th&gt;
+      &lt;td&gt;&lt;input type=&quot;text&quot; name=&quot;weight&quot; value=&quot;{{person[&#39;weight&#39;]}}&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;&lt;button type=&quot;submit&quot;&gt;Save&lt;/button&gt;&lt;/tr&gt;
+   &lt;/table&gt;
+  &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="complex-case">Complex Case</h3>
+<p>If you have nested JSON data you will probably have to use Javascript. There are so many solutions that I&#39;ll just point out some links. The library I use (and I have deeply nested JSON) is <a href="https://github.com/maxatwork/form2js">form2js</a>. It is a Javascript library for collecting form data and converting it to a Javascript object.</p>
+<p>In no particular order, here are some similar libraries that address the same situation:</p>
+<ul>
+<li><a href="https://github.com/Krinkle/jquery-json">jquery-json</a> jQuery plugin for conversion to and from JSON.</li>
+<li><a href="https://github.com/DubFriend/forminator">forminator</a> uses class names and data attributes to build ajax interfaces.</li>
+<li><a href="http://www.domajax.com/">domajax</a> jQuery plugin, enables ajax calls without javascript.</li>
+<li><a href="https://github.com/rdiazv/jquery.form.serializer">jquery.form.serializer</a> jQuery extension to serialize HTML forms to JSON.</li>
+</ul>
+<p>The following is an example of using the <code>form2js</code> library and jQuery. You can use the library with arbitrarily nested JSON documents. However, you need to make a couple of changes to your Bottle app. This example template and the changed app code are in the GitHub files <code>alt_people.py</code> and <code>alt_person_update.tpl</code>.</p>
+<p>The main change to the <code>people</code> app is the <code>update_person</code> function, which now looks like the following. It reads the JSON string from the request body and converts it. The <code>loads</code> function is included in the <code>pymongo</code> package; it provides conversion from a string instance to a BSON document. Finally, our function converts the <code>_id</code> to an ObjectId and saves the record back to the database.</p>
+<pre><code class="language-python">@app.post(&#39;/&#39;)
+def update_person():
+    data = request.body.read()
+    person = loads(data)
+    person[&#39;_id&#39;] = ObjectId(person[&#39;_id&#39;])
+    db[&#39;people&#39;].save(person)
+</code></pre>
+<p>In the template, the form itself is identical but the <strong>submit</strong> button now calls a Javascript function.</p>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;head&gt;
+&lt;title&gt;{{person[&#39;name&#39;]}} Stats&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;{{person[&#39;name&#39;]}} Stats&lt;/h1&gt;
+&lt;form id=&quot;persondata&quot; name=&quot;person&quot;&gt;
+  &lt;input type=&quot;text&quot; name=&quot;_id&quot; value=&quot;{{person[&#39;_id&#39;]}}&quot; style=&quot;display: none;&quot; /&gt;
+  &lt;input type=&quot;text&quot; name=&quot;name&quot; value=&quot;{{person[&#39;name&#39;]}}&quot; style=&quot;display: none;&quot; /&gt;
+  &lt;table&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Age&lt;/th&gt;
+      &lt;td&gt;&lt;input type=&quot;text&quot; name=&quot;age&quot; value=&quot;{{person[&#39;age&#39;]}}&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Height&lt;/th&gt;
+      &lt;td&gt;&lt;input type=&quot;text&quot; name=&quot;height&quot; value=&quot;{{person[&#39;height&#39;]}}&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Weight&lt;/th&gt;
+      &lt;td&gt;&lt;input type=&quot;text&quot; name=&quot;weight&quot; value=&quot;{{person[&#39;weight&#39;]}}&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;input type=&quot;submit&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+&lt;/form&gt;
+</code></pre>
+<p>When the user clicks the <code>submit</code> button, the <code>save_data</code> function is called.</p>
+<p>First we load jQuery and the <code>form2js</code> library. Finally, we have two functions--one that executes when the submit button is clicked, and the <code>save_data</code> function.
+The <code>save_data</code> function reads the JSON data from the form into the variable <code>json_data</code>, stringifies it to the variable <code>jsonstr</code>, and fires an AJAX POST back to our URL route for updating a person (the only route in our app that accepts a POST request).</p>
+<pre><code class="language-javascript">&lt;script type=&quot;text/javascript&quot; src=&quot;/js/jquery.min.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/form2js.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+    save_data = function(evt){
+        var json_data = form2js(&#39;persondata&#39;, skipEmpty=false);
+        var jsonstr = JSON.stringify(json_data, null, &#39;\t&#39;);
+        $.ajax({
+            type:&quot;POST&quot;,
+            url: &#39;http://example02/service/people&#39;,
+            data: jsonstr,
+            success: function(){
+                alert(&#39;Configuration saved.&#39;)
+            }
+        });
+    };
+  (function($){
+     $(function(){
+    $(&#39;input[type=submit]&#39;).val(&#39;Submit&#39;).click(save_data);
+  });
+   })(jQuery);
+   &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>When a request comes in at this URL:</p>
+<pre><code>http://example01/service/people/Janice
+</code></pre>
+<p>The result is displayed in a form:</p>
+<p><img src="../assets/blog/person_complex.png" alt="person_complex"></p>
+<p>Check it out on <a href="https://github.com/tiarno/bam_example">GitHub</a> if you want to play around with it. It is very easy to add applications and get CRUD operations going on any mongoDB database.</p>
+<p>Let me know if you have any questions or if something needs changing on the GitHub repo.</p>
+
+      </article>
+
+      <a class="back-link" href="../tech.html">&larr; Back to Technical</a>
+    </main>
+  </body>
+</html>

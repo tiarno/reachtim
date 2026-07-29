@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>reachtim — Include HTML in LaTeX</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Technical side</p>
+        <h1>Article</h1>
+      </div>
+      <nav>
+        <a href="../index.html">Home</a>
+        <a href="../tech.html" class="active">Technical</a>
+        <a href="../art.html">Art</a>
+      </nav>
+    </header>
+
+    <main class="content-page">
+      <section class="article-header intro-card">
+        <p class="eyebrow">LaTeX</p>
+        <h1>Include HTML in LaTeX</h1>
+        <span class="article-meta-line">2019-May-06 · how-to,</span>
+        <p class="summary">How to include HTML content in your LaTeX documents.</p>
+      </section>
+
+      <nav class="article-toc"><p>On this page</p><ul><li><a href="#introduction">Introduction</a></li><li><a href="#wkhtmltopdf">wkhtmltopdf</a></li><li><a href="#if-you-need-to-create-an-appendix">If You Need to Create an Appendix</a></li><li><a href="#if-you-need-to-preserve-internal-links">If You Need to Preserve Internal Links</a></li><li><a href="#paxmaker">PAXMaker</a></li><li><a href="#pdfpages">pdfpages</a></li><li><a href="#summary">Summary</a></li></ul></nav>
+
+      <article class="article-body content-card">
+        <h2 id="introduction">Introduction</h2>
+<p>When I first started supporting multiple users of LaTeX in my day job,
+a question I often heard was &quot;How do I include an HTML table in my document?&quot;.
+The answer was, of course, &quot;It doesn&#39;t work that way; you can&#39;t do that.&quot;</p>
+<p>But I found that, with some restrictions, you actually can include HTML by
+converting it to PDF and including that in your LaTeX document. </p>
+<p>In this article I&#39;ll show how I do that for myself and how you can include
+HTML pages that keep the original styles, colors and so forth once it has 
+been converted to PDF. And if you need them, you can keep the internal links
+from the HTML so they work in your final PDF.</p>
+<h2 id="wkhtmltopdf">wkhtmltopdf</h2>
+<p>The tool <code>wkhtmltopdf</code> converts HTML to PDF. The <a href="https://wkhtmltopdf.org/">wkhtmltopdf</a>
+website summarizes it:</p>
+<blockquote>
+<p>wkhtmltopdf and wkhtmltoimage are open source (LGPLv3) 
+command line tools to render HTML into PDF and various 
+image formats using the Qt WebKit rendering engine. 
+These run entirely &quot;headless&quot; and do not require a display or display service.</p>
+<p>There is also a C library, if you&#39;re into that kind of thing.</p>
+</blockquote>
+<p>It&#39;s a great tool. Here&#39;s the command I use (but put it all on one line):</p>
+<pre><code class="language-bash">/usr/local/bin/wkhtmltopdf -s Letter --no-background 
+    --minimum-font-size 20 --no-outline --no-pdf-compression 
+    --disable-external-links --enable-internal-links filename.html filename.pdf
+</code></pre>
+<p>Those options request the conversion to be rendered at letter-size with no background.
+You can play around with the font size so it matches your documents font size.</p>
+<p>Run this and you will have a single PDF with possibly multiple pages, using the same style, 
+colors, and links that are in the HTML. </p>
+<h3 id="if-you-need-to-create-an-appendix">If You Need to Create an Appendix</h3>
+<p>If you want the html you are including to be a separate chapter or appendix, then
+instead of <code>--no-outline</code>, use this command instead:</p>
+<pre><code class="language-bash">--outline-depth 2 toc --xsl-style-sheet wk_toc.xsl --toc-header-text &quot;Appendix A&quot;
+</code></pre>
+<p>This asks for a table of contents using an XSL stylesheet with the specified header text.
+Get my version of the <code>wk_toc.xsl</code> stylesheet here:</p>
+<p><a href="https://gist.github.com/tiarno/094ca5dc7f9c3ae560af9ace975881d3">gist.github.com/tiarno</a></p>
+<p>Alternatively, you can get the file <code>wk_toc.xsl</code> yourself and if you know a 
+little XSL, you can modify it for your needs. To generate the file, 
+give this command::</p>
+<pre><code>wkhtmltopdf --dump-default-toc-xsl
+</code></pre>
+<p>You can read more about the options in the <code>wkhtmltopdf</code> help documentation.</p>
+<h3 id="if-you-need-to-preserve-internal-links">If You Need to Preserve Internal Links</h3>
+<p>Skip this section if you don&#39;t need to preserve internal links in 
+the original HTML.  </p>
+<p>If you do need internal links, you&#39;ll find that there is already a 
+package to help with that, the <code>pax</code> package.
+From the documentation:</p>
+<blockquote>
+<p>If PDF files are in­cluded us­ing pdfTEX, PDF an­no­ta­tions are stripped. 
+The pax project of­fers a so­lu­tion with­out al­ter­ing pdfTEX. 
+A Java pro­gram (pax.jar) parses the PDF file that will later be in­cluded. 
+The pro­gram then writes the data of the an­no­ta­tions into a file that can be read by TEX.</p>
+</blockquote>
+<p>You can find it on <a href="https://www.ctan.org/pkg/pax">CTAN</a>.</p>
+<p>This package works to retain the internal links from the included PDF. Unfortunately,
+<code>wkhtmltopdf</code> creates the PDF in a way that is incompatible with this
+Java program mentioned in the <code>pax</code> package documentation. </p>
+<p>I mention it here to save you going down the rabbit hole of trying to get 
+it to work. You still need the <code>pax</code> package itself. But even though the 
+Java jar file is fantastic for other pdfs,  with <code>wkhtmltopdf</code>, you need a 
+different solution.  </p>
+<p>Enter <code>PAXMaker</code>.</p>
+<h3 id="paxmaker">PAXMaker</h3>
+<p>This little tool is available on my GitHub repository:
+<a href="https://github.com/tiarno/paxmaker">PAXMaker</a></p>
+<p>It requires the PyPDF2 Python package.
+As you can read on that repo, you can use it by following these steps:</p>
+<ul>
+<li>Convert your html file to pdf with wkhtmltopdf</li>
+<li>Run <code>paxmaker.py</code> on the pdf (the program takes a single argument, the name of the pdf file)</li>
+<li>In the LaTeX file in which you want this pdf inserted: load the 
+<code>pdfpages</code> and <code>pax</code> packages, and include the pdf as described in the
+next section.</li>
+</ul>
+<p>The <code>paxmaker.py</code> file does for the wkhtmltopdf-generated pdfs what the 
+pax java program does for normal pdfs. It writes a <code>.pax</code> file that will be
+read by the LaTeX <code>pax</code> package when you compile your final document.</p>
+<h2 id="pdfpages">pdfpages</h2>
+<p>So far you have generated a PDF file from the HTML, possibly preserving internal
+links, and possibly creating it as an appendix. 
+Now lets get that generated PDF into your LaTeX document.</p>
+<p>You include external PDFs in a LaTeX document with the <code>pdfpages</code> package, by Andreas Matthias.
+Get it on <a href="https://www.ctan.org/pkg/pdfpages">CTAN</a>.</p>
+<blockquote>
+<p>This package simplifies the insertion of external multi-page PDF
+documents into LaTeX documents. Pages can be freely selected and
+similar to psnup it is possible to put several logical pages onto
+each sheet of paper. Furthermore a lot of hypertext features like
+hyperlinks and article threads are provided. This package supports
+pdfTeX, VTeX, and XeTeX. With VTeX it is even possible to use
+this package to insert PostScript files, in addition to PDF files.</p>
+</blockquote>
+<p>Then, at the location you want the original HTML pages to be included,
+use this tag:</p>
+<pre><code class="language-latex">\IfFileExists{filename.pdf}
+    {\includepdf[pages=-,addtotoc={1,subsection,2,title,htmllabel}]{filename}} 
+    {\par\textcolor{red}{MISSING FILE!}}
+</code></pre>
+<p>The <code>\IfFileExists</code> command executes its first argument if the file exists or
+its second argument if it doesn&#39;t exist. </p>
+<p>So if the file is present, you 
+invoke the <code>includepdf</code> command from the <code>pdfpages</code> package, specifying
+that it should include all pages (<code>pages=-</code>), it should add a title in the table
+of contents at the subsection level with the  text <code>title</code>. </p>
+<p>If the file 
+does not exist, it will put a paragraph in your document with a big red 
+&quot;MISSING FILE&quot; warning.</p>
+<h2 id="summary">Summary</h2>
+<p>You can include HTML in your LaTeX document as follows:</p>
+<ul>
+<li>convert your HTML to PDF with <code>wkhtmltopdf</code></li>
+<li><em>if you need internal links</em>, use PAXMaker to write a helper <code>pax</code> file
+and make sure you use the <code>pax</code> package in your LaTeX document</li>
+<li>use the <code>pdfpages</code> LaTeX package to include the PDF rendering of the HTML file.</li>
+<li>compile your final LaTeX document</li>
+</ul>
+<p>This is a powerful method to include possibly many HTML pages into a LaTeX document.
+You can use CSS with the HTML to make the included pages match your document.</p>
+
+      </article>
+
+      <a class="back-link" href="../tech.html">&larr; Back to Technical</a>
+    </main>
+  </body>
+</html>

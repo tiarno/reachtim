@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>reachtim — SAS and LaTeX Together: The StatRep Package</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Technical side</p>
+        <h1>Article</h1>
+      </div>
+      <nav>
+        <a href="../index.html">Home</a>
+        <a href="../tech.html" class="active">Technical</a>
+        <a href="../art.html">Art</a>
+      </nav>
+    </header>
+
+    <main class="content-page">
+      <section class="article-header intro-card">
+        <p class="eyebrow">LaTeX</p>
+        <h1>SAS and LaTeX Together: The StatRep Package</h1>
+        <span class="article-meta-line">11-23-2014 · how-to, statrep</span>
+        <p class="summary">How to use StatRep with SAS-generated LaTeX output for reproducible research.</p>
+      </section>
+
+      <nav class="article-toc"><p>On this page</p><ul><li><a href="#overview">Overview</a></li><li><a href="#configuration">Configuration</a></li><li><a href="#the-statrep-macros-sas-file">The statrep_macros.sas File</a></li><li><a href="#the-sas-ods-output-destination">The SAS ODS Output Destination</a></li><li><a href="#the-statrep-tagset-and-style">The StatRep Tagset and Style</a></li><li><a href="#examples">Examples</a></li><li><a href="#capture-all-outputs-as-a-single-stream">Capture All Outputs as a Single Stream</a></li><li><a href="#capture-specific-outputs">Capture Specific Outputs</a></li><li><a href="#summary">Summary</a></li></ul></nav>
+
+      <article class="article-body content-card">
+        <h2 id="overview">Overview</h2>
+<p>This short article shows how you can use <strong>StatRep</strong> to capture and display SAS-generated output to create dynamic documents. With the most recent release of the <strong>StatRep</strong> package, you can now create and display SAS-generated LaTeX output in your LaTeX documents. </p>
+<div class="callout"><p>The <strong>StatRep</strong> system for reproducible research was introduced at the 2012 SAS Global Forum, in this <a href="http://support.sas.com/resources/papers/proceedings12/324-2012.pdf">paper</a>. You can download the package from the links given at the end of this article.</p></div><p>The <strong>StatRep</strong> package enables you to create dynamic documents using SAS and LaTeX. It is composed of one LaTeX package (<code>statrep.sty</code>) and a suite of SAS macros, (<code>statrep_macros.sas</code>) that work together to capture and display SAS output. This enables you to write all of your data, code, and discussion in a single source file (your LaTeX document); that file can be shared with others and you can be sure that the output others see is generated from the code you used to create the analysis. No more copying and pasting of code blocks!</p>
+<p>Your document is processed in four steps:</p>
+<ol>
+<li>Write your LaTeX document using custom markup from the <strong>StatRep</strong> package.</li>
+<li>Compile the document with pdfLaTeX; this step generates a SAS program to capture the output needed in your document.</li>
+<li>Run that generated SAS program to produce the output.</li>
+<li>Recompile the document with pdfLaTeX; now your code and output appear in the final PDF document.</li>
+</ol>
+<h2 id="configuration">Configuration</h2>
+<p>There are several &quot;hooks&quot; in the <strong>StatRep</strong> configuration that you can set in order to make the package work with your preferences. These hooks are explained in detail in the <em>User&#39;s Guide</em>; see the section on customization and the installation instructions. </p>
+<p>While the defaults have been carefully chosen, there are two settings that deserve some special consideration.</p>
+<h3 id="the-statrep-macros-sas-file">The <code>statrep_macros.sas</code> File</h3>
+<p>The location of the file <code>statrep_macros.sas</code> must be set so that the generated SAS program will function correctly. Set the location with the <code>\SRmacropath</code> variable in your <code>statrep.cfg</code> file. </p>
+<p>If you do not set this variable, SAS will expect the macros to be in the current directory (the one that contains the program and your LaTeX document). Nothing wrong with that, just make sure the file is in that directory when you run the generated SAS program.</p>
+<h3 id="the-sas-ods-output-destination">The SAS ODS Output Destination</h3>
+<p>When you download and install the <strong>StatRep</strong> package, the default ODS destination is the ODS Listing; (because the default value of the <code>\SRdefaultdests</code> configuration variable is <code>listing</code>). SAS-generated output is displayed as it appears in the listing window. You can alternatively have SAS create output as LaTeX tables.  There are two ways to select SAS-generated LaTeX output.</p>
+<ol>
+<li><p>You can modify the configuration in the <code>statrep.cfg</code> file to make the default the ODS <strong>StatRep</strong> LaTeX tagset by changing the value of <code>\SRdefaultdests</code> to <code>latex</code>. </p>
+</li>
+<li><p>Alternatively, you can leave the <code>\SRdefaultdests</code> configuration variable as it is and modify your <code>\Listing</code> tag in your LaTeX document. Specify the ODS destination on the <code>\Listing</code> tag itself, as in the example below, which sets the <code>dest=latex</code> option.</p>
+</li>
+</ol>
+<div class="callout"><p>If the global default <code>\SRdefaultdests</code> is set to <code>latex</code>, there is no need to specify it again on the <code>\Listing</code> tag.</p></div><p>In either case, whether you change the global configuration variable or add the <code>dest=</code> option to your <code>\Listing</code> tags, SAS will need access to the <strong>StatRep</strong> tagset in order to generate the output. </p>
+<p>Bundled in the <strong>StatRep</strong> package is a SAS program that creates a new tagset base on the ODS LaTeX tagset. You create the tagset by running the included SAS program, <code>statrep_tagset.sas</code>. </p>
+<h2 id="the-statrep-tagset-and-style">The StatRep Tagset and Style</h2>
+<p>If you want your output to be generated in LaTeX format rather than the listing format, you first must create a special tagset for SAS to use. This is easily done--just run the included SAS program <code>statrep_tagset.sas</code>.</p>
+<p>The <em>User&#39;s Guide</em> provides complete details on how to create SAS-generated LaTeX output. The main points are that you must create the <code>statrep.tagset</code> with the included SAS program, <code>statrep_tagset.sas</code>, and you must tell SAS to use the tagset when creating the output. You can run the tagset generation code each time you use <strong>StatRep</strong> or you can save the tagset. By default, the tagset is saved to the SASUSER.TEMPLAT item store. Full details on installing tagsets are available in this <a href="http://support.sas.com/kb/32/394.html">Usage Note</a></p>
+<p>If you want to run the tagset generation code each time, you can change the way <strong>StatRep</strong> includes the macros. Your file <code>statrep.cfg</code> will change so the definition for <code>\SRmacroinclude</code> appears as follows:</p>
+<pre><code class="language-latex">\SRmacroinclude{%
+  \@percentchar include &quot;statrep_tagset.sas&quot; /nosource;
+  \@percentchar include &quot;\SRmacropath&quot; /nosource;
+}
+</code></pre>
+<p>With this definition, the generated SAS program first creates the <strong>StatRep</strong> tagset before creating the output for your document. </p>
+<h2 id="examples">Examples</h2>
+<p>In the examples that follow, the following document preamble, data step and proc step are used. Make sure you have already created the <strong>StatRep</strong> tagset, described above.</p>
+<pre><code class="language-latex">\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{statrep}
+\begin{document}
+
+The SAS datastep and analysis ...
+
+\begin{Datastep}
+data time;
+   input time @@;
+   datalines;
+ 43  90  84  87  116   95  86   99   93  92
+121  71  66  98   79  102  60  112  105  98
+;
+\end{Datastep}
+
+... discussion of the analysis ...
+
+\begin{Sascode}[store=myoutput]
+proc ttest h0=80 plots(showh0) sides=u alpha=0.1;
+   var time;
+run;
+\end{Sascode}
+
+... discussion of the results ...
+</code></pre>
+<p>The final PDF output from the preceding code looks like this:
+<img src="../assets/blog/saslatex1.png" alt="pdfpage"></p>
+<p>In the document snippet above, the code creates a SAS data set <code>time</code> and invokes the TTEST procedure.  The result is that all output created by the TTEST procedure is contained in an ODS document named <code>myoutput</code> as specified by the option <code>store=myoutput</code>. </p>
+<div class="callout"><p>So far, no output is displayed--the output that is displayed is determined by the <code>\Listing</code> and <code>\Graphic</code> tags that follow. This is how <strong>StatRep</strong> works: the code block generates all the output at one time and stores it in the ODS document so it can be used at any point in the document.</p></div><p>In the sections that follow, the <code>\Listing</code> and <code>\Graphic</code> tags request the ODS document to replay output objects into external files (on disk). When the final document is recompiled, pdfLaTeX embeds and displays those outputs.</p>
+<h3 id="capture-all-outputs-as-a-single-stream">Capture All Outputs as a Single Stream</h3>
+<p>In this example, the output tags make no request for specific outputs. When you make no explicit output selection, the <code>Listing</code> tag selects all tables and notes. </p>
+<pre><code class="language-latex">\Listing[store=myoutput, dest=latex, 
+         caption={Court Case Duration Analysis}]{myouta}
+text about table
+</code></pre>
+<p>The <code>\Listing</code> tag specifies:</p>
+<ul>
+<li>that output should come from the ODS document <code>myoutput</code> which matches the <code>store=</code> option on the <code>Sascode</code> block</li>
+<li>the output destination is <code>latex</code> </li>
+<li>caption for the output</li>
+<li>filename that contains the output is <code>lst/myouta.lst</code></li>
+</ul>
+<p>The output from the above code looks like this:
+<img src="../assets/blog/saslatex2.png" alt="pdfpage"></p>
+<p>When you run the generated SAS program, the SAS Log displays the ODS objects that are selected for replay. These outputs are displayed in your document as a continuous stream of output with page breaks handled automatically. That is, the output can go over a page break, with breaks allowed only between ODS objects. The SAS Log displays the following table that corresponds to the <code>\Listing</code> tag:</p>
+<pre><code>Objects                   Type  Status   Group
+
+Ttest.time.PT             Note  Selected   1
+Ttest.time.Statistics     Table Selected   1
+Ttest.time.ConfLimits     Table Selected   2
+Ttest.time.TTests         Table Selected   3
+Ttest.time.SummaryPanel   Graph            .
+Ttest.time.QQPlot         Graph            .
+</code></pre>
+<p>Next, add some graphical output to your document with the <code>\Graphic</code> tag</p>
+<pre><code class="language-latex">\Graphic[store=myoutput, 
+         caption={Court Case Duration}]{myoutb}
+</code></pre>
+<p>The <code>\Graphic</code> tag specifies</p>
+<ul>
+<li>that output should come from the ODS document <code>myoutput</code> which matches the <code>store=</code> option on the <code>Sascode</code> block</li>
+<li>caption for the output</li>
+<li>filename that contains the output is <code>png/myoutb.png</code></li>
+</ul>
+<p>The <code>Graphic</code> tag selects all graphs by default. The SAS Log displays the following table that corresponds to the <code>\Graphic</code> tag:</p>
+<pre><code>Objects                   Type  Status   Group
+
+Ttest.time.PT             Note             .
+Ttest.time.Statistics     Table            .
+Ttest.time.ConfLimits     Table            .
+Ttest.time.TTests         Table            .
+Ttest.time.SummaryPanel   Graph Selected   1
+Ttest.time.QQPlot         Graph Selected   2
+</code></pre>
+<p>The final PDF document, which specifies the <code>latex</code> destination and uses the <strong>StatRep</strong> tagset, looks like this:</p>
+<p><img src="../assets/blog/saslatex3a.png" alt="pdfpage"><img src="../assets/blog/saslatex3b.png" alt="pdfpage">
+<img src="../assets/blog/saslatex3c.png" alt="pdfpage"></p>
+<p>For comparison, the following screenshots show the final PDF document if you use the default <code>listing</code> destination. Only the tabular output has changed; the graphs are identical.</p>
+<p><img src="../assets/blog/saslatex4a.png" alt="pdfpage"></p>
+<h3 id="capture-specific-outputs">Capture Specific Outputs</h3>
+<p>You don&#39;t always want the output to displayed as a continuous, uninterrupted stream, so <strong>StatRep</strong> provides a flexible way to select ODS objects. In the following <code>\Listing</code> tag, the <code>firstobj=</code> option specifies that the output stream should begin with the <code>ConfLimits</code> object; the <code>lastobj=</code> option specifies that the output stream should end with the <code>TTests</code> object. </p>
+<pre><code class="language-latex">\Listing[store=myoutput, dest=latex, 
+         firstobj=conflimits, lastobj=ttests,
+         caption={Court Case Duration Analysis}]{myoutc}
+</code></pre>
+<p>Suppose there were several objects in the ODS document between those two specified objects; they would all be included with this one <code>\Listing</code> tag.
+<strong>StatRep</strong> provides many other methods of ODS object selection; see the <em>User&#39;s Guide</em> for details.</p>
+<div class="callout"><p>By specifying the same ODS document in different <code>\Listing</code> tags, you can show the outputs in any order or break them up into parts so you can discuss particular outputs. Your SAS code is only run one time--when the ODS document is created. You can replay the output from that ODS document in any order you like.</p></div><p>When you run the generated SAS program, the resulting SAS Log shows that the output objects <code>ConfLimits</code> and <code>TTests</code> are selected.</p>
+<pre><code>Objects                   Type  Status   Group
+
+Ttest.time.PT             Note             .
+Ttest.time.Statistics     Table            .
+Ttest.time.ConfLimits     Table Selected   1
+Ttest.time.TTests         Table Selected   2
+Ttest.time.SummaryPanel   Graph            .
+Ttest.time.QQPlot         Graph            .
+</code></pre>
+<p>The <code>\Graphic</code> tag uses the <code>objects=</code> option to specify that a single graph is to be captured and displayed, the <code>qqplot</code> object. Typically, the <code>objects=</code> option contains a space-separated list of ODS objects; in this case however, only one plot is selected.</p>
+<pre><code class="language-latex"> \Graphic[store=myoutput, 
+          objects=qqplot,
+          caption={Court Case Duration}]{myoutd}
+</code></pre>
+<p>The log shows that only the <code>QQPlot</code> object is selected.</p>
+<pre><code>Objects                   Type  Status   Group
+
+Ttest.time.PT             Note             .
+Ttest.time.Statistics     Table            .
+Ttest.time.ConfLimits     Table            .
+Ttest.time.TTests         Table            .
+Ttest.time.SummaryPanel   Graph            .
+Ttest.time.QQPlot         Graph Selected   1
+</code></pre>
+<h2 id="summary">Summary</h2>
+<p>This article provides a couple of simple examples that show you how to get started with <strong>StatRep</strong> and generate LaTeX output with SAS. The <em>User&#39;s Guide</em> also provides simple examples, but includes more in-depth, advanced usage.</p>
+<p>You can download the package from:</p>
+<ul>
+<li><a href="http://support.sas.com/rnd/app/papers/statrep.html">support.SAS.com</a></li>
+<li><a href="http://www.ctan.org/tex-archive/macros/latex/contrib/statrep">CTAN.org</a></li>
+</ul>
+<p>Do you have an example you&#39;d like to see or a question about <strong>StatRep</strong>? Leave a comment!</p>
+
+      </article>
+
+      <a class="back-link" href="../tech.html">&larr; Back to Technical</a>
+    </main>
+  </body>
+</html>
