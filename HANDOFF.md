@@ -16,9 +16,11 @@ placeholder copy and no discovery infrastructure.
   reads the old CodeHilite/attr_list syntax natively. The previous session's
   one-off Node conversion script had been thrown away; conversion is now part of
   the build and reproducible.
-- **Design**: palette sampled from the curtain sheets, ink/paper surfaces,
-  Fraunces/Spectral/IBM Plex Mono self-hosted, and a generated ruled-line field
-  as the signature element.
+- **Design**: warm light page, dark ink type, Fraunces/Spectral/IBM Plex Mono
+  self-hosted. Originally built dark around a generated ruled-line field; Tim
+  asked for light, less emphasis on the line drawings, and a more personal
+  voice, so the field and the lane register motifs are gone, all page copy was
+  rewritten in first person, and only a six-stroke masthead mark remains.
 - **Crystals gallery added** — 18 images from the Facebook album export
   (`CrystalsandPolarizedLight`), EXIF stripped, descriptively named.
 - **Curtain gallery replaced.** The two images the previous session used were
@@ -46,7 +48,7 @@ and has been verified end to end:
 | Keyboard focus | visible on every interactive element |
 | `prefers-reduced-motion` | animation disabled, static final state |
 | Third-party requests | none |
-| Home page weight | 5 requests, ~88 KB gzipped |
+| Home page weight | 5 requests, ~76 KB gzipped (mostly font) |
 | Feed / sitemap | parse; 10 entries, 17 URLs |
 
 Bugs found and fixed during verification, worth knowing about because they were

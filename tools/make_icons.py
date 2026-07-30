@@ -19,15 +19,16 @@ ICONS = ROOT / "static" / "icons"
 IMG = ROOT / "static" / "img"
 FONTS = ROOT / "static" / "fonts"
 
-INK = (28, 26, 23)
-PAPER = (237, 231, 218)
-OCHRE = (216, 163, 43)
-TEAL = (46, 127, 134)
+PAGE = (247, 244, 236)
+INK = (33, 32, 28)
+MUTED = (85, 80, 74)
+OCHRE = (125, 90, 15)
+TEAL = (28, 86, 91)
 
 FAVICON_SVG = """\
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="4" fill="#1c1a17"/>
-  <g fill="none" stroke="#ede7da" stroke-width="1.6" stroke-linecap="round">
+  <rect width="32" height="32" rx="4" fill="#21201c"/>
+  <g fill="none" stroke="#f7f4ec" stroke-width="1.6" stroke-linecap="round">
 {strokes}
   </g>
 </svg>
@@ -49,6 +50,11 @@ def write_favicon_svg() -> None:
 
 
 def draw_mark(size: int, pad_ratio: float = 0.22) -> Image.Image:
+    """Light strokes on ink.
+
+    Inverted relative to the site on purpose: a browser tab strip is usually
+    light, so a light icon disappears into it. Ink reads on either.
+    """
     img = Image.new("RGB", (size, size), INK)
     d = ImageDraw.Draw(img)
     pad = size * pad_ratio
@@ -56,7 +62,7 @@ def draw_mark(size: int, pad_ratio: float = 0.22) -> Image.Image:
     width = max(1, round(size / 20))
     for i in range(6):
         x = pad + span * (i / 5) ** 1.6
-        d.line([(x, pad), (x, size - pad)], fill=PAPER, width=width)
+        d.line([(x, pad), (x, size - pad)], fill=PAGE, width=width)
     return img
 
 
@@ -80,42 +86,30 @@ def load_font(name: str, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageF
 
 
 def write_og_card() -> None:
-    """1200x630 share card: the line field, the name, the two lanes."""
+    """1200x630 share card. Type on the page colour, no ornament."""
     w, h = 1200, 630
-    img = Image.new("RGB", (w, h), INK)
+    img = Image.new("RGB", (w, h), PAGE)
     d = ImageDraw.Draw(img)
 
-    # The signature field, straight at the left and folding toward the right.
-    n = 74
-    for i in range(n):
-        y0 = h * (i + 0.5) / n
-        phase = (i / n) * math.tau * 1.6
-        pts = []
-        for s in range(61):
-            t = s / 60
-            disorder = t * t * (3 - 2 * t)
-            fold = math.sin(t * math.tau * 1.15 + phase * 0.35)
-            swell = math.sin(t * math.pi * 0.85 + phase * 0.12)
-            amp = 108 * disorder
-            y = y0 + fold * amp * 0.42 + swell * amp * 0.28
-            y += 20 * disorder * math.sin(phase + t * math.pi)
-            pts.append((t * w, y))
-        # Dim, so the type stays legible on top.
-        d.line(pts, fill=(58, 54, 48), width=1, joint="curve")
+    title = load_font("fraunces-display.woff2", 82)
+    body = load_font("spectral-regular.woff2", 30)
+    meta = load_font("plexmono-regular.woff2", 23)
 
-    title = load_font("fraunces-display.woff2", 78)
-    meta = load_font("plexmono-regular.woff2", 24)
+    d.text((78, 150), "REACHTIM", font=meta, fill=MUTED)
+    d.text((78, 214), "Tim Arnold", font=title, fill=INK)
+    d.text(
+        (78, 330),
+        "Python, the insides of PDF and LaTeX,",
+        font=body,
+        fill=MUTED,
+    )
+    d.text((78, 372), "and a pile of pictures I made.", font=body, fill=MUTED)
 
-    d.text((72, 236), "Line work,", font=title, fill=PAPER)
-    d.text((72, 322), "in two registers.", font=title, fill=PAPER)
-    d.text((72, 168), "REACHTIM  ·  TIM ARNOLD", font=meta, fill=(169, 161, 150))
-
-    d.text((72, 470), "TECHNICAL", font=meta, fill=TEAL)
-    d.text((262, 470), "ART", font=meta, fill=OCHRE)
-    d.line([(72, 452), (1128, 452)], fill=(52, 48, 42), width=1)
+    d.line([(78, 456), (1122, 456)], fill=(33, 30, 26, 40), width=1)
+    d.text((78, 482), "WRITING", font=meta, fill=TEAL)
+    d.text((236, 482), "PICTURES", font=meta, fill=OCHRE)
 
     img.save(IMG / "og-default.png", optimize=True)
-    return None
 
 
 def write_manifest() -> None:
@@ -126,8 +120,8 @@ def write_manifest() -> None:
                 "short_name": "reachtim",
                 "start_url": "/",
                 "display": "browser",
-                "background_color": "#1c1a17",
-                "theme_color": "#1c1a17",
+                "background_color": "#f7f4ec",
+                "theme_color": "#f7f4ec",
                 "icons": [
                     {"src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
                     {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},

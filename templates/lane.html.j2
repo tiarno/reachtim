@@ -5,9 +5,6 @@
 
 {% block content %}
 <header class="pagehead">
-  <span class="pagehead__register" aria-hidden="true">
-    {% include "partials/_register_" ~ page.lane ~ ".svg" %}
-  </span>
   <p class="eyebrow">{{ page.title }}</p>
   <h1>{{ page.headline }}</h1>
   <div class="pagehead__lede">{{ page.body | safe }}</div>

@@ -5,9 +5,9 @@ mount: 1 / 1
 lane: art
 order: 2
 summary: >-
-  Algorithmic pieces, each one a picture of an equation, a dynamical system, or
-  a physical process. Same instinct as the curtain drawings — form out of line —
-  except the strokes are placed by arithmetic instead of by hand.
+  Every one of these is a picture of an equation, a dynamical system, or some
+  physical process behaving the way it does. I find it hard to look away from the
+  fact that arithmetic produces things this pretty without being asked to.
 
 pieces:
   - file: seashell-surface.svg

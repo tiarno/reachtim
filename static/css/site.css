@@ -1,14 +1,14 @@
 /* ============================================================================
    reachtim.com
 
-   The palette is sampled from the curtain sheets in the art gallery: their cream
-   ground and the pigments running across the warm and cool ones. Nothing here is
-   invented.
+   Warm off-white page, dark warm ink for type, and very little else. The work —
+   articles, photographs, drawings — supplies the colour; the page stays out of
+   its way. Code samples are the one inversion, sitting as dark blocks on the
+   light page.
 
-   The organising idea is ink and paper. Site chrome is ink; anything you read at
-   length — an article, a caption — sits on a paper sheet laid over it. Each lane
-   takes its accent from one of the two drawings: technical from the cool sheet,
-   art from the warm one.
+   Accents are drawn from the art: a deep teal for the technical side, a deep
+   ochre for the art side. Both are darkened well past their source values so
+   that small text clears WCAG AA on this background.
    ========================================================================== */
 
 @font-face {
@@ -46,39 +46,23 @@
 }
 
 :root {
-  /* Sampled pigments */
-  --ink: #1c1a17;
-  --ink-raised: #24211d;
-  --ink-edge: #34302a;
-  --paper: #ede7da;
-  --paper-bright: #f5f1e8;
-  --ochre: #d8a32b;
-  --brick: #b44a32;
-  --teal: #2e7f86;
-  --citron: #8a9a3c;
+  --page: #f7f4ec;
+  --surface: #fffdf7;
+  --ink: #21201c;
+  --muted: #55504a;
+  --line: rgba(33, 30, 26, 0.13);
+  --line-strong: rgba(33, 30, 26, 0.22);
 
-  /* Lifted / deepened variants so each accent clears AA on both surfaces */
-  --brick-deep: #a44029;
-  --brick-lift: #d4694a;
-  --teal-lift: #4fb3b8;
-  --teal-deep: #1f5c61;
-  --ochre-lift: #e8b845;
-  --ochre-deep: #8a6512;
+  /* Dark block used for code samples */
+  --code-bg: #23211d;
+  --code-fg: #ece6d9;
 
-  /* Semantic, on ink */
-  --fg: #ece6d9;
-  --fg-muted: #a9a196;
-  /* 4.6:1 on --ink. The obvious choice here is a dimmer grey, but this colour
-     carries dates, counters and captions at 12px, which is exactly the text
-     that has to clear AA rather than merely look subdued. */
-  --fg-faint: #8a8279;
+  --teal: #1c565b;
+  --ochre: #7d5a0f;
+  --brick: #9c3c26;
+  --citron: #57621f;
 
-  /* Semantic, on paper */
-  --pfg: #211e1a;
-  --pfg-muted: #5a5449;
-
-  --accent-ink: var(--teal-lift);
-  --accent-paper: var(--teal-deep);
+  --accent: var(--teal);
 
   --font-display: "Fraunces", Georgia, serif;
   --font-body: "Spectral", Georgia, "Times New Roman", serif;
@@ -89,19 +73,16 @@
   --gutter: clamp(1.25rem, 5vw, 3rem);
 
   --radius: 3px;
-  --sheet-shadow: 0 1px 2px rgba(0, 0, 0, 0.34), 0 12px 28px -12px rgba(0, 0, 0, 0.5);
+  --lift: 0 1px 2px rgba(33, 30, 26, 0.06), 0 10px 24px -14px rgba(33, 30, 26, 0.3);
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
-/* Lane accents, taken from opposite ends of the curtain palette. */
 .lane-tech {
-  --accent-ink: var(--teal-lift);
-  --accent-paper: var(--teal-deep);
+  --accent: var(--teal);
 }
 .lane-art {
-  --accent-ink: var(--ochre-lift);
-  --accent-paper: var(--ochre-deep);
+  --accent: var(--ochre);
 }
 
 /* --------------------------------------------------------------- foundation */
@@ -118,8 +99,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--ink);
-  color: var(--fg);
+  background: var(--page);
+  color: var(--ink);
   font-family: var(--font-body);
   font-size: 1.0625rem;
   line-height: 1.7;
@@ -147,14 +128,14 @@ h3,
 h4 {
   font-family: var(--font-display);
   font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.015em;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
   text-wrap: balance;
   margin: 0;
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent-ink);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 1px;
 }
@@ -164,8 +145,8 @@ h4 {
   left: -9999px;
   top: 0;
   z-index: 10;
-  background: var(--paper);
-  color: var(--pfg);
+  background: var(--ink);
+  color: var(--page);
   padding: 0.6rem 1rem;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -178,13 +159,13 @@ h4 {
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--fg-muted);
+  color: var(--muted);
   margin: 0 0 0.9rem;
 }
 .eyebrow a {
-  color: var(--accent-ink);
+  color: var(--accent);
   text-decoration: none;
 }
 .eyebrow a:hover {
@@ -194,8 +175,8 @@ h4 {
 .tag {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  color: var(--accent-ink);
+  letter-spacing: 0.06em;
+  color: var(--accent);
 }
 
 /* ----------------------------------------------------------------- masthead */
@@ -204,9 +185,9 @@ h4 {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1.5rem 2rem;
+  gap: 1.25rem 2rem;
   flex-wrap: wrap;
-  padding: 1.6rem var(--gutter);
+  padding: 1.75rem var(--gutter) 1.25rem;
   max-width: var(--measure-wide);
   width: 100%;
   margin: 0 auto;
@@ -215,7 +196,7 @@ h4 {
 .masthead__mark {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.6rem;
+  gap: 0.55rem;
   text-decoration: none;
 }
 
@@ -227,12 +208,12 @@ h4 {
 }
 
 .masthead__rule {
-  color: var(--fg-faint);
+  color: var(--line-strong);
   display: inline-block;
-  width: 34px;
+  width: 26px;
 }
 .masthead__mark:hover .masthead__rule {
-  color: var(--accent-ink);
+  color: var(--accent);
 }
 
 .masthead__nav {
@@ -240,119 +221,57 @@ h4 {
   gap: 1.4rem;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
 }
 
 .masthead__nav a {
-  color: var(--fg-muted);
+  color: var(--muted);
   text-decoration: none;
   padding-bottom: 2px;
   border-bottom: 1px solid transparent;
 }
 .masthead__nav a:hover {
-  color: var(--fg);
+  color: var(--ink);
 }
 .masthead__nav a[aria-current="page"] {
-  color: var(--fg);
+  color: var(--ink);
   border-bottom-color: currentColor;
 }
 .lane-link--teal:hover {
-  color: var(--teal-lift);
+  color: var(--teal);
 }
 .lane-link--ochre:hover {
-  color: var(--ochre-lift);
+  color: var(--ochre);
 }
 
 main {
   flex: 1;
 }
 
-/* ------------------------------------------------------- the signature field
-
-   One field of ruled strokes: evenly pitched at the left edge, folding into
-   drape toward the right. It sweeps in once on load, left to right, so the
-   order-into-drape reading happens in time as well as in space.                */
+/* --------------------------------------------------------------------- hero */
 
 .hero {
-  position: relative;
-  /* Full-bleed on purpose: bounded by the content column the strokes read as a
-     box with edges, which is the opposite of a sheet. */
-  padding: clamp(3rem, 9vw, 7rem) var(--gutter) clamp(3rem, 7vw, 5rem);
-  overflow: hidden;
-}
-
-.hero__field {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  color: var(--paper);
-  pointer-events: none;
-  --field-opacity: 0.55;
-  /* Nearly clear on the left, where the text sits, and full strength on the
-     right, where the strokes fold. The concept and the legibility want the same
-     thing here: the ordered end stays quiet, the drape carries the weight. */
-  mask-image:
-    linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(0, 0, 0, 0.12) 26%,
-      rgba(0, 0, 0, 0.55) 52%,
-      #000 72%,
-      #000 92%,
-      transparent 100%
-    ),
-    linear-gradient(to bottom, transparent 0%, #000 14%, #000 86%, transparent 100%);
-  mask-composite: intersect;
-}
-
-.hero__field .linefield {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.hero__field .linefield__strokes {
-  opacity: var(--field-opacity);
-  clip-path: inset(0 0 0 0);
-  animation: sweep 1400ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
-/* The end state reads --field-opacity rather than a literal, so the narrow
-   viewport override further down still wins: an animation with fill:both
-   otherwise outranks any plain declaration. */
-@keyframes sweep {
-  from {
-    clip-path: inset(0 100% 0 0);
-    opacity: 0;
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-    opacity: var(--field-opacity);
-  }
+  max-width: var(--measure-wide);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vw, 3.5rem) var(--gutter) clamp(2rem, 5vw, 3.25rem);
 }
 
 .hero__text {
-  position: relative;
-  max-width: var(--measure-wide);
-  margin: 0 auto;
-}
-
-.hero__text > * {
   max-width: 34rem;
 }
 
 .hero__headline {
-  font-size: clamp(2.5rem, 8vw, 4.6rem);
+  font-size: clamp(2rem, 5.5vw, 3.1rem);
   font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 0.98;
-  margin: 0 0 1.4rem;
+  letter-spacing: -0.022em;
+  line-height: 1.05;
+  margin: 0 0 1.3rem;
 }
 
 .hero__lede p {
   margin: 0 0 1rem;
-  color: var(--fg-muted);
-  font-size: 1.125rem;
+  color: var(--muted);
+  font-size: 1.09rem;
 }
 .hero__lede p:last-child {
   margin-bottom: 0;
@@ -364,54 +283,41 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
   gap: 1px;
-  background: var(--ink-edge);
-  border-top: 1px solid var(--ink-edge);
-  border-bottom: 1px solid var(--ink-edge);
+  background: var(--line);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   max-width: var(--measure-wide);
-  margin: clamp(1.5rem, 5vw, 3rem) auto 0;
+  margin: 0 auto;
 }
 
 .lane {
   display: grid;
-  gap: 0.9rem;
-  padding: clamp(1.75rem, 4vw, 2.75rem) var(--gutter);
-  background: var(--ink);
+  gap: 0.75rem;
+  align-content: start;
+  padding: clamp(1.5rem, 4vw, 2.4rem) var(--gutter);
+  background: var(--page);
   text-decoration: none;
-  transition: background 200ms ease;
+  transition: background 180ms ease;
 }
 .lane:hover {
-  background: var(--ink-raised);
+  background: var(--surface);
 }
 .lane--teal {
-  --accent-ink: var(--teal-lift);
+  --accent: var(--teal);
 }
 .lane--ochre {
-  --accent-ink: var(--ochre-lift);
-}
-
-.lane__register {
-  color: var(--fg-faint);
-  width: 64px;
-  display: block;
-  transition: color 200ms ease;
-}
-.lane:hover .lane__register {
-  color: var(--accent-ink);
-}
-.lane__register .register {
-  display: block;
-  width: 100%;
+  --accent: var(--ochre);
 }
 
 .lane__label {
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.018em;
 }
 
 .lane__tagline {
-  color: var(--fg-muted);
+  color: var(--muted);
   font-size: 0.9375rem;
   line-height: 1.55;
 }
@@ -419,10 +325,10 @@ main {
 .lane__index {
   display: grid;
   gap: 0.3rem;
-  margin-top: 0.4rem;
+  margin-top: 0.35rem;
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--fg-faint);
+  color: var(--muted);
 }
 .lane__item {
   overflow: hidden;
@@ -430,20 +336,20 @@ main {
   white-space: nowrap;
 }
 .lane__more {
-  color: var(--accent-ink);
-  letter-spacing: 0.08em;
+  color: var(--accent);
+  letter-spacing: 0.06em;
 }
 
 .lane__enter {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
-  letter-spacing: 0.08em;
-  color: var(--accent-ink);
+  letter-spacing: 0.06em;
+  color: var(--accent);
 }
 .lane:hover .lane__enter span {
   display: inline-block;
   transform: translateX(3px);
-  transition: transform 200ms ease;
+  transition: transform 180ms ease;
 }
 
 /* ------------------------------------------------------------- page headings */
@@ -451,36 +357,29 @@ main {
 .pagehead {
   max-width: var(--measure-wide);
   margin: 0 auto;
-  padding: clamp(1.5rem, 5vw, 3.5rem) var(--gutter) clamp(1.5rem, 3vw, 2.25rem);
-}
-
-.pagehead__register {
-  display: block;
-  width: 56px;
-  color: var(--accent-ink);
-  margin-bottom: 1.25rem;
-}
-.pagehead__register .register {
-  display: block;
-  width: 100%;
+  padding: clamp(1.25rem, 4vw, 2.75rem) var(--gutter) clamp(1.5rem, 3vw, 2rem);
 }
 
 .pagehead h1 {
-  font-size: clamp(1.9rem, 5vw, 3.1rem);
+  font-size: clamp(1.8rem, 4.5vw, 2.7rem);
   margin: 0 0 1rem;
 }
 
-.pagehead__lede,
-.pagehead__lede p {
+.pagehead__lede {
   margin: 0;
-  color: var(--fg-muted);
+  color: var(--muted);
   max-width: var(--measure);
 }
+/* On gallery pages the lede is itself a <p>; on lane pages it is a wrapper
+   holding several, which need to stay apart. */
+.pagehead__lede p {
+  margin: 0 0 0.9rem;
+}
+.pagehead__lede p:last-child {
+  margin-bottom: 0;
+}
 
-/* --------------------------------------------------------------- article list
-
-   A numbered list because it is one: the articles are in date order, and the
-   number tells you where each sits in the run.                                */
+/* --------------------------------------------------------------- article list */
 
 .index {
   list-style: none;
@@ -488,12 +387,12 @@ main {
   margin: 0 auto;
   padding: 0 0 clamp(2rem, 6vw, 4rem);
   max-width: var(--measure-wide);
-  border-top: 1px solid var(--ink-edge);
+  border-top: 1px solid var(--line);
 }
 
 .index__row {
   counter-increment: row;
-  border-bottom: 1px solid var(--ink-edge);
+  border-bottom: 1px solid var(--line);
 }
 
 .index__link {
@@ -502,31 +401,31 @@ main {
   gap: 0.15rem 1rem;
   padding: 1.5rem var(--gutter);
   text-decoration: none;
-  transition: background 160ms ease;
+  transition: background 150ms ease;
 }
 .index__link:hover {
-  background: var(--ink-raised);
+  background: var(--surface);
 }
 .index__link::before {
   content: counter(row, decimal-leading-zero);
   grid-row: 1 / span 3;
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--fg-faint);
+  color: var(--muted);
   padding-top: 0.45rem;
 }
 
 .index__title {
-  font-size: 1.3rem;
+  font-size: 1.28rem;
   font-weight: 600;
 }
 .index__link:hover .index__title {
-  color: var(--accent-ink);
+  color: var(--accent);
 }
 
 .index__summary {
   margin: 0.35rem 0 0;
-  color: var(--fg-muted);
+  color: var(--muted);
   font-size: 0.9375rem;
   line-height: 1.6;
   max-width: var(--measure);
@@ -539,45 +438,45 @@ main {
   align-items: baseline;
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--fg-faint);
+  color: var(--muted);
 }
 
-/* ------------------------------------------------------------- collections */
+/* --------------------------------------------------------------- collections */
 
 .collections {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
   gap: 1px;
-  background: var(--ink-edge);
-  border-top: 1px solid var(--ink-edge);
-  border-bottom: 1px solid var(--ink-edge);
+  background: var(--line);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   max-width: var(--measure-wide);
   margin: 0 auto clamp(2rem, 6vw, 4rem);
 }
 
 .collection {
-  background: var(--ink);
-  padding: clamp(1.5rem, 4vw, 2.25rem) var(--gutter);
+  background: var(--page);
+  padding: clamp(1.4rem, 4vw, 2.1rem) var(--gutter);
   text-decoration: none;
   display: grid;
-  gap: 0.6rem;
+  gap: 0.55rem;
   align-content: start;
-  transition: background 200ms ease;
+  transition: background 180ms ease;
 }
 .collection:hover {
-  background: var(--ink-raised);
+  background: var(--surface);
 }
 
 .collection__title {
-  font-size: 1.4rem;
+  font-size: 1.32rem;
 }
 .collection:hover .collection__title {
-  color: var(--accent-ink);
+  color: var(--accent);
 }
 
 .collection__summary {
   margin: 0;
-  color: var(--fg-muted);
+  color: var(--muted);
   font-size: 0.9375rem;
   line-height: 1.6;
 }
@@ -586,34 +485,31 @@ main {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  color: var(--accent-ink);
+  letter-spacing: 0.06em;
+  color: var(--accent);
 }
 
-/* -------------------------------------------------------------------- article
-
-   The reading surface is a paper sheet laid on the ink.                       */
+/* ------------------------------------------------------------------- article */
 
 .article,
 .page-plain .prose {
   max-width: var(--measure-wide);
   margin: 0 auto;
-  padding: 0 var(--gutter) clamp(2.5rem, 6vw, 4.5rem);
+  padding: 0 var(--gutter) clamp(2rem, 5vw, 3.5rem);
 }
 
 .article__head {
-  padding: clamp(1.5rem, 5vw, 3rem) 0 clamp(1.25rem, 3vw, 2rem);
+  padding: clamp(1.25rem, 4vw, 2.5rem) 0 clamp(1rem, 2.5vw, 1.5rem);
 }
 
 .article__head h1 {
-  font-size: clamp(1.9rem, 4.6vw, 2.9rem);
+  font-size: clamp(1.8rem, 4.4vw, 2.6rem);
   margin: 0 0 1rem;
-  max-width: var(--measure-wide);
 }
 
 .article__summary {
   margin: 0;
-  color: var(--fg-muted);
+  color: var(--muted);
   font-size: 1.0625rem;
   max-width: var(--measure);
 }
@@ -625,22 +521,22 @@ main {
   flex-wrap: wrap;
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--fg-faint);
+  color: var(--muted);
 }
 
 .contents {
-  border-top: 1px solid var(--ink-edge);
-  border-bottom: 1px solid var(--ink-edge);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   padding: 1.1rem 0;
-  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  margin-bottom: clamp(1.5rem, 4vw, 2.25rem);
 }
 
 .contents__label {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--fg-faint);
+  color: var(--muted);
   margin: 0 0 0.7rem;
 }
 
@@ -656,14 +552,13 @@ main {
 }
 
 .contents a {
-  color: var(--fg-muted);
+  color: var(--muted);
   text-decoration: none;
 }
 .contents a:hover {
-  color: var(--accent-ink);
+  color: var(--accent);
   text-decoration: underline;
 }
-/* Levels are rebased per article, so l1 is always the top section. */
 .contents__item--l2 {
   padding-left: 1rem;
 }
@@ -674,17 +569,7 @@ main {
   padding-left: 3rem;
 }
 
-/* ---------------------------------------------------------------------- prose
-
-   Everything read at length sits on paper.                                    */
-
-.prose {
-  background: var(--paper);
-  color: var(--pfg);
-  padding: clamp(1.75rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 3.5rem);
-  border-radius: var(--radius);
-  box-shadow: var(--sheet-shadow);
-}
+/* --------------------------------------------------------------------- prose */
 
 .prose > * {
   max-width: var(--measure);
@@ -695,15 +580,14 @@ main {
 .prose h2,
 .prose h3,
 .prose h4 {
-  color: var(--pfg);
-  margin: 2.4rem auto 0.8rem;
+  margin: 2.3rem auto 0.75rem;
   scroll-margin-top: 1.5rem;
 }
 .prose h2 {
-  font-size: 1.6rem;
+  font-size: 1.55rem;
 }
 .prose h3 {
-  font-size: 1.25rem;
+  font-size: 1.22rem;
 }
 .prose h4 {
   font-size: 1.0625rem;
@@ -724,12 +608,12 @@ main {
 }
 
 .prose a {
-  color: var(--accent-paper);
+  color: var(--accent);
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
 .prose a:hover {
-  color: var(--brick-deep);
+  color: var(--brick);
 }
 
 .prose strong {
@@ -739,22 +623,23 @@ main {
 .prose blockquote {
   margin: 0 auto 1.4rem;
   padding-left: 1.2rem;
-  border-left: 2px solid var(--accent-paper);
-  color: var(--pfg-muted);
+  border-left: 2px solid var(--accent);
+  color: var(--muted);
   font-style: italic;
 }
 
 .prose hr {
   border: 0;
-  border-top: 1px solid rgba(33, 30, 26, 0.18);
+  border-top: 1px solid var(--line);
   margin: 2.2rem auto;
 }
 
 .prose img {
   display: block;
-  border: 1px solid rgba(33, 30, 26, 0.16);
+  border: 1px solid var(--line);
   border-radius: 2px;
   margin: 0 auto 1.4rem;
+  background: var(--surface);
 }
 
 .prose table {
@@ -765,7 +650,7 @@ main {
 }
 .prose th,
 .prose td {
-  border: 1px solid rgba(33, 30, 26, 0.18);
+  border: 1px solid var(--line-strong);
   padding: 0.5rem 0.7rem;
   text-align: left;
   vertical-align: top;
@@ -776,7 +661,6 @@ main {
   font-size: 0.8125rem;
 }
 
-/* Definition lists carried over from the old blog's option/parameter tables. */
 .prose dt {
   font-weight: 600;
   font-family: var(--font-mono);
@@ -785,17 +669,17 @@ main {
 }
 .prose dd {
   margin: 0.2rem 0 0;
-  color: var(--pfg-muted);
+  color: var(--muted);
 }
 
 /* The old blog marked asides with {: .callout}. */
 .prose .callout {
-  background: rgba(46, 127, 134, 0.09);
-  border-left: 2px solid var(--accent-paper);
+  background: rgba(28, 86, 91, 0.07);
+  border-left: 2px solid var(--accent);
   border-radius: 0 2px 2px 0;
   padding: 1rem 1.2rem;
   margin: 0 auto 1.4rem;
-  color: var(--pfg-muted);
+  color: var(--muted);
 }
 .prose .callout > :last-child {
   margin-bottom: 0;
@@ -803,9 +687,9 @@ main {
 .prose .note {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--brick-deep);
+  color: var(--brick);
   font-weight: 400;
 }
 
@@ -813,29 +697,20 @@ main {
   max-width: var(--measure);
 }
 
-/* Code blocks invert back to ink — a sample of a terminal on a paper page. */
 .prose code {
   font-family: var(--font-mono);
   font-size: 0.875em;
-  background: rgba(33, 30, 26, 0.075);
-  padding: 0.1em 0.35em;
+  background: rgba(33, 30, 26, 0.06);
+  border: 1px solid var(--line);
+  padding: 0.05em 0.32em;
   border-radius: 2px;
-  /* Long identifiers and paths appear inline throughout these articles and
-     would otherwise push the page wider than a phone screen. */
   overflow-wrap: anywhere;
 }
 
-/* Display math is typeset at its natural width; on a narrow screen it has to
-   scroll inside its own box rather than widen the document. */
-.prose .katex-display {
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0.25rem 0;
-}
-
+/* Code samples are the one dark surface on the page. */
 .prose pre {
-  background: var(--ink);
-  color: var(--fg);
+  background: var(--code-bg);
+  color: var(--code-fg);
   border-radius: var(--radius);
   padding: 1.1rem 1.25rem;
   margin: 0 auto 1.4rem;
@@ -847,32 +722,36 @@ main {
 }
 .prose pre code {
   background: none;
+  border: 0;
   padding: 0;
   font-size: inherit;
   color: inherit;
 }
 
-/* Pygments, coloured from the site palette rather than a stock theme. */
-.highlight .c, .highlight .c1, .highlight .cm, .highlight .cs, .highlight .ch { color: #8a8279; font-style: italic; }
-.highlight .k, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kt { color: var(--ochre); }
-.highlight .kc, .highlight .bp, .highlight .nb { color: var(--ochre-lift); }
+.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+/* Pygments, tuned against the dark code block. */
+.highlight .c, .highlight .c1, .highlight .cm, .highlight .cs, .highlight .ch { color: #918a80; font-style: italic; }
+.highlight .k, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kt { color: #d8a32b; }
+.highlight .kc, .highlight .bp, .highlight .nb { color: #e8b845; }
 .highlight .s, .highlight .s1, .highlight .s2, .highlight .sb, .highlight .sc,
 .highlight .sd, .highlight .se, .highlight .sh, .highlight .si, .highlight .sx,
-.highlight .sr, .highlight .ss { color: var(--citron); }
-.highlight .nf, .highlight .fm { color: var(--teal-lift); }
+.highlight .sr, .highlight .ss { color: #a8bb52; }
+.highlight .nf, .highlight .fm { color: #4fb3b8; }
 .highlight .nc, .highlight .nn, .highlight .ne { color: #d8c98f; }
-.highlight .nd, .highlight .nt { color: var(--brick-lift); }
+.highlight .nd, .highlight .nt { color: #d4694a; }
 .highlight .m, .highlight .mi, .highlight .mf, .highlight .mh, .highlight .mo,
 .highlight .il { color: #c98a6b; }
-.highlight .o, .highlight .ow, .highlight .p { color: var(--fg-muted); }
-.highlight .nv, .highlight .vi, .highlight .vg, .highlight .vc { color: var(--fg); }
-.highlight .err { color: var(--brick-lift); }
-.highlight .gd { color: var(--brick); }
-.highlight .gi { color: var(--citron); }
+.highlight .o, .highlight .ow, .highlight .p { color: #a9a196; }
+.highlight .nv, .highlight .vi, .highlight .vg, .highlight .vc { color: #ece6d9; }
+.highlight .err, .highlight .gd { color: #d4694a; }
+.highlight .gi { color: #a8bb52; }
 
-/* ----------------------------------------------------------------- galleries
-
-   Each piece is mounted on paper, because each original is on paper.          */
+/* ----------------------------------------------------------------- galleries */
 
 .plates {
   display: grid;
@@ -885,23 +764,21 @@ main {
 
 .plate {
   margin: 0;
-  background: var(--paper-bright);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--sheet-shadow);
+  box-shadow: var(--lift);
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* A square mount with the piece centred inside it, never cropped. The gallery
-   mixes portrait, landscape and square work; matting each one to a common
-   opening keeps the grid regular the way a wall of framed prints is regular. */
 .plate__frame {
   --mat: clamp(0.85rem, 2.5vw, 1.4rem);
   position: relative;
   display: block;
   aspect-ratio: var(--mount, 1 / 1);
-  background: var(--paper-bright);
+  background: var(--surface);
 }
 /* Taken out of flow deliberately. In flow, a percentage height can't resolve
    against a height that aspect-ratio derives from the width — it falls back to
@@ -912,10 +789,6 @@ main {
   position: absolute;
   top: var(--mat);
   left: var(--mat);
-  /* Sized explicitly rather than by insets: a replaced element with auto
-     width/height ignores its insets and lays out at intrinsic size. The frame
-     carries no padding, so 100% here is the full mat, less the border on both
-     sides. */
   width: calc(100% - 2 * var(--mat));
   height: calc(100% - 2 * var(--mat));
   object-fit: contain;
@@ -925,15 +798,14 @@ main {
 }
 
 .plate__caption {
-  padding: 0 clamp(0.9rem, 2.5vw, 1.35rem) clamp(1rem, 2.5vw, 1.35rem);
-  color: var(--pfg-muted);
-  border-top: 1px solid rgba(33, 30, 26, 0.12);
-  padding-top: 0.9rem;
+  padding: 0.9rem clamp(0.9rem, 2.5vw, 1.35rem) clamp(1rem, 2.5vw, 1.35rem);
+  color: var(--muted);
+  border-top: 1px solid var(--line);
 }
 
 .plate__title {
   font-size: 1.0625rem;
-  color: var(--pfg);
+  color: var(--ink);
   margin: 0 0 0.4rem;
 }
 
@@ -948,29 +820,29 @@ main {
 .article__foot {
   max-width: var(--measure-wide);
   margin: 0 auto;
-  padding: clamp(1.5rem, 4vw, 2.5rem) var(--gutter);
+  padding: clamp(1.25rem, 4vw, 2.25rem) var(--gutter);
 }
 
 .backlink {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
-  letter-spacing: 0.06em;
-  color: var(--fg-muted);
+  letter-spacing: 0.05em;
+  color: var(--muted);
   text-decoration: none;
 }
 .backlink:hover {
-  color: var(--accent-ink);
+  color: var(--accent);
 }
 
 .footer {
-  border-top: 1px solid var(--ink-edge);
+  border-top: 1px solid var(--line);
   margin-top: clamp(2rem, 6vw, 4rem);
 }
 
 .footer__inner {
   max-width: var(--measure-wide);
   margin: 0 auto;
-  padding: 1.75rem var(--gutter) 2.5rem;
+  padding: 1.6rem var(--gutter) 2.4rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem 2rem;
@@ -978,12 +850,12 @@ main {
   align-items: baseline;
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 .footer__who {
   margin: 0;
-  color: var(--fg-faint);
+  color: var(--muted);
 }
 
 .footer__links {
@@ -992,23 +864,14 @@ main {
   flex-wrap: wrap;
 }
 .footer__links a {
-  color: var(--fg-muted);
+  color: var(--muted);
   text-decoration: none;
 }
 .footer__links a:hover {
-  color: var(--accent-ink);
+  color: var(--accent);
 }
 
 /* --------------------------------------------------------------- adjustments */
-
-@media (max-width: 48rem) {
-  /* The mask's quiet zone is a percentage of the width, so on a phone there is
-     no room for the text to sit clear of the strokes. Drop the field back to
-     texture there rather than let it cross the lede. */
-  .hero__field {
-    --field-opacity: 0.26;
-  }
-}
 
 @media (max-width: 40rem) {
   .contents ol {
@@ -1017,9 +880,6 @@ main {
   .index__link {
     grid-template-columns: 1.75rem 1fr;
     gap: 0.15rem 0.75rem;
-  }
-  .masthead {
-    padding-bottom: 1rem;
   }
 }
 
@@ -1031,33 +891,24 @@ main {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-  .hero__field .linefield__strokes {
-    animation: none;
-    clip-path: none;
-    opacity: var(--field-opacity);
-  }
 }
 
 @media print {
   body {
     background: #fff;
-    color: #000;
   }
   .masthead__nav,
-  .hero__field,
   .footer__links,
   .backlink,
   .skip {
     display: none;
   }
-  .prose {
-    box-shadow: none;
-    background: none;
-    padding: 0;
-  }
   .prose pre {
     background: #f4f4f4;
     color: #000;
     border: 1px solid #ccc;
+  }
+  .prose pre .highlight span {
+    color: #000 !important;
   }
 }

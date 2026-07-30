@@ -2,23 +2,22 @@ title: reachtim
 author: Tim Arnold
 base_url: https://reachtim.com
 description: >-
-  Technical writing on Python, PDF and LaTeX plumbing, and system monitoring —
-  alongside a gallery of line work built from thousands of parallel curves.
+  Tim Arnold — writing about Python, the insides of PDF and LaTeX, and keeping
+  servers honest, plus galleries of crystals, curves and folded colour.
 locale: en
 
-# Both lanes are equal. Each takes its accent from one of the curtain drawings:
-# technical from the cool sheet, art from the warm one.
+# Both lanes are equal. Technical takes the teal accent, art the ochre.
 lanes:
   - id: tech
     label: Technical
     title: Technical
     accent: teal
-    tagline: Python, PDF and LaTeX plumbing, packet structure, monitoring.
+    tagline: Python, the insides of PDF and LaTeX, and watching servers.
   - id: art
     label: Art
     title: Art
     accent: ochre
-    tagline: Line work, algorithmic curves, and crystals under polarized light.
+    tagline: Crystals, curves, and sheets of folded colour.
 
 social:
   - label: GitHub

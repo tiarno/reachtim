@@ -2,17 +2,20 @@
 title: "About"
 slug: about
 template: page
-headline: "About"
-description: Tim Arnold — software developer, statistician, and author.
+headline: "About me"
+description: Tim Arnold — developer, statistician, author of Black Hat Python (2nd ed).
 ---
 
-I'm Tim Arnold. Twenty-five years of writing software and doing statistics, most
-of it spent around publishing systems — PDF, LaTeX, DocBook — and the tooling
-that keeps them honest.
+I'm Tim Arnold. Twenty-five years of writing software and doing statistics,
+most of it spent somewhere near publishing systems — PDF, LaTeX, DocBook — and
+the tooling that keeps them from quietly lying to you.
 
-I wrote the second edition of *Black Hat Python*, and I speak at security
-conferences now and then. Python is my working language; I care more than is
-strictly reasonable about how documents are put together.
+I wrote the second edition of *Black Hat Python*. I speak at security
+conferences when they'll have me. Python is my working language, and I care
+more than is strictly reasonable about how a document is put together.
 
-The line work is a separate habit. Thousands of parallel curves to a sheet, and
-no shading anywhere — the folds have to come out of the spacing alone.
+I also make pictures, which has nothing to do with any of that and is probably
+better for it.
+
+If you want to get in touch, I'm [tim@reachtim.com](mailto:tim@reachtim.com),
+and most of what I've published lives on [GitHub](https://github.com/tiarno).
