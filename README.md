@@ -22,19 +22,37 @@ python -m venv .venv
 
 ## Deploying
 
-Upload the **contents** of `dist/` to the Porkbun static hosting root, so that
-`dist/index.html` lands at `/index.html`. Every internal URL is root-absolute
-(`/static/...`, `/articles/...`), so the site only works when served from a
-domain root — opening `dist/index.html` off the filesystem will not load CSS.
-
-Before uploading:
+Live at <https://reachtim.com> on Porkbun static hosting.
 
 ```bash
-.venv/Scripts/python tools/check_build.py
+.venv/Scripts/python tools/check_build.py     # validate first
+set FTP_HOST=pixie-ss1-ftp.porkbun.com
+set FTP_USER=reachtim.com
+set FTP_PASS=...                              # from the Porkbun panel
+.venv/Scripts/python tools/deploy.py --prune
 ```
 
-That verifies every internal link, asset, anchor and legacy redirect resolves,
-that the feed and sitemap parse, and reports which external hosts are linked.
+`check_build.py` verifies every internal link, asset, anchor and legacy redirect
+resolves, that the feed and sitemap parse, and reports which external hosts are
+linked. `deploy.py` uploads `dist/` over FTPS; `--prune` deletes remote files
+that `dist/` no longer contains, and `--dry-run` shows the plan without changing
+anything.
+
+**Credentials come from the environment, never from a file in this repo** — it
+is public.
+
+Every internal URL is root-absolute (`/static/...`, `/articles/...`), so the
+contents of `dist/` go at the web root and opening `dist/index.html` off the
+filesystem will not load CSS.
+
+Two things about this host worth knowing before debugging it:
+
+- **TLS is required.** Plain FTP is refused, so `deploy.py` uses `FTP_TLS` and
+  protects the data channel as well as the control channel.
+- **Its vsFTPd does not implement `MLSD`.** Walking the remote tree has to parse
+  traditional unix `LIST` output. Uploads also get reset mid-run fairly often,
+  so `deploy.py` retries, reconnects, and skips files whose remote size already
+  matches — re-running a failed deploy is cheap.
 
 ## Adding content
 
