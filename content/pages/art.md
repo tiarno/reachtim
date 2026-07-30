@@ -3,12 +3,12 @@ title: "Art"
 slug: art
 template: lane
 lane: art
-headline: "Several hundred strokes to a sheet."
+headline: "Thousands of strokes to a sheet."
 description: >-
-  Hand-ruled curtain drawings in ink on paper, and algorithmic pieces built
-  from the same instinct for line.
+  Curtain line work built from thousands of parallel curves, algorithmic
+  pieces, and crystals photographed under polarized light.
 ---
 
-The curtain drawings are ink on paper, ruled by hand — no fills and no shading,
-so the drape has to come out of how the spacing tightens and opens. The math art
-is the same instinct handed to a program.
+The curtains are built from thousands of parallel curves — no fills and no
+shading, so the drape has to come out of how the spacing tightens and opens. The
+math art is the same instinct, pointed at equations instead of cloth.

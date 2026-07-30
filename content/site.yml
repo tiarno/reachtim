@@ -3,7 +3,7 @@ author: Tim Arnold
 base_url: https://reachtim.com
 description: >-
   Technical writing on Python, PDF and LaTeX plumbing, and system monitoring —
-  alongside a gallery of hand-ruled line drawings.
+  alongside a gallery of line work built from thousands of parallel curves.
 locale: en
 
 # Both lanes are equal. Each takes its accent from one of the curtain drawings:
@@ -18,7 +18,7 @@ lanes:
     label: Art
     title: Art
     accent: ochre
-    tagline: Hand-ruled line drawings and algorithmic curves.
+    tagline: Line work, algorithmic curves, and crystals under polarized light.
 
 social:
   - label: GitHub

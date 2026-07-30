@@ -14,5 +14,5 @@ I wrote the second edition of *Black Hat Python*, and I speak at security
 conferences now and then. Python is my working language; I care more than is
 strictly reasonable about how documents are put together.
 
-The drawings are a separate habit. Ink, a ruler, and a few hundred strokes to a
-sheet.
+The line work is a separate habit. Thousands of parallel curves to a sheet, and
+no shading anywhere — the folds have to come out of the spacing alone.

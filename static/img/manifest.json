@@ -323,41 +323,77 @@
     ],
     "width": 450
   },
-  "curtains/curtain-cool.jpg": {
+  "curtains/curtain-01-cream-and-rose.jpg": {
     "fallback": {
-      "src": "/static/img/curtains/d/curtain-cool-960.jpg",
-      "srcset": "/static/img/curtains/d/curtain-cool-480.jpg 480w, /static/img/curtains/d/curtain-cool-960.jpg 960w"
+      "src": "/static/img/curtains/d/curtain-01-cream-and-rose-960.jpg",
+      "srcset": "/static/img/curtains/d/curtain-01-cream-and-rose-480.jpg 480w, /static/img/curtains/d/curtain-01-cream-and-rose-960.jpg 960w"
     },
-    "height": 1434,
+    "height": 1533,
     "sources": [
       {
-        "srcset": "/static/img/curtains/d/curtain-cool-480.avif 480w, /static/img/curtains/d/curtain-cool-960.avif 960w",
+        "srcset": "/static/img/curtains/d/curtain-01-cream-and-rose-480.avif 480w, /static/img/curtains/d/curtain-01-cream-and-rose-960.avif 960w",
         "type": "image/avif"
       },
       {
-        "srcset": "/static/img/curtains/d/curtain-cool-480.webp 480w, /static/img/curtains/d/curtain-cool-960.webp 960w",
+        "srcset": "/static/img/curtains/d/curtain-01-cream-and-rose-480.webp 480w, /static/img/curtains/d/curtain-01-cream-and-rose-960.webp 960w",
         "type": "image/webp"
       }
     ],
-    "width": 1080
+    "width": 1536
   },
-  "curtains/curtain-warm.jpg": {
+  "curtains/curtain-02-gold-and-coral.jpg": {
     "fallback": {
-      "src": "/static/img/curtains/d/curtain-warm-960.jpg",
-      "srcset": "/static/img/curtains/d/curtain-warm-480.jpg 480w, /static/img/curtains/d/curtain-warm-960.jpg 960w"
+      "src": "/static/img/curtains/d/curtain-02-gold-and-coral-960.jpg",
+      "srcset": "/static/img/curtains/d/curtain-02-gold-and-coral-480.jpg 480w, /static/img/curtains/d/curtain-02-gold-and-coral-960.jpg 960w"
     },
-    "height": 1434,
+    "height": 1569,
     "sources": [
       {
-        "srcset": "/static/img/curtains/d/curtain-warm-480.avif 480w, /static/img/curtains/d/curtain-warm-960.avif 960w",
+        "srcset": "/static/img/curtains/d/curtain-02-gold-and-coral-480.avif 480w, /static/img/curtains/d/curtain-02-gold-and-coral-960.avif 960w",
         "type": "image/avif"
       },
       {
-        "srcset": "/static/img/curtains/d/curtain-warm-480.webp 480w, /static/img/curtains/d/curtain-warm-960.webp 960w",
+        "srcset": "/static/img/curtains/d/curtain-02-gold-and-coral-480.webp 480w, /static/img/curtains/d/curtain-02-gold-and-coral-960.webp 960w",
         "type": "image/webp"
       }
     ],
-    "width": 1080
+    "width": 1938
+  },
+  "curtains/curtain-03-teal-and-sage.jpg": {
+    "fallback": {
+      "src": "/static/img/curtains/d/curtain-03-teal-and-sage-960.jpg",
+      "srcset": "/static/img/curtains/d/curtain-03-teal-and-sage-480.jpg 480w, /static/img/curtains/d/curtain-03-teal-and-sage-960.jpg 960w"
+    },
+    "height": 1491,
+    "sources": [
+      {
+        "srcset": "/static/img/curtains/d/curtain-03-teal-and-sage-480.avif 480w, /static/img/curtains/d/curtain-03-teal-and-sage-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/curtains/d/curtain-03-teal-and-sage-480.webp 480w, /static/img/curtains/d/curtain-03-teal-and-sage-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1866
+  },
+  "curtains/curtain-04-lilac-and-blue.jpg": {
+    "fallback": {
+      "src": "/static/img/curtains/d/curtain-04-lilac-and-blue-960.jpg",
+      "srcset": "/static/img/curtains/d/curtain-04-lilac-and-blue-480.jpg 480w, /static/img/curtains/d/curtain-04-lilac-and-blue-960.jpg 960w"
+    },
+    "height": 1629,
+    "sources": [
+      {
+        "srcset": "/static/img/curtains/d/curtain-04-lilac-and-blue-480.avif 480w, /static/img/curtains/d/curtain-04-lilac-and-blue-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/curtains/d/curtain-04-lilac-and-blue-480.webp 480w, /static/img/curtains/d/curtain-04-lilac-and-blue-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 2199
   },
   "mathart/chladni-plate.svg": {
     "fallback": {

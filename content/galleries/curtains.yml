@@ -1,34 +1,55 @@
 title: Curtains
 slug: curtains
 dir: curtains
-mount: 3 / 4
+mount: 4 / 3
 lane: art
 order: 1
 summary: >-
-  Ink on paper. Each sheet is built from several hundred ruled strokes; the
-  drape, the volume and the shadow all come from how the line spacing tightens
-  and opens. Nothing is filled in.
+  Thousands of fine parallel curves on a cream ground. There is no fill and no
+  shading anywhere in these — every fold, every shadow and the whole sense of
+  weight comes from the strokes crowding together or opening out. Where two
+  families of curves cross, the interference between them does the rest.
 
-# NOTE: titles and dates are placeholders pending Tim's real ones. The captions
-# below describe only what is observably in each sheet — media and palette.
+# NOTE: the titles are descriptive labels — the palette of each sheet — not
+# titles Tim gave the pieces.
+#
+# The medium is deliberately not stated. The line work is far too regular to be
+# hand-ruled; it is either plotter output or rendered. Confirm with Tim and put
+# the real medium (and dates, and dimensions) in the captions.
 pieces:
-  - file: curtain-warm.jpg
-    title: Curtain I
+  - file: curtain-01-cream-and-rose.jpg
+    title: Cream and rose
     alt: >-
-      Drawing of a folded curtain built from several hundred ruled parallel
-      strokes in gold and brick red, the strokes crowding to black where the
-      folds turn away.
+      Vertical folds built from thousands of fine parallel curves in cream, tan
+      and dusty rose, the strokes crowding to a dark line where each fold turns.
     caption: >-
-      Gold and brick red on white stock. The strokes crowd to near-black along
-      each fold and open out across the faces, so the form reads as fabric
-      without any shading.
+      The quietest of the four. Warm neutrals with a single rose band running
+      down the centre fold.
 
-  - file: curtain-cool.jpg
-    title: Curtain II
+  - file: curtain-02-gold-and-coral.jpg
+    title: Gold and coral
     alt: >-
-      Drawing of vertical curtain folds in olive and teal, ruled in dense
-      parallel strokes that widen and narrow to describe the drape.
+      Folds in gold and coral built from dense parallel curves, with moiré
+      patterning where the stroke families cross.
     caption: >-
-      Olive and teal on white stock. The same ruled construction in a cooler
-      register, with the fold lines carried edge to edge rather than pooling at
-      the hem.
+      Gold against coral, with the strokes bunching almost to solid along the
+      fold lines. The faint cross-hatching in the wide passages is interference
+      between the two families of curves, not a second colour.
+
+  - file: curtain-03-teal-and-sage.jpg
+    title: Teal and sage
+    alt: >-
+      Folds in teal, sage green and cream, rendered in fine parallel curves that
+      widen and narrow to describe the drape.
+    caption: >-
+      A cooler register. The sage passages read as almost flat until the strokes
+      tighten and the fold reappears.
+
+  - file: curtain-04-lilac-and-blue.jpg
+    title: Lilac and blue
+    alt: >-
+      Narrow vertical folds in lilac, pink, cream and pale blue, built from
+      closely spaced parallel curves.
+    caption: >-
+      The most crowded of the set — more folds across the same width, so the
+      whole sheet reads as pleating rather than drape.

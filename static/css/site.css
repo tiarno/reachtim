@@ -1,9 +1,9 @@
 /* ============================================================================
    reachtim.com
 
-   The palette is sampled from the two curtain drawings in the art gallery: the
-   ink they're ruled in, the paper they're on, and the four pigments used across
-   the warm and cool sheets. Nothing here is invented.
+   The palette is sampled from the curtain sheets in the art gallery: their cream
+   ground and the pigments running across the warm and cool ones. Nothing here is
+   invented.
 
    The organising idea is ink and paper. Site chrome is ink; anything you read at
    length — an article, a caption — sits on a paper sheet laid over it. Each lane
@@ -94,7 +94,7 @@
   color-scheme: dark;
 }
 
-/* Lane accents. Assigned from the drawings, not chosen arbitrarily. */
+/* Lane accents, taken from opposite ends of the curtain palette. */
 .lane-tech {
   --accent-ink: var(--teal-lift);
   --accent-paper: var(--teal-deep);
@@ -897,18 +897,27 @@ main {
    mixes portrait, landscape and square work; matting each one to a common
    opening keeps the grid regular the way a wall of framed prints is regular. */
 .plate__frame {
-  display: grid;
-  place-items: center;
+  --mat: clamp(0.85rem, 2.5vw, 1.4rem);
+  position: relative;
+  display: block;
   aspect-ratio: var(--mount, 1 / 1);
-  padding: clamp(0.85rem, 2.5vw, 1.4rem);
   background: var(--paper-bright);
 }
+/* Taken out of flow deliberately. In flow, a percentage height can't resolve
+   against a height that aspect-ratio derives from the width — it falls back to
+   auto, the image's natural height then grows the box through min-height: auto,
+   and the openings stop matching. Absolute positioning breaks that cycle, so
+   every mat is identical and object-fit letterboxes the piece inside it. */
 .plate__frame img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
+  position: absolute;
+  top: var(--mat);
+  left: var(--mat);
+  /* Sized explicitly rather than by insets: a replaced element with auto
+     width/height ignores its insets and lays out at intrinsic size. The frame
+     carries no padding, so 100% here is the full mat, less the border on both
+     sides. */
+  width: calc(100% - 2 * var(--mat));
+  height: calc(100% - 2 * var(--mat));
   object-fit: contain;
 }
 .plate__frame:focus-visible {
@@ -919,7 +928,6 @@ main {
   padding: 0 clamp(0.9rem, 2.5vw, 1.35rem) clamp(1rem, 2.5vw, 1.35rem);
   color: var(--pfg-muted);
   border-top: 1px solid rgba(33, 30, 26, 0.12);
-  margin-top: auto;
   padding-top: 0.9rem;
 }
 
