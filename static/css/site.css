@@ -254,18 +254,46 @@ main {
   max-width: var(--measure-wide);
   margin: 0 auto;
   padding: clamp(1.5rem, 5vw, 3.5rem) var(--gutter) clamp(2rem, 5vw, 3.25rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: start;
 }
 
 .hero__text {
   max-width: 34rem;
 }
 
-.hero__headline {
-  font-size: clamp(2rem, 5.5vw, 3.1rem);
+.hero__name {
+  font-size: clamp(1.9rem, 5vw, 2.9rem);
   font-weight: 600;
   letter-spacing: -0.022em;
   line-height: 1.05;
   margin: 0 0 1.3rem;
+}
+
+.hero__portrait {
+  margin: 0;
+  width: clamp(8.5rem, 20vw, 14rem);
+}
+
+.hero__portrait img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+  border: 1px solid var(--line);
+}
+
+@media (max-width: 48rem) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+  /* Stacked, the photo belongs above the introduction rather than trailing it. */
+  .hero__portrait {
+    order: -1;
+    width: 8.5rem;
+  }
 }
 
 .hero__lede p {

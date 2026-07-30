@@ -76,10 +76,8 @@ all silent:
 ## Next Steps
 
 1. Review the site locally: `.venv/Scripts/python build.py --serve`.
-2. Confirm the curtain medium (plotter? rendered?) so the captions and the about
-   page can say what it actually is.
-3. Upload `dist/` to Porkbun when ready to go live.
-4. If the original crystal photographs turn up, drop them in over the 450px
+2. Upload `dist/` to Porkbun when ready to go live.
+3. If the original crystal photographs turn up, drop them in over the 450px
    Facebook copies and re-run `tools/optimize_assets.py`.
 
 ## Notes of Record

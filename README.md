@@ -130,17 +130,16 @@ nothing else. Type carries the page.
 
 ## Open items
 
-- **The curtain medium is unstated on purpose.** The line work is far too regular
-  to be hand-ruled — it is plotter output or rendered. All copy now describes what
-  is visible rather than claiming a medium. Once Tim confirms, put the real
-  medium (and dates and dimensions) into `content/galleries/curtains.yml` and the
-  about page.
 - **The crystal images are the 450px copies from the Facebook album export.** If
   the camera originals turn up, drop them in over the current files and re-run
   `optimize_assets.py`; the plates would look better on a 2x display.
 - Gallery titles are descriptive labels — the palette of a curtain sheet, the form
   in a crystal frame — not titles Tim gave the pieces. He has confirmed these are
   fine to keep for now.
+- The curtains are generated, not hand-drawn (confirmed 2026-07-30). The
+  generator is `ribbons.py` in `~/work/ribbons`, whose README documents the
+  displacement-field maths, the fold thresholds, and the ten versions it took to
+  stop looking like gauze. Captions are written from that.
 - The math-art SVGs are Tim's own work (confirmed 2026-07-30). An earlier note in
   the repo said they were downloaded from mathart.app, which is not the case.
 - Two images previously in the curtain gallery (`1vldoc6mp8dh1.jpg`,

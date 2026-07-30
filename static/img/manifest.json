@@ -610,5 +610,23 @@
       }
     ],
     "width": 1536
+  },
+  "portrait/tim.jpg": {
+    "fallback": {
+      "src": "/static/img/portrait/d/tim-480.jpg",
+      "srcset": "/static/img/portrait/d/tim-480.jpg 480w"
+    },
+    "height": 832,
+    "sources": [
+      {
+        "srcset": "/static/img/portrait/d/tim-480.avif 480w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/portrait/d/tim-480.webp 480w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 764
   }
 }

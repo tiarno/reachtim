@@ -21,10 +21,23 @@
 {% block content %}
 <section class="hero">
   <div class="hero__text">
-    <p class="eyebrow">{{ site.author }}</p>
-    <h1 class="hero__headline">{{ page.headline }}</h1>
+    <h1 class="hero__name">{{ site.author }}</h1>
     <div class="hero__lede">{{ page.body | safe }}</div>
   </div>
+  {% if manifest.get("portrait/tim.jpg") %}
+  {% set portrait = manifest["portrait/tim.jpg"] %}
+  <figure class="hero__portrait">
+    <picture>
+      {% for source in portrait.sources %}
+      <source type="{{ source.type }}" srcset="{{ source.srcset }}" sizes="(min-width: 48rem) 15rem, 9rem" />
+      {% endfor %}
+      <img src="{{ portrait.fallback.src }}"
+           width="{{ portrait.width }}" height="{{ portrait.height }}"
+           alt="Tim Arnold outdoors in a blue jacket and scarf, misty hills behind him."
+           fetchpriority="high" decoding="async" />
+    </picture>
+  </figure>
+  {% endif %}
 </section>
 
 <section class="lanes" aria-label="Sections">

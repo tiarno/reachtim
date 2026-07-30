@@ -54,7 +54,8 @@ CHROME_CANDIDATES = [
     r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
 ]
 
-GALLERY_DIRS = ["curtains", "mathart", "crystals"]
+# "portrait" is not a gallery, but it wants the same derivative treatment.
+GALLERY_DIRS = ["curtains", "mathart", "crystals", "portrait"]
 
 
 def find_chrome() -> Path | None:
