@@ -1,0 +1,11 @@
+# Build output. Regenerate with `python build.py`; this is what gets uploaded.
+/dist/
+
+# Local Python environment
+/.venv/
+
+# Local tool state, not site content
+/.claude/
+
+__pycache__/
+*.pyc

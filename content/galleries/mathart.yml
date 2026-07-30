@@ -1,0 +1,95 @@
+title: Math art
+slug: math-art
+dir: mathart
+mount: 1 / 1
+lane: art
+order: 2
+summary: >-
+  Algorithmic pieces, each one a picture of an equation, a dynamical system, or
+  a physical process. Same instinct as the curtain drawings — form out of line —
+  except the strokes are placed by arithmetic instead of by hand.
+
+pieces:
+  - file: seashell-surface.svg
+    title: Seashell Surface
+    alt: Logarithmic-spiral surface rendered as a ribbed shell form.
+    caption: >-
+      A logarithmic-spiral surface that mirrors how mollusks deposit shell
+      material as they grow.
+
+  - file: harmonograph.svg
+    title: Harmonograph
+    alt: Dense looping curve traced by a decaying pendulum drawing machine.
+    caption: >-
+      The trace of a pendulum-driven drawing machine — decaying oscillations
+      turned into curves.
+
+  - file: string-art.svg
+    title: String Art
+    alt: Curved envelope formed by straight chords strung across a boundary.
+    caption: >-
+      Curves built entirely from straight lines strung between points around a
+      boundary.
+
+  - file: klein-bottle.svg
+    title: Klein Bottle
+    alt: Klein bottle surface immersed in three dimensions, self-intersecting.
+    caption: >-
+      A non-orientable surface with no distinct inside or outside, immersed in
+      three dimensions.
+
+  - file: pickover.svg
+    title: Pickover
+    alt: Biomorph-like form grown from an iterated function system.
+    caption: >-
+      Biomorph-like forms grown from iterated functions, in the tradition of
+      Clifford Pickover.
+
+  - file: lorenz-attractor.svg
+    title: Lorenz Attractor
+    alt: The two-lobed butterfly trajectory of the Lorenz system.
+    caption: >-
+      Trajectories of a chaotic system that never repeat, tracing the iconic
+      butterfly shape.
+
+  - file: chladni-plate.svg
+    title: Chladni Plate
+    alt: Symmetric nodal pattern of a plate vibrating at resonance.
+    caption: >-
+      The standing-wave nodal pattern left by sound vibrating a plate at
+      resonance.
+
+  - file: reaction-diffusion.svg
+    title: Reaction–Diffusion
+    alt: Mottled Turing pattern of interleaved spots and stripes.
+    caption: >-
+      Turing-style patterns that emerge from two chemicals diffusing and
+      reacting at different rates.
+
+  - file: clifford-attractor.svg
+    title: Clifford Attractor
+    alt: Layered filament structure of the Clifford strange attractor.
+    caption: >-
+      A strange attractor built by iterating a pair of trigonometric maps
+      millions of times.
+
+  - file: three-body.svg
+    title: Three-Body
+    alt: Three interwoven gravitational orbital paths.
+    caption: >-
+      Orbital paths from the classic gravitational three-body problem — chaotic
+      and never periodic.
+
+  - file: dini-surface.svg
+    title: Dini Surface
+    alt: Twisted pseudosphere of constant negative curvature.
+    caption: >-
+      A twisted pseudosphere of constant negative curvature, one of the classic
+      surfaces of hyperbolic geometry.
+
+  - file: flow-field.svg
+    title: Flow Field
+    alt: Streamlines of particles traced through a vector field.
+    caption: >-
+      Particle paths traced through a vector field, visualizing the shape of an
+      invisible flow.

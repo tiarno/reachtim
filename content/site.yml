@@ -1,0 +1,27 @@
+title: reachtim
+author: Tim Arnold
+base_url: https://reachtim.com
+description: >-
+  Technical writing on Python, PDF and LaTeX plumbing, and system monitoring —
+  alongside a gallery of hand-ruled line drawings.
+locale: en
+
+# Both lanes are equal. Each takes its accent from one of the curtain drawings:
+# technical from the cool sheet, art from the warm one.
+lanes:
+  - id: tech
+    label: Technical
+    title: Technical
+    accent: teal
+    tagline: Python, PDF and LaTeX plumbing, packet structure, monitoring.
+  - id: art
+    label: Art
+    title: Art
+    accent: ochre
+    tagline: Hand-ruled line drawings and algorithmic curves.
+
+social:
+  - label: GitHub
+    url: https://github.com/tiarno
+  - label: Gists
+    url: https://gist.github.com/tiarno/

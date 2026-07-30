@@ -1,0 +1,34 @@
+title: Curtains
+slug: curtains
+dir: curtains
+mount: 3 / 4
+lane: art
+order: 1
+summary: >-
+  Ink on paper. Each sheet is built from several hundred ruled strokes; the
+  drape, the volume and the shadow all come from how the line spacing tightens
+  and opens. Nothing is filled in.
+
+# NOTE: titles and dates are placeholders pending Tim's real ones. The captions
+# below describe only what is observably in each sheet — media and palette.
+pieces:
+  - file: curtain-warm.jpg
+    title: Curtain I
+    alt: >-
+      Drawing of a folded curtain built from several hundred ruled parallel
+      strokes in gold and brick red, the strokes crowding to black where the
+      folds turn away.
+    caption: >-
+      Gold and brick red on white stock. The strokes crowd to near-black along
+      each fold and open out across the faces, so the form reads as fabric
+      without any shading.
+
+  - file: curtain-cool.jpg
+    title: Curtain II
+    alt: >-
+      Drawing of vertical curtain folds in olive and teal, ruled in dense
+      parallel strokes that widen and narrow to describe the drape.
+    caption: >-
+      Olive and teal on white stock. The same ruled construction in a cooler
+      register, with the fold lines carried edge to edge rather than pooling at
+      the hem.

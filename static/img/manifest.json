@@ -1,0 +1,578 @@
+{
+  "crystals/crystal-01-orange-blue-spherulites.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-01-orange-blue-spherulites-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-01-orange-blue-spherulites-450.jpg 450w"
+    },
+    "height": 302,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-01-orange-blue-spherulites-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-01-orange-blue-spherulites-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-02-blue-magenta-radiants.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-02-blue-magenta-radiants-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-02-blue-magenta-radiants-450.jpg 450w"
+    },
+    "height": 298,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-02-blue-magenta-radiants-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-02-blue-magenta-radiants-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-03-magenta-needle-burst.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-03-magenta-needle-burst-298.jpg",
+      "srcset": "/static/img/crystals/d/crystal-03-magenta-needle-burst-298.jpg 298w"
+    },
+    "height": 450,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-03-magenta-needle-burst-298.avif 298w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-03-magenta-needle-burst-298.webp 298w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 298
+  },
+  "crystals/crystal-04-crimson-sheets-fan.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-04-crimson-sheets-fan-297.jpg",
+      "srcset": "/static/img/crystals/d/crystal-04-crimson-sheets-fan-297.jpg 297w"
+    },
+    "height": 450,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-04-crimson-sheets-fan-297.avif 297w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-04-crimson-sheets-fan-297.webp 297w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 297
+  },
+  "crystals/crystal-05-dendritic-starburst.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-05-dendritic-starburst-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-05-dendritic-starburst-450.jpg 450w"
+    },
+    "height": 430,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-05-dendritic-starburst-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-05-dendritic-starburst-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-06-violet-field-rosette.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-06-violet-field-rosette-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-06-violet-field-rosette-450.jpg 450w"
+    },
+    "height": 311,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-06-violet-field-rosette-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-06-violet-field-rosette-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-07-ringed-spherulite.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-07-ringed-spherulite-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-07-ringed-spherulite-450.jpg 450w"
+    },
+    "height": 295,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-07-ringed-spherulite-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-07-ringed-spherulite-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-08-blue-lobes.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-08-blue-lobes-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-08-blue-lobes-450.jpg 450w"
+    },
+    "height": 295,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-08-blue-lobes-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-08-blue-lobes-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-09-pale-rosette-cross.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-09-pale-rosette-cross-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-09-pale-rosette-cross-450.jpg 450w"
+    },
+    "height": 292,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-09-pale-rosette-cross-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-09-pale-rosette-cross-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-10-salmon-wedges.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-10-salmon-wedges-302.jpg",
+      "srcset": "/static/img/crystals/d/crystal-10-salmon-wedges-302.jpg 302w"
+    },
+    "height": 450,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-10-salmon-wedges-302.avif 302w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-10-salmon-wedges-302.webp 302w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 302
+  },
+  "crystals/crystal-11-amber-band.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-11-amber-band-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-11-amber-band-450.jpg 450w"
+    },
+    "height": 299,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-11-amber-band-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-11-amber-band-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-12-plumes-and-blades.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-12-plumes-and-blades-301.jpg",
+      "srcset": "/static/img/crystals/d/crystal-12-plumes-and-blades-301.jpg 301w"
+    },
+    "height": 450,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-12-plumes-and-blades-301.avif 301w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-12-plumes-and-blades-301.webp 301w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 301
+  },
+  "crystals/crystal-13-banded-strata.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-13-banded-strata-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-13-banded-strata-450.jpg 450w"
+    },
+    "height": 273,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-13-banded-strata-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-13-banded-strata-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-14-branching-filament.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-14-branching-filament-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-14-branching-filament-450.jpg 450w"
+    },
+    "height": 325,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-14-branching-filament-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-14-branching-filament-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-15-pale-escarpment.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-15-pale-escarpment-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-15-pale-escarpment-450.jpg 450w"
+    },
+    "height": 289,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-15-pale-escarpment-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-15-pale-escarpment-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-16-scattered-clusters.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-16-scattered-clusters-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-16-scattered-clusters-450.jpg 450w"
+    },
+    "height": 301,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-16-scattered-clusters-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-16-scattered-clusters-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-17-blade-chain.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-17-blade-chain-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-17-blade-chain-450.jpg 450w"
+    },
+    "height": 291,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-17-blade-chain-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-17-blade-chain-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "crystals/crystal-18-sparse-ring.jpg": {
+    "fallback": {
+      "src": "/static/img/crystals/d/crystal-18-sparse-ring-450.jpg",
+      "srcset": "/static/img/crystals/d/crystal-18-sparse-ring-450.jpg 450w"
+    },
+    "height": 302,
+    "sources": [
+      {
+        "srcset": "/static/img/crystals/d/crystal-18-sparse-ring-450.avif 450w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/crystals/d/crystal-18-sparse-ring-450.webp 450w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 450
+  },
+  "curtains/curtain-cool.jpg": {
+    "fallback": {
+      "src": "/static/img/curtains/d/curtain-cool-960.jpg",
+      "srcset": "/static/img/curtains/d/curtain-cool-480.jpg 480w, /static/img/curtains/d/curtain-cool-960.jpg 960w"
+    },
+    "height": 1434,
+    "sources": [
+      {
+        "srcset": "/static/img/curtains/d/curtain-cool-480.avif 480w, /static/img/curtains/d/curtain-cool-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/curtains/d/curtain-cool-480.webp 480w, /static/img/curtains/d/curtain-cool-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1080
+  },
+  "curtains/curtain-warm.jpg": {
+    "fallback": {
+      "src": "/static/img/curtains/d/curtain-warm-960.jpg",
+      "srcset": "/static/img/curtains/d/curtain-warm-480.jpg 480w, /static/img/curtains/d/curtain-warm-960.jpg 960w"
+    },
+    "height": 1434,
+    "sources": [
+      {
+        "srcset": "/static/img/curtains/d/curtain-warm-480.avif 480w, /static/img/curtains/d/curtain-warm-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/curtains/d/curtain-warm-480.webp 480w, /static/img/curtains/d/curtain-warm-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1080
+  },
+  "mathart/chladni-plate.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/chladni-plate-960.jpg",
+      "srcset": "/static/img/mathart/d/chladni-plate-480.jpg 480w, /static/img/mathart/d/chladni-plate-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/chladni-plate-480.avif 480w, /static/img/mathart/d/chladni-plate-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/chladni-plate-480.webp 480w, /static/img/mathart/d/chladni-plate-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/clifford-attractor.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/clifford-attractor-960.jpg",
+      "srcset": "/static/img/mathart/d/clifford-attractor-480.jpg 480w, /static/img/mathart/d/clifford-attractor-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/clifford-attractor-480.avif 480w, /static/img/mathart/d/clifford-attractor-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/clifford-attractor-480.webp 480w, /static/img/mathart/d/clifford-attractor-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/dini-surface.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/dini-surface-960.jpg",
+      "srcset": "/static/img/mathart/d/dini-surface-480.jpg 480w, /static/img/mathart/d/dini-surface-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/dini-surface-480.avif 480w, /static/img/mathart/d/dini-surface-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/dini-surface-480.webp 480w, /static/img/mathart/d/dini-surface-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/flow-field.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/flow-field-960.jpg",
+      "srcset": "/static/img/mathart/d/flow-field-480.jpg 480w, /static/img/mathart/d/flow-field-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/flow-field-480.avif 480w, /static/img/mathart/d/flow-field-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/flow-field-480.webp 480w, /static/img/mathart/d/flow-field-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/harmonograph.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/harmonograph-960.jpg",
+      "srcset": "/static/img/mathart/d/harmonograph-480.jpg 480w, /static/img/mathart/d/harmonograph-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/harmonograph-480.avif 480w, /static/img/mathart/d/harmonograph-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/harmonograph-480.webp 480w, /static/img/mathart/d/harmonograph-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/klein-bottle.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/klein-bottle-960.jpg",
+      "srcset": "/static/img/mathart/d/klein-bottle-480.jpg 480w, /static/img/mathart/d/klein-bottle-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/klein-bottle-480.avif 480w, /static/img/mathart/d/klein-bottle-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/klein-bottle-480.webp 480w, /static/img/mathart/d/klein-bottle-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/lorenz-attractor.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/lorenz-attractor-960.jpg",
+      "srcset": "/static/img/mathart/d/lorenz-attractor-480.jpg 480w, /static/img/mathart/d/lorenz-attractor-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/lorenz-attractor-480.avif 480w, /static/img/mathart/d/lorenz-attractor-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/lorenz-attractor-480.webp 480w, /static/img/mathart/d/lorenz-attractor-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/pickover.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/pickover-960.jpg",
+      "srcset": "/static/img/mathart/d/pickover-480.jpg 480w, /static/img/mathart/d/pickover-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/pickover-480.avif 480w, /static/img/mathart/d/pickover-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/pickover-480.webp 480w, /static/img/mathart/d/pickover-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/reaction-diffusion.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/reaction-diffusion-960.jpg",
+      "srcset": "/static/img/mathart/d/reaction-diffusion-480.jpg 480w, /static/img/mathart/d/reaction-diffusion-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/reaction-diffusion-480.avif 480w, /static/img/mathart/d/reaction-diffusion-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/reaction-diffusion-480.webp 480w, /static/img/mathart/d/reaction-diffusion-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/seashell-surface.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/seashell-surface-960.jpg",
+      "srcset": "/static/img/mathart/d/seashell-surface-480.jpg 480w, /static/img/mathart/d/seashell-surface-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/seashell-surface-480.avif 480w, /static/img/mathart/d/seashell-surface-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/seashell-surface-480.webp 480w, /static/img/mathart/d/seashell-surface-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/string-art.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/string-art-960.jpg",
+      "srcset": "/static/img/mathart/d/string-art-480.jpg 480w, /static/img/mathart/d/string-art-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/string-art-480.avif 480w, /static/img/mathart/d/string-art-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/string-art-480.webp 480w, /static/img/mathart/d/string-art-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  },
+  "mathart/three-body.svg": {
+    "fallback": {
+      "src": "/static/img/mathart/d/three-body-960.jpg",
+      "srcset": "/static/img/mathart/d/three-body-480.jpg 480w, /static/img/mathart/d/three-body-960.jpg 960w"
+    },
+    "height": 1536,
+    "sources": [
+      {
+        "srcset": "/static/img/mathart/d/three-body-480.avif 480w, /static/img/mathart/d/three-body-960.avif 960w",
+        "type": "image/avif"
+      },
+      {
+        "srcset": "/static/img/mathart/d/three-body-480.webp 480w, /static/img/mathart/d/three-body-960.webp 960w",
+        "type": "image/webp"
+      }
+    ],
+    "width": 1536
+  }
+}

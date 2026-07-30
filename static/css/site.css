@@ -1,0 +1,1055 @@
+/* ============================================================================
+   reachtim.com
+
+   The palette is sampled from the two curtain drawings in the art gallery: the
+   ink they're ruled in, the paper they're on, and the four pigments used across
+   the warm and cool sheets. Nothing here is invented.
+
+   The organising idea is ink and paper. Site chrome is ink; anything you read at
+   length — an article, a caption — sits on a paper sheet laid over it. Each lane
+   takes its accent from one of the two drawings: technical from the cool sheet,
+   art from the warm one.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/static/fonts/fraunces-display.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Spectral";
+  src: url("/static/fonts/spectral-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Spectral";
+  src: url("/static/fonts/spectral-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Spectral";
+  src: url("/static/fonts/spectral-semibold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plex Mono";
+  src: url("/static/fonts/plexmono-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  /* Sampled pigments */
+  --ink: #1c1a17;
+  --ink-raised: #24211d;
+  --ink-edge: #34302a;
+  --paper: #ede7da;
+  --paper-bright: #f5f1e8;
+  --ochre: #d8a32b;
+  --brick: #b44a32;
+  --teal: #2e7f86;
+  --citron: #8a9a3c;
+
+  /* Lifted / deepened variants so each accent clears AA on both surfaces */
+  --brick-deep: #a44029;
+  --brick-lift: #d4694a;
+  --teal-lift: #4fb3b8;
+  --teal-deep: #1f5c61;
+  --ochre-lift: #e8b845;
+  --ochre-deep: #8a6512;
+
+  /* Semantic, on ink */
+  --fg: #ece6d9;
+  --fg-muted: #a9a196;
+  /* 4.6:1 on --ink. The obvious choice here is a dimmer grey, but this colour
+     carries dates, counters and captions at 12px, which is exactly the text
+     that has to clear AA rather than merely look subdued. */
+  --fg-faint: #8a8279;
+
+  /* Semantic, on paper */
+  --pfg: #211e1a;
+  --pfg-muted: #5a5449;
+
+  --accent-ink: var(--teal-lift);
+  --accent-paper: var(--teal-deep);
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Spectral", Georgia, "Times New Roman", serif;
+  --font-mono: "Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+
+  --measure: 36rem;
+  --measure-wide: 58rem;
+  --gutter: clamp(1.25rem, 5vw, 3rem);
+
+  --radius: 3px;
+  --sheet-shadow: 0 1px 2px rgba(0, 0, 0, 0.34), 0 12px 28px -12px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+/* Lane accents. Assigned from the drawings, not chosen arbitrarily. */
+.lane-tech {
+  --accent-ink: var(--teal-lift);
+  --accent-paper: var(--teal-deep);
+}
+.lane-art {
+  --accent-ink: var(--ochre-lift);
+  --accent-paper: var(--ochre-deep);
+}
+
+/* --------------------------------------------------------------- foundation */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+img,
+svg,
+picture {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10;
+  background: var(--paper);
+  color: var(--pfg);
+  padding: 0.6rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+.skip:focus {
+  left: 0.5rem;
+  top: 0.5rem;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin: 0 0 0.9rem;
+}
+.eyebrow a {
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+.eyebrow a:hover {
+  text-decoration: underline;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+}
+
+/* ----------------------------------------------------------------- masthead */
+
+.masthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
+  flex-wrap: wrap;
+  padding: 1.6rem var(--gutter);
+  max-width: var(--measure-wide);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.masthead__mark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  text-decoration: none;
+}
+
+.masthead__name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.masthead__rule {
+  color: var(--fg-faint);
+  display: inline-block;
+  width: 34px;
+}
+.masthead__mark:hover .masthead__rule {
+  color: var(--accent-ink);
+}
+
+.masthead__nav {
+  display: flex;
+  gap: 1.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+}
+
+.masthead__nav a {
+  color: var(--fg-muted);
+  text-decoration: none;
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+}
+.masthead__nav a:hover {
+  color: var(--fg);
+}
+.masthead__nav a[aria-current="page"] {
+  color: var(--fg);
+  border-bottom-color: currentColor;
+}
+.lane-link--teal:hover {
+  color: var(--teal-lift);
+}
+.lane-link--ochre:hover {
+  color: var(--ochre-lift);
+}
+
+main {
+  flex: 1;
+}
+
+/* ------------------------------------------------------- the signature field
+
+   One field of ruled strokes: evenly pitched at the left edge, folding into
+   drape toward the right. It sweeps in once on load, left to right, so the
+   order-into-drape reading happens in time as well as in space.                */
+
+.hero {
+  position: relative;
+  /* Full-bleed on purpose: bounded by the content column the strokes read as a
+     box with edges, which is the opposite of a sheet. */
+  padding: clamp(3rem, 9vw, 7rem) var(--gutter) clamp(3rem, 7vw, 5rem);
+  overflow: hidden;
+}
+
+.hero__field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--paper);
+  pointer-events: none;
+  --field-opacity: 0.55;
+  /* Nearly clear on the left, where the text sits, and full strength on the
+     right, where the strokes fold. The concept and the legibility want the same
+     thing here: the ordered end stays quiet, the drape carries the weight. */
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.12) 26%,
+      rgba(0, 0, 0, 0.55) 52%,
+      #000 72%,
+      #000 92%,
+      transparent 100%
+    ),
+    linear-gradient(to bottom, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  mask-composite: intersect;
+}
+
+.hero__field .linefield {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hero__field .linefield__strokes {
+  opacity: var(--field-opacity);
+  clip-path: inset(0 0 0 0);
+  animation: sweep 1400ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* The end state reads --field-opacity rather than a literal, so the narrow
+   viewport override further down still wins: an animation with fill:both
+   otherwise outranks any plain declaration. */
+@keyframes sweep {
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: var(--field-opacity);
+  }
+}
+
+.hero__text {
+  position: relative;
+  max-width: var(--measure-wide);
+  margin: 0 auto;
+}
+
+.hero__text > * {
+  max-width: 34rem;
+}
+
+.hero__headline {
+  font-size: clamp(2.5rem, 8vw, 4.6rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  margin: 0 0 1.4rem;
+}
+
+.hero__lede p {
+  margin: 0 0 1rem;
+  color: var(--fg-muted);
+  font-size: 1.125rem;
+}
+.hero__lede p:last-child {
+  margin-bottom: 0;
+}
+
+/* --------------------------------------------------------------- lane panels */
+
+.lanes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
+  gap: 1px;
+  background: var(--ink-edge);
+  border-top: 1px solid var(--ink-edge);
+  border-bottom: 1px solid var(--ink-edge);
+  max-width: var(--measure-wide);
+  margin: clamp(1.5rem, 5vw, 3rem) auto 0;
+}
+
+.lane {
+  display: grid;
+  gap: 0.9rem;
+  padding: clamp(1.75rem, 4vw, 2.75rem) var(--gutter);
+  background: var(--ink);
+  text-decoration: none;
+  transition: background 200ms ease;
+}
+.lane:hover {
+  background: var(--ink-raised);
+}
+.lane--teal {
+  --accent-ink: var(--teal-lift);
+}
+.lane--ochre {
+  --accent-ink: var(--ochre-lift);
+}
+
+.lane__register {
+  color: var(--fg-faint);
+  width: 64px;
+  display: block;
+  transition: color 200ms ease;
+}
+.lane:hover .lane__register {
+  color: var(--accent-ink);
+}
+.lane__register .register {
+  display: block;
+  width: 100%;
+}
+
+.lane__label {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.lane__tagline {
+  color: var(--fg-muted);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.lane__index {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-faint);
+}
+.lane__item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lane__more {
+  color: var(--accent-ink);
+  letter-spacing: 0.08em;
+}
+
+.lane__enter {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+}
+.lane:hover .lane__enter span {
+  display: inline-block;
+  transform: translateX(3px);
+  transition: transform 200ms ease;
+}
+
+/* ------------------------------------------------------------- page headings */
+
+.pagehead {
+  max-width: var(--measure-wide);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vw, 3.5rem) var(--gutter) clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.pagehead__register {
+  display: block;
+  width: 56px;
+  color: var(--accent-ink);
+  margin-bottom: 1.25rem;
+}
+.pagehead__register .register {
+  display: block;
+  width: 100%;
+}
+
+.pagehead h1 {
+  font-size: clamp(1.9rem, 5vw, 3.1rem);
+  margin: 0 0 1rem;
+}
+
+.pagehead__lede,
+.pagehead__lede p {
+  margin: 0;
+  color: var(--fg-muted);
+  max-width: var(--measure);
+}
+
+/* --------------------------------------------------------------- article list
+
+   A numbered list because it is one: the articles are in date order, and the
+   number tells you where each sits in the run.                                */
+
+.index {
+  list-style: none;
+  counter-reset: row;
+  margin: 0 auto;
+  padding: 0 0 clamp(2rem, 6vw, 4rem);
+  max-width: var(--measure-wide);
+  border-top: 1px solid var(--ink-edge);
+}
+
+.index__row {
+  counter-increment: row;
+  border-bottom: 1px solid var(--ink-edge);
+}
+
+.index__link {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 0.15rem 1rem;
+  padding: 1.5rem var(--gutter);
+  text-decoration: none;
+  transition: background 160ms ease;
+}
+.index__link:hover {
+  background: var(--ink-raised);
+}
+.index__link::before {
+  content: counter(row, decimal-leading-zero);
+  grid-row: 1 / span 3;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-faint);
+  padding-top: 0.45rem;
+}
+
+.index__title {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+.index__link:hover .index__title {
+  color: var(--accent-ink);
+}
+
+.index__summary {
+  margin: 0.35rem 0 0;
+  color: var(--fg-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: var(--measure);
+}
+
+.index__meta {
+  margin: 0.6rem 0 0;
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-faint);
+}
+
+/* ------------------------------------------------------------- collections */
+
+.collections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
+  gap: 1px;
+  background: var(--ink-edge);
+  border-top: 1px solid var(--ink-edge);
+  border-bottom: 1px solid var(--ink-edge);
+  max-width: var(--measure-wide);
+  margin: 0 auto clamp(2rem, 6vw, 4rem);
+}
+
+.collection {
+  background: var(--ink);
+  padding: clamp(1.5rem, 4vw, 2.25rem) var(--gutter);
+  text-decoration: none;
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+  transition: background 200ms ease;
+}
+.collection:hover {
+  background: var(--ink-raised);
+}
+
+.collection__title {
+  font-size: 1.4rem;
+}
+.collection:hover .collection__title {
+  color: var(--accent-ink);
+}
+
+.collection__summary {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.collection__meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+}
+
+/* -------------------------------------------------------------------- article
+
+   The reading surface is a paper sheet laid on the ink.                       */
+
+.article,
+.page-plain .prose {
+  max-width: var(--measure-wide);
+  margin: 0 auto;
+  padding: 0 var(--gutter) clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.article__head {
+  padding: clamp(1.5rem, 5vw, 3rem) 0 clamp(1.25rem, 3vw, 2rem);
+}
+
+.article__head h1 {
+  font-size: clamp(1.9rem, 4.6vw, 2.9rem);
+  margin: 0 0 1rem;
+  max-width: var(--measure-wide);
+}
+
+.article__summary {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 1.0625rem;
+  max-width: var(--measure);
+}
+
+.article__meta {
+  margin: 1rem 0 0;
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-faint);
+}
+
+.contents {
+  border-top: 1px solid var(--ink-edge);
+  border-bottom: 1px solid var(--ink-edge);
+  padding: 1.1rem 0;
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.contents__label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  margin: 0 0 0.7rem;
+}
+
+.contents ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 2.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.9;
+}
+
+.contents a {
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+.contents a:hover {
+  color: var(--accent-ink);
+  text-decoration: underline;
+}
+/* Levels are rebased per article, so l1 is always the top section. */
+.contents__item--l2 {
+  padding-left: 1rem;
+}
+.contents__item--l3 {
+  padding-left: 2rem;
+}
+.contents__item--l4 {
+  padding-left: 3rem;
+}
+
+/* ---------------------------------------------------------------------- prose
+
+   Everything read at length sits on paper.                                    */
+
+.prose {
+  background: var(--paper);
+  color: var(--pfg);
+  padding: clamp(1.75rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 3.5rem);
+  border-radius: var(--radius);
+  box-shadow: var(--sheet-shadow);
+}
+
+.prose > * {
+  max-width: var(--measure);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: var(--pfg);
+  margin: 2.4rem auto 0.8rem;
+  scroll-margin-top: 1.5rem;
+}
+.prose h2 {
+  font-size: 1.6rem;
+}
+.prose h3 {
+  font-size: 1.25rem;
+}
+.prose h4 {
+  font-size: 1.0625rem;
+}
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose dl {
+  margin: 0 auto 1.15rem;
+}
+
+.prose li {
+  margin-bottom: 0.4rem;
+}
+
+.prose a {
+  color: var(--accent-paper);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.prose a:hover {
+  color: var(--brick-deep);
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose blockquote {
+  margin: 0 auto 1.4rem;
+  padding-left: 1.2rem;
+  border-left: 2px solid var(--accent-paper);
+  color: var(--pfg-muted);
+  font-style: italic;
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid rgba(33, 30, 26, 0.18);
+  margin: 2.2rem auto;
+}
+
+.prose img {
+  display: block;
+  border: 1px solid rgba(33, 30, 26, 0.16);
+  border-radius: 2px;
+  margin: 0 auto 1.4rem;
+}
+
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 auto 1.4rem;
+  font-size: 0.9375rem;
+}
+.prose th,
+.prose td {
+  border: 1px solid rgba(33, 30, 26, 0.18);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+.prose th {
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+/* Definition lists carried over from the old blog's option/parameter tables. */
+.prose dt {
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+.prose dd {
+  margin: 0.2rem 0 0;
+  color: var(--pfg-muted);
+}
+
+/* The old blog marked asides with {: .callout}. */
+.prose .callout {
+  background: rgba(46, 127, 134, 0.09);
+  border-left: 2px solid var(--accent-paper);
+  border-radius: 0 2px 2px 0;
+  padding: 1rem 1.2rem;
+  margin: 0 auto 1.4rem;
+  color: var(--pfg-muted);
+}
+.prose .callout > :last-child {
+  margin-bottom: 0;
+}
+.prose .note {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brick-deep);
+  font-weight: 400;
+}
+
+.prose--narrow > * {
+  max-width: var(--measure);
+}
+
+/* Code blocks invert back to ink — a sample of a terminal on a paper page. */
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: rgba(33, 30, 26, 0.075);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+  /* Long identifiers and paths appear inline throughout these articles and
+     would otherwise push the page wider than a phone screen. */
+  overflow-wrap: anywhere;
+}
+
+/* Display math is typeset at its natural width; on a narrow screen it has to
+   scroll inside its own box rather than widen the document. */
+.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+.prose pre {
+  background: var(--ink);
+  color: var(--fg);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  margin: 0 auto 1.4rem;
+  overflow-x: auto;
+  max-width: var(--measure-wide);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.prose pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Pygments, coloured from the site palette rather than a stock theme. */
+.highlight .c, .highlight .c1, .highlight .cm, .highlight .cs, .highlight .ch { color: #8a8279; font-style: italic; }
+.highlight .k, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kt { color: var(--ochre); }
+.highlight .kc, .highlight .bp, .highlight .nb { color: var(--ochre-lift); }
+.highlight .s, .highlight .s1, .highlight .s2, .highlight .sb, .highlight .sc,
+.highlight .sd, .highlight .se, .highlight .sh, .highlight .si, .highlight .sx,
+.highlight .sr, .highlight .ss { color: var(--citron); }
+.highlight .nf, .highlight .fm { color: var(--teal-lift); }
+.highlight .nc, .highlight .nn, .highlight .ne { color: #d8c98f; }
+.highlight .nd, .highlight .nt { color: var(--brick-lift); }
+.highlight .m, .highlight .mi, .highlight .mf, .highlight .mh, .highlight .mo,
+.highlight .il { color: #c98a6b; }
+.highlight .o, .highlight .ow, .highlight .p { color: var(--fg-muted); }
+.highlight .nv, .highlight .vi, .highlight .vg, .highlight .vc { color: var(--fg); }
+.highlight .err { color: var(--brick-lift); }
+.highlight .gd { color: var(--brick); }
+.highlight .gi { color: var(--citron); }
+
+/* ----------------------------------------------------------------- galleries
+
+   Each piece is mounted on paper, because each original is on paper.          */
+
+.plates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  gap: clamp(1.25rem, 3vw, 2rem);
+  max-width: var(--measure-wide);
+  margin: 0 auto;
+  padding: 0 var(--gutter) clamp(2rem, 5vw, 3.5rem);
+}
+
+.plate {
+  margin: 0;
+  background: var(--paper-bright);
+  border-radius: var(--radius);
+  box-shadow: var(--sheet-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* A square mount with the piece centred inside it, never cropped. The gallery
+   mixes portrait, landscape and square work; matting each one to a common
+   opening keeps the grid regular the way a wall of framed prints is regular. */
+.plate__frame {
+  display: grid;
+  place-items: center;
+  aspect-ratio: var(--mount, 1 / 1);
+  padding: clamp(0.85rem, 2.5vw, 1.4rem);
+  background: var(--paper-bright);
+}
+.plate__frame img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.plate__frame:focus-visible {
+  outline-offset: -3px;
+}
+
+.plate__caption {
+  padding: 0 clamp(0.9rem, 2.5vw, 1.35rem) clamp(1rem, 2.5vw, 1.35rem);
+  color: var(--pfg-muted);
+  border-top: 1px solid rgba(33, 30, 26, 0.12);
+  margin-top: auto;
+  padding-top: 0.9rem;
+}
+
+.plate__title {
+  font-size: 1.0625rem;
+  color: var(--pfg);
+  margin: 0 0 0.4rem;
+}
+
+.plate__caption p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------------- footers */
+
+.article__foot {
+  max-width: var(--measure-wide);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 2.5rem) var(--gutter);
+}
+
+.backlink {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+.backlink:hover {
+  color: var(--accent-ink);
+}
+
+.footer {
+  border-top: 1px solid var(--ink-edge);
+  margin-top: clamp(2rem, 6vw, 4rem);
+}
+
+.footer__inner {
+  max-width: var(--measure-wide);
+  margin: 0 auto;
+  padding: 1.75rem var(--gutter) 2.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.footer__who {
+  margin: 0;
+  color: var(--fg-faint);
+}
+
+.footer__links {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+.footer__links a {
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+.footer__links a:hover {
+  color: var(--accent-ink);
+}
+
+/* --------------------------------------------------------------- adjustments */
+
+@media (max-width: 48rem) {
+  /* The mask's quiet zone is a percentage of the width, so on a phone there is
+     no room for the text to sit clear of the strokes. Drop the field back to
+     texture there rather than let it cross the lede. */
+  .hero__field {
+    --field-opacity: 0.26;
+  }
+}
+
+@media (max-width: 40rem) {
+  .contents ol {
+    columns: 1;
+  }
+  .index__link {
+    grid-template-columns: 1.75rem 1fr;
+    gap: 0.15rem 0.75rem;
+  }
+  .masthead {
+    padding-bottom: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .hero__field .linefield__strokes {
+    animation: none;
+    clip-path: none;
+    opacity: var(--field-opacity);
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .masthead__nav,
+  .hero__field,
+  .footer__links,
+  .backlink,
+  .skip {
+    display: none;
+  }
+  .prose {
+    box-shadow: none;
+    background: none;
+    padding: 0;
+  }
+  .prose pre {
+    background: #f4f4f4;
+    color: #000;
+    border: 1px solid #ccc;
+  }
+}

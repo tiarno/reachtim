@@ -1,0 +1,42 @@
+{% extends "base.html.j2" %}
+
+{% block meta_description %}{{ page.description }}{% endblock %}
+{% block body_attrs %} class="page-lane lane-{{ page.lane }}"{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <span class="pagehead__register" aria-hidden="true">
+    {% include "partials/_register_" ~ page.lane ~ ".svg" %}
+  </span>
+  <p class="eyebrow">{{ page.title }}</p>
+  <h1>{{ page.headline }}</h1>
+  <div class="pagehead__lede">{{ page.body | safe }}</div>
+</header>
+
+{% if page.lane == 'tech' %}
+<ol class="index" aria-label="Articles">
+  {% for article in articles %}
+  <li class="index__row">
+    <a class="index__link" href="{{ article.url }}">
+      <h2 class="index__title">{{ article.title }}</h2>
+      <p class="index__summary">{{ article.summary_html | safe }}</p>
+      <p class="index__meta">
+        <span class="tag">{{ article.category }}</span>
+        <time datetime="{{ article.date.isoformat() }}">{{ article.date | datefmt }}</time>
+      </p>
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}
+<div class="collections">
+  {% for gallery in galleries %}
+  <a class="collection" href="{{ gallery.url }}">
+    <h2 class="collection__title">{{ gallery.title }}</h2>
+    <p class="collection__summary">{{ gallery.summary }}</p>
+    <p class="collection__meta">{{ gallery.pieces | length }} piece{{ '' if gallery.pieces | length == 1 else 's' }}</p>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

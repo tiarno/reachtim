@@ -1,0 +1,73 @@
+{% extends "base.html.j2" %}
+
+{% block meta_description %}{{ page.summary }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block body_attrs %} class="page-article lane-tech"{% endblock %}
+
+{% block head_extra %}
+{% if page.math %}
+<link rel="stylesheet" href="/static/vendor/katex/katex.min.css" />
+{% endif %}
+<script type="application/ld+json">
+{{ {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": page.title,
+  "description": page.summary,
+  "datePublished": page.date.isoformat(),
+  "author": {"@type": "Person", "name": site.author, "url": site.base_url},
+  "mainEntityOfPage": site.base_url ~ page.url,
+  "keywords": page.tags | join(", ")
+} | tojson }}
+</script>
+{% endblock %}
+
+{% block content %}
+<article class="article">
+  <header class="article__head">
+    <p class="eyebrow">
+      <a href="/tech.html">Technical</a>
+      <span aria-hidden="true">/</span>
+      <span class="tag">{{ page.category }}</span>
+    </p>
+    <h1>{{ page.title }}</h1>
+    <p class="article__summary">{{ page.summary_html | safe }}</p>
+    <p class="article__meta">
+      <time datetime="{{ page.date.isoformat() }}">{{ page.date | datefmt }}</time>
+      {% if page.tags %}
+      <span class="article__tags">{{ page.tags | join(' · ') }}</span>
+      {% endif %}
+    </p>
+  </header>
+
+  {% if page.toc | length >= 3 %}
+  <nav class="contents" aria-label="On this page">
+    <p class="contents__label">Contents</p>
+    <ol>
+      {% for item in page.toc %}
+      <li class="contents__item contents__item--l{{ item.level }}">
+        <a href="#{{ item.id }}">{{ item.name }}</a>
+      </li>
+      {% endfor %}
+    </ol>
+  </nav>
+  {% endif %}
+
+  <div class="prose">
+    {{ page.body | safe }}
+  </div>
+
+  <footer class="article__foot">
+    <a class="backlink" href="/tech.html"><span aria-hidden="true">&larr;</span> All articles</a>
+  </footer>
+</article>
+
+{% if page.math %}
+<script defer src="/static/vendor/katex/katex.min.js"></script>
+<script defer src="/static/vendor/katex/auto-render.min.js"
+        onload="renderMathInElement(document.querySelector('.prose'), {delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '$', right: '$', display: false}
+        ], ignoredTags: ['script','noscript','style','textarea','pre','code']});"></script>
+{% endif %}
+{% endblock %}

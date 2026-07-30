@@ -1,0 +1,182 @@
+title: Crystal microphotography
+slug: crystals
+dir: crystals
+mount: 4 / 3
+lane: art
+order: 3
+summary: >-
+  Crystals grown on a slide and photographed between crossed polarizing filters.
+  The colour isn't pigment — it's interference. Birefringent crystals split the
+  light into two rays that travel at different speeds, and what reaches the
+  camera is whatever survives recombination at that thickness. Turn the stage and
+  the colours change.
+
+# NOTE: the titles below are descriptive labels — what each frame shows — not
+# titles Tim gave the pieces. Replace them with real ones (and any subject,
+# date or magnification details) whenever he has them.
+#
+# Source files are the 450px copies from the Facebook album export. If the
+# originals turn up they should be dropped in over these: the plates are sized
+# for ~480px and would benefit from the extra resolution on a 2x display.
+pieces:
+  - file: crystal-01-orange-blue-spherulites.jpg
+    title: Orange field with blue spherulites
+    alt: >-
+      Polarized-light micrograph of broad orange crystal wedges interrupted by
+      three dark blue spherulites, each showing a black extinction cross.
+    caption: >-
+      Radiating orange plates crossed by blue spherulites. The dark cross in each
+      sphere is the extinction figure, where the crystal axes line up with the
+      filters and no light gets through.
+
+  - file: crystal-02-blue-magenta-radiants.jpg
+    title: Blue and magenta radiants
+    alt: >-
+      Micrograph of blue and magenta crystal blades radiating from a bright seam
+      running diagonally across the frame.
+    caption: >-
+      Blades fanning out from a single seam. The magenta and gold along the fault
+      line mark where the crystal is thinnest.
+
+  - file: crystal-03-magenta-needle-burst.jpg
+    title: Needle burst over concentric rings
+    alt: >-
+      Micrograph of fine magenta and blue needles radiating from a point above a
+      reddish ground marked with faint concentric rings.
+    caption: >-
+      A burst of needles over an older growth front — the faint rings behind them
+      record earlier stages of the same crystallisation.
+
+  - file: crystal-04-crimson-sheets-fan.jpg
+    title: Crimson sheets and a dark fan
+    alt: >-
+      Micrograph of folded crimson crystal sheets with a pleated dark blue fan
+      opening at the top of the frame.
+    caption: >-
+      Deep red sheets folding like cloth, with a pleated fan breaking through
+      above them.
+
+  - file: crystal-05-dendritic-starburst.jpg
+    title: Dendritic starburst
+    alt: >-
+      Micrograph of a pale blue-white feathery dendrite branching outward against
+      a black field.
+    caption: >-
+      A dendrite: growth that keeps branching because the tips reach fresh
+      solution faster than the hollows between them.
+
+  - file: crystal-06-violet-field-rosette.jpg
+    title: Violet field with rosette
+    alt: >-
+      Micrograph of a pale rosette on a violet ground, with a comb of cream
+      spikes along the lower edge and a small four-petalled form at centre.
+    caption: >-
+      A rosette opening across a violet ground, with a palisade of spikes closing
+      off the bottom of the frame.
+
+  - file: crystal-07-ringed-spherulite.jpg
+    title: Ringed spherulite
+    alt: >-
+      Micrograph of a blue disc crossed by concentric arcs and a faint dark
+      radial cross.
+    caption: >-
+      Concentric banding inside a single spherulite. The rings come from the
+      crystal twisting as it grew outward.
+
+  - file: crystal-08-blue-lobes.jpg
+    title: Blue lobes
+    alt: >-
+      Micrograph of two smooth blue lobes meeting at the centre of the frame
+      above a red ground, with a fine white needle crossing beneath them.
+    caption: >-
+      Two broad lobes meeting along a seam — thick, even crystal, so the colour
+      stays flat instead of banding.
+
+  - file: crystal-09-pale-rosette-cross.jpg
+    title: Rosette with extinction cross
+    alt: >-
+      Micrograph of a large cream rosette with a dark radial cross, accompanied
+      by two small pinwheel forms on a near-black field.
+    caption: >-
+      A rosette caught with its extinction cross square to the filters, with two
+      smaller pinwheels alongside.
+
+  - file: crystal-10-salmon-wedges.jpg
+    title: Salmon wedges
+    alt: >-
+      Micrograph of salmon and orange crystal wedges advancing across a dark
+      field scattered with round bubbles.
+    caption: >-
+      A growth front advancing into the dark, with trapped bubbles marking where
+      it moved fastest.
+
+  - file: crystal-11-amber-band.jpg
+    title: Amber band
+    alt: >-
+      Micrograph of a massive amber crystal band with dark drapery hanging
+      beneath it against a black upper field.
+    caption: >-
+      Thick amber crystal with dark striations pulling downward underneath, the
+      whole thing reading like a cliff face.
+
+  - file: crystal-12-plumes-and-blades.jpg
+    title: Plumes and blades
+    alt: >-
+      Micrograph of dark feathery plumes with orange and green blades cutting
+      through them, and a red-orange column at lower left.
+    caption: >-
+      Dark plumes shot through with orange and green blades, with one bright
+      column holding the lower corner.
+
+  - file: crystal-13-banded-strata.jpg
+    title: Banded strata
+    alt: >-
+      Micrograph of an orange and red banded crystal mass with a teal-green
+      streak along one band and a cracked upper surface.
+    caption: >-
+      Bands of colour stacked like sediment, each one a step in thickness, with a
+      single green seam running through.
+
+  - file: crystal-14-branching-filament.jpg
+    title: Branching filament
+    alt: >-
+      Micrograph of a pale iridescent filament branching diagonally upward from a
+      row of small coloured columns at the base.
+    caption: >-
+      A filament climbing diagonally out of a row of stubby columns at the
+      bottom of the slide.
+
+  - file: crystal-15-pale-escarpment.jpg
+    title: Pale escarpment
+    alt: >-
+      Micrograph of a jagged cream-white crystal band with dark vertical streaks
+      descending below it.
+    caption: >-
+      Near-colourless crystal, so the structure comes through as relief rather
+      than as interference colour.
+
+  - file: crystal-16-scattered-clusters.jpg
+    title: Scattered clusters
+    alt: >-
+      Micrograph of small pink, blue and white crystal clusters scattered in a
+      loose spiral across a black field.
+    caption: >-
+      Isolated clusters on an otherwise empty slide, falling into a loose spiral.
+
+  - file: crystal-17-blade-chain.jpg
+    title: Chain of blades
+    alt: >-
+      Micrograph of a chain of pale blue blades standing along a curve, with pink
+      flecks above them on a dark blue field.
+    caption: >-
+      Blades standing in a row along a curve, as if the solution dried back along
+      a single edge.
+
+  - file: crystal-18-sparse-ring.jpg
+    title: Sparse ring
+    alt: >-
+      Micrograph of a broken ring of small amber and white crystal fragments on a
+      deep black field.
+    caption: >-
+      What was left when a drop dried from the middle outward — a ring of
+      fragments and nothing in the centre.

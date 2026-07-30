@@ -1,0 +1,8 @@
+<svg class="register register--tech" viewBox="0 0 64 40" role="presentation" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round">
+    <path d="M2,5.0L62,5.0" />
+    <path d="M2,15.0L62,15.0" />
+    <path d="M2,25.0L62,25.0" />
+    <path d="M2,35.0L62,35.0" />
+  </g>
+</svg>

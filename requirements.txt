@@ -1,0 +1,5 @@
+Jinja2>=3.1
+Markdown>=3.10
+Pygments>=2.20
+PyYAML>=6.0
+pillow>=12.0

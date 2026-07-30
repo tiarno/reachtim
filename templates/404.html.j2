@@ -1,0 +1,25 @@
+{% extends "base.html.j2" %}
+
+{% block page_title %}Not found — {{ site.title }}{% endblock %}
+{% block meta_description %}That page isn't here.{% endblock %}
+{% block canonical %}/404.html{% endblock %}
+{% block body_attrs %} class="page-plain"{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <p class="eyebrow">404</p>
+  <h1>That page isn't here.</h1>
+</header>
+
+<div class="prose prose--narrow">
+  <p>
+    The address may be from an older version of this site. Both sections are
+    listed below, and everything that used to be here has a home in one of them.
+  </p>
+  <ul>
+    {% for lane in site.lanes %}
+    <li><a href="/{{ lane.id }}.html">{{ lane.title }}</a> — {{ lane.tagline }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

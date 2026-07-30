@@ -1,0 +1,29 @@
+{#
+  Renders a gallery image from the manifest written by tools/optimize_assets.py:
+  AVIF and WebP derivatives with srcset, and intrinsic width/height so nothing
+  reflows while loading.
+
+  If the manifest has no entry (fresh checkout, no optimize run yet) it falls
+  back to the original file. The page still works, just heavier.
+#}
+{% macro figure(manifest, dir, piece, sizes, eager=false) %}
+{% set key = dir ~ "/" ~ piece.file %}
+{% set entry = manifest.get(key) %}
+{% if entry %}
+<picture>
+  {% for source in entry.sources %}
+  <source type="{{ source.type }}" srcset="{{ source.srcset }}" sizes="{{ sizes }}" />
+  {% endfor %}
+  <img src="{{ entry.fallback.src }}"
+       {% if entry.fallback.srcset %}srcset="{{ entry.fallback.srcset }}" sizes="{{ sizes }}"{% endif %}
+       width="{{ entry.width }}" height="{{ entry.height }}"
+       alt="{{ piece.alt }}"
+       {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %}
+       decoding="async" />
+</picture>
+{% else %}
+<img src="/static/img/{{ key }}" alt="{{ piece.alt }}"
+     {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %}
+     decoding="async" />
+{% endif %}
+{% endmacro %}

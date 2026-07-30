@@ -1,0 +1,20 @@
+{
+  "name": "reachtim",
+  "short_name": "reachtim",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#1c1a17",
+  "theme_color": "#1c1a17",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

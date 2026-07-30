@@ -1,0 +1,14 @@
+{% extends "base.html.j2" %}
+
+{% block meta_description %}{{ page.description }}{% endblock %}
+{% block body_attrs %} class="page-plain"{% endblock %}
+
+{% block content %}
+<header class="pagehead">
+  <h1>{{ page.headline }}</h1>
+</header>
+
+<div class="prose prose--narrow">
+  {{ page.body | safe }}
+</div>
+{% endblock %}

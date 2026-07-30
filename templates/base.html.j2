@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="{{ site.locale }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block page_title %}{{ page.title }} — {{ site.title }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ site.description }}{% endblock %}" />
+    <meta name="author" content="{{ site.author }}" />
+    <link rel="canonical" href="{{ site.base_url }}{% block canonical %}{{ page.url }}{% endblock %}" />
+
+    <meta property="og:site_name" content="{{ site.title }}" />
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
+    <meta property="og:title" content="{{ self.page_title() }}" />
+    <meta property="og:description" content="{{ self.meta_description() }}" />
+    <meta property="og:url" content="{{ site.base_url }}{{ self.canonical() }}" />
+    <meta property="og:image" content="{{ site.base_url }}{% block og_image %}/static/img/og-default.png{% endblock %}" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/static/icons/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/static/icons/manifest.webmanifest" />
+    <link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="/feeds/all.atom.xml" />
+
+    {# Only the two faces used above the fold are preloaded. #}
+    <link rel="preload" href="/static/fonts/fraunces-display.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/static/fonts/spectral-regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/static/css/site.css" />
+    {% block head_extra %}{% endblock %}
+  </head>
+
+  <body{% block body_attrs %}{% endblock %}>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="masthead">
+      <a class="masthead__mark" href="/"{% if current == 'index' %} aria-current="page"{% endif %}>
+        <span class="masthead__name">{{ site.title }}</span>
+        <span class="masthead__rule" aria-hidden="true">{% include "partials/_rule.svg" %}</span>
+      </a>
+      <nav class="masthead__nav" aria-label="Main">
+        {% for lane in site.lanes %}
+        <a href="/{{ lane.id }}.html"
+           class="lane-link lane-link--{{ lane.accent }}"
+           {%- if current == lane.id %} aria-current="page"{% endif %}>{{ lane.label }}</a>
+        {% endfor %}
+        <a href="/about.html"{% if current == 'about' %} aria-current="page"{% endif %}>About</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <p class="footer__who">
+          {{ site.author }} — {{ site.title }}
+        </p>
+        <nav class="footer__links" aria-label="Elsewhere">
+          {% for link in site.social %}
+          <a href="{{ link.url }}" rel="me noopener">{{ link.label }}</a>
+          {% endfor %}
+          <a href="/feeds/all.atom.xml">Feed</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
