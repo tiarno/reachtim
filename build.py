@@ -17,6 +17,7 @@ read natively, with no regex preprocessing to drift out of sync.
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import re
 import shutil
@@ -156,8 +157,15 @@ def flatten_toc(tokens: list[dict]) -> list[dict]:
     def walk(nodes: list[dict]) -> list[dict]:
         out: list[dict] = []
         for token in nodes:
+            # smarty renders headings with literal entities (Let&rsquo;s), and
+            # this string goes through Jinja's autoescape same as any other
+            # value, which would double-escape the & into &amp;rsquo;.
             out.append(
-                {"id": token["id"], "name": token["name"], "level": token["level"]}
+                {
+                    "id": token["id"],
+                    "name": html.unescape(token["name"]),
+                    "level": token["level"],
+                }
             )
             out.extend(walk(token.get("children", [])))
         return out
