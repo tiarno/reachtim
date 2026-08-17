@@ -7,18 +7,21 @@ tags: [LoRa, hacking, ESP32, Meshtastic]
 summary: "A teaching walkthrough of a passive LoRa sniffer for cheap ESP32 hardware — the scanning problem it solves, exactly what it can and can't decrypt, and how the pieces fit together."
 ---
 
-There is a surprising amount of radio traffic going on above your head that
-nobody thinks of as a network. Meshtastic nodes relaying each other's
-messages. LoRaWAN sensors reporting soil moisture. Someone's weather station,
-someone's mesh of hiking radios, someone's "private" channel still running on
-whatever key it shipped with. It's all in the license-free ISM bands, it's all
-long-range by design, and almost none of it expects a listener.
+I spent an afternoon in a hotel listening to the radio. Not the FM band — the
+LoRa traffic drifting through the building. Mesh nodes relaying each other's
+messages. Someone's sensor phoning home. Someone's "private" channel still
+running on whatever key it shipped with. By the time I packed up, I had 3,630
+packets from 266 devices, and 57 messages I could read in plaintext. Every
+readable one was sitting on a public channel or an unchanged default key.
 
-[LoRecon](https://github.com/haksht/lorecon) is that listener. It's firmware
-for a twenty-dollar ESP32 board that turns it into a self-contained LoRa
-reconnaissance tool, driven from a phone over its own web interface. I wrote
-it; I'll teach it the way I'd want it explained to me — starting from the one
-fact that makes sniffing LoRa harder than sniffing WiFi.
+None of it expected a listener. That is the interesting part, and it is what
+this article is about.
+
+[LoRecon](https://github.com/haksht/lorecon) is the listener. It's firmware for
+a twenty-dollar ESP32 board that turns it into a self-contained LoRa
+reconnaissance tool, driven from your phone over its own web interface. I wrote
+it, and I'll teach it the way I'd want it explained to me — starting from the
+one fact that makes sniffing LoRa harder than sniffing WiFi.
 
 # Why you can't just listen
 
@@ -31,11 +34,11 @@ isn't garbled — it's silence. You never even see it.
 
 So a passive sniffer can't just "listen." It has to *guess*, methodically,
 across every combination anyone actually uses. LoRecon carries a table of 29
-such combinations, covering five network families, and cycles through them
-one at a time, dwelling about twelve seconds on each before moving on. A full
-lap is roughly six minutes. Whatever's in range and transmitting during its
-slice gets captured, classified, and — where possible — decrypted, before the
-radio retunes and moves to the next slot.
+such combinations, covering five network families, and cycles through them one
+at a time, dwelling about twelve seconds on each before moving on. A full lap is
+roughly six minutes. Whatever's in range and transmitting during its slice gets
+captured, classified, and — where possible — decrypted, before the radio
+retunes and moves to the next slot.
 
 <figure class="diagram" markdown="0">
 <svg viewBox="0 0 880 170" role="img" aria-labelledby="scan-title scan-desc" xmlns="http://www.w3.org/2000/svg">
@@ -107,57 +110,59 @@ radio retunes and moves to the next slot.
 That's also why the scan takes minutes instead of being instant: there's no
 shortcut around trying each combination in turn. It's the same reason a
 Meshtastic node in your backpack and a LoRaWAN sensor on someone's roof can
-share the same air without ever hearing each other — they were never
-listening on the same "channel" in the first place.
+share the same air without ever hearing each other — they were never listening
+on the same "channel" in the first place. Back in that hotel, the six-minute lap
+is exactly what turned a quiet band into 266 devices: give the sweep enough laps
+and everything transmitting eventually lands in a slice you're tuned to.
 
 # What it does once it hears something
 
-Once a packet is captured, LoRecon classifies it by protocol and tries to
-open it. Three things happen, depending on what it heard:
+Once a packet is captured, LoRecon classifies it by protocol and tries to open
+it. Three things can happen, depending on what it heard.
 
 - **Default-key decryption.** It carries 23 known and historically common
-  Meshtastic channel PSKs and tries each against what it captured. For
-  MeshCore, the public channel key is fixed and shipped on every device, so
-  that one's automatic; a handful of common hashtag-room keys (`#general`,
-  `#emergency`, and similar) are derived from the room name and tried too.
-  For LoRaWAN, it checks 16 default AppKeys against any Join Request it
-  catches.
+  Meshtastic channel PSKs and tries each against what it captured. For MeshCore,
+  the public channel key is fixed and shipped on every device, so that one's
+  automatic; a handful of common hashtag-room keys (`#general`, `#emergency`,
+  and similar) are derived from the room name and tried too. For LoRaWAN, it
+  checks 16 default AppKeys against any Join Request it catches.
 - **Position extraction.** A successful decrypt of a Meshtastic `POSITION_APP`
   packet yields GPS coordinates, exportable straight to KML or GeoJSON.
-- **Replay.** Ten storage slots, configurable repeat count and delay, for
+- **Replay.** Ten storage slots, with a configurable repeat count and delay, for
   testing how your own gear reacts to a packet it's seen before.
 
-Everything captured is reachable from a six-tab web UI the board serves
-itself — over its own access point if there's no WiFi around — and exportable
-as CSV or Wireshark-ready PCAP for the Python toolkit that ships in the repo:
-a `report` command that turns a capture into a prioritized findings page, a
-`map` command that plots extracted GPS onto an interactive map, and a
-`topology` command that draws the mesh as a graph, labeling nodes with
-whatever operator name it could decrypt.
+Everything captured is reachable from a six-tab web UI the board serves itself —
+over its own access point if there's no WiFi around — and exportable as CSV or
+Wireshark-ready PCAP. From there, a Python toolkit that ships in the repo picks
+up the file: a `report` command that turns a capture into a prioritized findings
+page, a `map` command that plots extracted GPS onto an interactive map, and a
+`topology` command that draws the mesh as a graph, labeling nodes with whatever
+operator name it could decrypt.
 
 # The boundary: what a default key doesn't get you
 
 This is the part I'd want to know first if I were reading instead of writing:
 **a cracked default key does not hand you someone's private messages.**
 
-Meshtastic firmware from 2.5.0 onward split its encryption into two systems,
-and it's worth understanding both, because the difference is the entire
-argument for why this tool is interesting rather than alarming.
+Meshtastic firmware from 2.5.0 onward split its encryption into two systems, and
+it's worth understanding both, because the difference is the entire argument for
+why this tool is interesting rather than alarming.
 
 Everything a node broadcasts automatically — its position, its telemetry, its
-node info, its traceroutes, routing packets, and anything typed into a
-*channel* (as opposed to a direct message) — is wrapped in one shared AES key
-per channel. If that key is still the factory default, which most deployments
-never change, LoRecon's 23-key database opens it in one pass. That's the
-finding: not that the crypto is broken, but that almost nobody rotates the
-key it shipped with.
+node info, its traceroutes, routing packets, and anything typed into a *channel*
+(as opposed to a direct message) — is wrapped in one shared AES key per channel.
+If that key is still the factory default, which most deployments never change,
+LoRecon's 23-key database opens it in one pass. That's the finding, and it's the
+whole of the finding: not that the crypto is broken, but that almost nobody
+rotates the key their gear shipped with. The 57 readable messages in that hotel
+weren't a break. They were 57 people who never changed a setting.
 
-Direct messages and admin commands are different. Since firmware 2.5.0 they
-get a second, independent layer — Curve25519 public-key encryption, keyed to
-the *recipient's* device, whose private key never leaves that device. No
-database of default values gets you through that layer, because there isn't
-a shared secret to guess. It isn't weak encryption tested and found wanting;
-it's the correct primitive, used correctly.
+Direct messages and admin commands are a different story. Since firmware 2.5.0
+they get a second, independent layer — Curve25519 public-key encryption, keyed
+to the *recipient's* device, whose private key never leaves that device. No
+database of default values gets you through that layer, because there is no
+shared secret to guess. It isn't weak encryption tested and found wanting; it's
+the correct primitive, used correctly.
 
 <figure class="diagram" markdown="0">
 <svg viewBox="0 0 880 320" role="img" aria-labelledby="enc-title enc-desc" xmlns="http://www.w3.org/2000/svg">
@@ -204,22 +209,24 @@ it's the correct primitive, used correctly.
 <figcaption>The channel PSK is one shared secret protecting everything a node sends automatically. A hit opens it all at once. Direct messages and admin commands sit behind a second, independent lock keyed to one device’s private key — a channel-PSK hit never reaches it.</figcaption>
 </figure>
 
-If an operator has set a custom channel PSK, the 23-key database simply
-doesn't match anything, and the broadcasts stay encrypted blobs too. That's
-the correct outcome, and honestly the whole point of running the tool against
-your own mesh: one six-minute sweep tells you which side of that line you're
-on.
+If an operator has set a custom channel PSK, the 23-key database simply doesn't
+match anything, and the broadcasts stay encrypted blobs too. That's the correct
+outcome, and honestly it's the whole point of running the tool against your own
+mesh: one six-minute sweep tells you which side of that line you're on. Setting
+a custom PSK is a thirty-second job, and it is the difference between being a
+readable blip in someone's hotel capture and being noise.
 
 One historical wrinkle worth knowing: before firmware 2.5.0, direct messages
 were just channel messages with a destination field, protected by the same
 shared key as everything else. Pre-2.5.0 devices don't get the Curve25519
-protection at all. If you're auditing an older deployment, "we're on the
-default key" and "our DMs are private" are not both true at once.
+protection at all. So if you're auditing an older deployment, keep in mind that
+"we're on the default key" and "our DMs are private" cannot both be true at
+once.
 
 # From antenna to report
 
-None of this needs a laptop in the field, and none of it needs a cloud
-service. The whole pipeline fits on the board and the phone in your pocket:
+None of this needs a laptop in the field, and none of it needs a cloud service.
+The whole pipeline fits on the board and the phone in your pocket.
 
 <figure class="diagram" markdown="0">
 <svg viewBox="0 0 880 200" role="img" aria-labelledby="path-title path-desc" xmlns="http://www.w3.org/2000/svg">
@@ -261,14 +268,15 @@ service. The whole pipeline fits on the board and the phone in your pocket:
 <figcaption>CSV, PCAP, KML, and GeoJSON move the data from device to disk; `lorecon report`, `lorecon map`, and `lorecon topology` turn a saved capture into a findings page, a GPS map, and a mesh graph — all of it running on a machine that never has to touch the internet.</figcaption>
 </figure>
 
-The RF leg is drawn one-way on purpose. LoRecon never transmits — replay
-writes to storage slots you trigger manually, but nothing goes out over the
-air unless you ask it to, and normal operation is receive-only from power-on.
+The RF leg is drawn one-way on purpose. LoRecon never transmits — replay writes
+to storage slots you trigger manually, but nothing goes out over the air unless
+you ask it to, and normal operation is receive-only from power-on. That's a
+deliberate design line, not an accident of what I got around to building.
 
 # Choosing hardware
 
-Four boards run the same firmware and the same web UI; the differences are
-about what you need in the field, not what the tool can do:
+Four boards run the same firmware and the same web UI; the differences are about
+what you need in the field, not what the tool can do.
 
 | Board | Why you'd pick it |
 | --- | --- |
@@ -277,25 +285,27 @@ about what you need in the field, not what the tool can do:
 | LilyGO T3-S3 | SD card slot — log PCAP/CSV to disk in the field |
 | LilyGO T-Beam Supreme | SD, GPS, battery management, and 8 MB of PSRAM |
 
-That last column, PSRAM, isn't a spec-sheet flourish. A long unattended
-capture dies of heap fragmentation on a bare ESP32 long before anything
-conceptually interesting happens to it; the T-Beam Supreme with PSRAM enabled
-holds roughly 130 KB of minimum free heap after twenty hours with fifty
-devices in range, against about 53 KB without. Most of the recent release
-cycle was stability engineering of exactly that flavor — chunked API
-responses, heap guards, crash context that survives a reboot.
+That last column, PSRAM, isn't a spec-sheet flourish. A long unattended capture
+dies of heap fragmentation on a bare ESP32 long before anything conceptually
+interesting happens to it. The T-Beam Supreme with PSRAM enabled holds roughly
+130 KB of minimum free heap after twenty hours with fifty devices in range,
+against about 53 KB without. Most of the recent release cycle was stability
+engineering of exactly that flavor — chunked API responses, heap guards, crash
+context that survives a reboot. It isn't glamorous work, but it's the difference
+between a tool that runs on the bench and one that's still running when you come
+back to it.
 
 # Try it yourself
 
 There's a browser-based installer, so getting a board running doesn't require
 touching a toolchain:
 
-<https://haksht.github.io/lorecon/install/> — plug the board in, open the
-page in Chrome or Edge, click flash.
+<https://haksht.github.io/lorecon/install/> — plug the board in, open the page
+in Chrome or Edge, click flash.
 
-If you want the Python analysis toolkit too — `report`, `map`, `topology`,
-and the rest — that lives in the source repo, not the binary release, so
-you'll want to clone it:
+If you want the Python analysis toolkit too — `report`, `map`, `topology`, and
+the rest — that lives in the source repo, not the binary release, so you'll want
+to clone it:
 
 ```
 git clone https://github.com/haksht/lorecon.git
@@ -308,8 +318,8 @@ pip install -e .
 `lorecon --help` confirms the install worked. From there, `lorecon report
 capture.csv` is the first thing worth running against anything you capture.
 
-Building the firmware yourself is PlatformIO, with OTA updates available
-after the first USB flash. MIT licensed. Current release is 2.6.0.
+Building the firmware yourself is PlatformIO, with OTA updates available after
+the first USB flash. MIT licensed. The current release is 2.6.0.
 
 <span class="note">Note: </span>This is for networks you own or have written permission to test. Passive reception is generally legal in the US; interception of content can implicate 18 U.S.C. § 2511, and the rules vary considerably by jurisdiction. The default-key testing exists to demonstrate a risk, not to hand anyone a way into someone else's traffic.
 {: .callout}
@@ -327,12 +337,12 @@ The repo's `docs/` folder is the fuller version of everything above:
 
 # Credit where it's due
 
-I wrote the firmware and the tooling. The hardware side — board selection,
-the antenna and power work, and the field testing that turned up most of the
-bugs worth fixing — is [The-Foe](https://github.com/The-Foe), who I share the
-[haksht](https://github.com/haksht) org with. A sniffer that works on the
-bench and falls over after six hours in a bag is not a sniffer, and finding
-that out is its own skill.
+I wrote the firmware and the tooling. The hardware side — board selection, the
+antenna and power work, and the field testing that turned up most of the bugs
+worth fixing — is [The-Foe](https://github.com/The-Foe), who I share the
+[haksht](https://github.com/haksht) org with. A sniffer that works on the bench
+and falls over after six hours in a bag is not a sniffer, and finding that out
+is its own skill.
 
 The repo is at **[github.com/haksht/lorecon](https://github.com/haksht/lorecon)**.
 If it's useful to you, a star helps other people find it.
