@@ -7,11 +7,11 @@ tags: [LoRa, hacking, ESP32, Meshtastic]
 summary: "A teaching walkthrough of a passive LoRa sniffer for cheap ESP32 hardware — the scanning problem it solves, exactly what it can and can't decrypt, and how the pieces fit together."
 ---
 
-I spent an afternoon in a hotel listening to the radio. Not the FM band — the
-LoRa traffic drifting through the building. Mesh nodes relaying each other's
+My hacking partner and I spent an afternoon in a hotel listening to the LoRa
+traffic drifting through the building. Mesh nodes relaying each other's
 messages. Someone's sensor phoning home. Someone's "private" channel still
-running on whatever key it shipped with. By the time I packed up, I had 3,630
-packets from 266 devices, and 57 messages I could read in plaintext. Every
+running on whatever key it shipped with. By the time we packed up, we had 3,630
+packets from 266 devices, and 57 messages we could read in plaintext. Every
 readable one was sitting on a public channel or an unchanged default key.
 
 None of it expected a listener. That is the interesting part, and it is what
@@ -19,18 +19,19 @@ this article is about.
 
 [LoRecon](https://github.com/haksht/lorecon) is the listener. It's firmware for
 a twenty-dollar ESP32 board that turns it into a self-contained LoRa
-reconnaissance tool, driven from your phone over its own web interface. I wrote
-it, and I'll teach it the way I'd want it explained to me — starting from the
-one fact that makes sniffing LoRa harder than sniffing WiFi.
+reconnaissance tool, driven from your phone over its own web interface. We built
+it — I wrote the firmware, my buddy The-Foe built out the hardware and did the
+field testing — and I'll teach it the way I'd want it explained to me, starting
+from the one fact that makes sniffing LoRa harder than sniffing WiFi.
 
 # Why you can't just listen
 
 On WiFi, one radio hears every other radio on the same channel. LoRa doesn't
-work that way. "LoRa" is a modulation scheme, not a protocol — every network
-built on it picks its own **frequency**, **spreading factor**, **bandwidth**,
+work that way. "LoRa" is just the modulation; the protocol on top is left to each
+network, and every one picks its own **frequency**, **spreading factor**, **bandwidth**,
 and **coding rate**, and a receiver has to match all four before it can
-demodulate anything at all. Get one of the four wrong and the transmission
-isn't garbled — it's silence. You never even see it.
+demodulate anything at all. Get one of the four wrong and you hear nothing at
+all — just silence, and you never even see it.
 
 So a passive sniffer can't just "listen." It has to *guess*, methodically,
 across every combination anyone actually uses. LoRecon carries a table of 29
@@ -153,16 +154,14 @@ node info, its traceroutes, routing packets, and anything typed into a *channel*
 (as opposed to a direct message) — is wrapped in one shared AES key per channel.
 If that key is still the factory default, which most deployments never change,
 LoRecon's 23-key database opens it in one pass. That's the finding, and it's the
-whole of the finding: not that the crypto is broken, but that almost nobody
-rotates the key their gear shipped with. The 57 readable messages in that hotel
-weren't a break. They were 57 people who never changed a setting.
+whole of the finding: almost nobody rotates the key their gear shipped with. The
+57 readable messages in that hotel were 57 people who never changed a setting.
 
 Direct messages and admin commands are a different story. Since firmware 2.5.0
 they get a second, independent layer — Curve25519 public-key encryption, keyed
 to the *recipient's* device, whose private key never leaves that device. No
 database of default values gets you through that layer, because there is no
-shared secret to guess. It isn't weak encryption tested and found wanting; it's
-the correct primitive, used correctly.
+shared secret to guess. This is the correct primitive, used correctly.
 
 <figure class="diagram" markdown="0">
 <svg viewBox="0 0 880 320" role="img" aria-labelledby="enc-title enc-desc" xmlns="http://www.w3.org/2000/svg">
@@ -271,7 +270,7 @@ The whole pipeline fits on the board and the phone in your pocket.
 The RF leg is drawn one-way on purpose. LoRecon never transmits — replay writes
 to storage slots you trigger manually, but nothing goes out over the air unless
 you ask it to, and normal operation is receive-only from power-on. That's a
-deliberate design line, not an accident of what I got around to building.
+deliberate design line.
 
 # Choosing hardware
 
@@ -285,13 +284,13 @@ what you need in the field, not what the tool can do.
 | LilyGO T3-S3 | SD card slot — log PCAP/CSV to disk in the field |
 | LilyGO T-Beam Supreme | SD, GPS, battery management, and 8 MB of PSRAM |
 
-That last column, PSRAM, isn't a spec-sheet flourish. A long unattended capture
+That last column, PSRAM, earns its keep. A long unattended capture
 dies of heap fragmentation on a bare ESP32 long before anything conceptually
 interesting happens to it. The T-Beam Supreme with PSRAM enabled holds roughly
 130 KB of minimum free heap after twenty hours with fifty devices in range,
 against about 53 KB without. Most of the recent release cycle was stability
 engineering of exactly that flavor — chunked API responses, heap guards, crash
-context that survives a reboot. It isn't glamorous work, but it's the difference
+context that survives a reboot. It's unglamorous work, and it's the difference
 between a tool that runs on the bench and one that's still running when you come
 back to it.
 
