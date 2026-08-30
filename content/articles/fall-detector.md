@@ -22,7 +22,7 @@ This is what came of building a wrist-worn fall detector, measuring it properly,
 and concluding that it should never be allowed to page anyone. I'll walk through
 how these things are supposed to work, the two numbers that killed mine, and the
 part I genuinely did not expect: the published research has been saying the same
-thing since 2012, and mostly nobody acts on it.
+thing since 2008, and mostly nobody acts on it.
 
 # What I was building, and why
 
@@ -261,9 +261,33 @@ Nineteen points sitting in the mounting position tells you the orientation stage
 was the problem all along. It also tells you that relocating the sensor doesn't
 rescue the idea — a pendant still misses more than a third of falls, and comes
 with its own well-known problem, which is that people don't wear pendants.
-Stigma, forgetting, taking it off in the shower and leaving it there. The
-wrist's compliance advantage is exactly why wrist devices dominate the market
-despite worse physics.
+Stigma, forgetting, taking it off in the shower and leaving it there, leaving it
+on the charger through the night.
+
+Wear rate doesn't sit beside the recall number; it multiplies against it.
+Fleming and Brayne
+followed 110 people over ninety for a year and found that 82% of falls happened
+while the person was alone, and that **80% of those who fell and had a call
+button did not use it** — not wearing it, knocked unconscious, or too shaken by
+the fall to press. Those were manual buttons, so the figure measures wearing and
+not detecting, but it's the same term in the same product: whatever recall you
+achieve, you multiply it by the fraction of falls where the device was on the
+body at all.
+
+I haven't measured that fraction for my own watch and I'm not going to invent
+one, but the direction is clear without it. The pendant's nineteen-point lead
+survives only if the pendant is worn, and the best real-world evidence says it
+mostly isn't — which is exactly why wrist devices dominate the market despite
+worse physics. Neither mount produces a number you'd stake someone's safety on.
+
+None of this was new, either. In 2008, Kangas and colleagues ran essentially the
+same comparison — accelerometers at the waist, the wrist and the head, threshold
+algorithms simpler than mine — and got 97–98% sensitivity at the waist and the
+head against staged falls by three middle-aged volunteers. Those top-line
+numbers carry exactly the caveat this article is about. Their finding on the
+third position needs no such caveat: the wrist, they concluded, "did not appear
+to be an applicable site for fall detection." Eighteen years before I measured
+44.4%, that sentence was sitting in *Gait & Posture*.
 
 # This is not just my detector
 
@@ -299,7 +323,11 @@ Two details make my number worse:
   *easy* case: real fallers grab furniture, twist, brace, and half-catch
   themselves, and those compensatory movements smear the clean signature the
   cascade is looking for. My 49.3% is a ceiling, and real-world performance
-  would be lower.
+  would be lower. Staged data is also the field's normal practice, which is the
+  problem with the field's numbers: Chaudhuri, Thompson and Demiris reviewed
+  more than a hundred fall-detection papers in 2014 and found most of them built
+  on simulated falls, concluding that a system trained that way cannot reach the
+  reliability of one built on real ones.
 - **Their algorithms were mostly waist-mounted.** As my own three-mount
   comparison shows, that's the easier position by about nineteen points.
 
@@ -415,4 +443,7 @@ yourself and convert it.
 # Sources
 
 - Bagalà, F. et al., [Evaluation of Accelerometer-Based Fall Detection Algorithms on Real-World Falls](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0037062), *PLOS ONE*, 2012 — the thirteen-algorithm study, and the source of the simulated-versus-real gap.
+- Chaudhuri, S., Thompson, H. and Demiris, G., [Fall detection devices and their use with older adults: a systematic review](https://pubmed.ncbi.nlm.nih.gov/24406708/), *Journal of Geriatric Physical Therapy*, 2014 — over a hundred papers, most of them measured on simulated falls.
+- Fleming, J. and Brayne, C., [Inability to get up after falling, subsequent time on floor, and summoning help](https://pmc.ncbi.nlm.nih.gov/articles/PMC2590903/), *BMJ*, 2008 — 110 people over ninety, followed for a year; 80% of those who fell and had a call button didn't use it.
+- Kangas, M. et al., [Comparison of low-complexity fall detection algorithms for body attached accelerometers](https://pubmed.ncbi.nlm.nih.gov/18294851/), *Gait & Posture*, 2008 — waist, wrist and head compared directly, and the wrist ruled out.
 - Saleh, M. and Le Bouquin Jeannes, R., [FallAllD](https://ieee-dataport.org/open-access/fallalld-comprehensive-dataset-human-falls-and-activities-daily-living), IEEE DataPort, 2020 — 15 participants, simultaneous wrist, waist and neck loggers. Described in [IEEE Sensors Journal](https://ieeexplore.ieee.org/document/9171857/), 2021.
