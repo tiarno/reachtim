@@ -58,21 +58,20 @@ Bugs found during verification, all of which were silent:
 
 ## What's Blocked
 
-- **Something syncs the GitHub repo into the web root.** The root held 80 files
-  that were not part of any site — this repo's source, the old Pelican source,
-  and the three never-published drafts (`scapy_intro.md`, `bpf_scapy.md`,
-  `ipv4_v6.md`) — carrying that day's timestamps. Looks like Porkbun's
-  "connect to a GitHub repository" feature. `dist/` is gitignored, so that sync
-  can never produce a working site, and **the next push may undo the deploy**.
-  Tim needs to check Static Hosting settings and disconnect it. Files are pruned
-  for now and all recoverable from git.
+- ~~**Something syncs the GitHub repo into the web root.**~~ **Struck 2026-08-30.
+  Pushing to GitHub has no effect on the live Porkbun site** — confirmed by Tim.
+  The two are independent: GitHub holds the source, the FTPS deploy publishes
+  `dist/`. A push cannot undo a deploy, and a deploy needs no push. Corroborated
+  the same day by a `deploy.py --prune --dry-run` that found **0 remote files
+  absent from `dist/`**, where a live sync would have re-added the repo source.
+  The 80 stray files the original note described were real, but they were a
+  one-off left in the web root, not evidence of an ongoing sync. Push freely.
 
 ## Next Steps
 
-1. Confirm the GitHub → Porkbun sync is off, then re-check the live site.
-2. Redeploy after any content change:
+1. Redeploy after any content change:
    `check_build.py`, then `deploy.py --prune` (see README for the env vars).
-3. If the original crystal photographs turn up, drop them in over the 450px
+2. If the original crystal photographs turn up, drop them in over the 450px
    Facebook copies and re-run `tools/optimize_assets.py`.
 
 ## Key Parameters/Settings
