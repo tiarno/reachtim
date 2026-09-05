@@ -9,13 +9,12 @@ summary: "A teaching walkthrough of a passive LoRa sniffer for cheap ESP32 hardw
 
 My hacking partner and I spent an afternoon in a hotel listening to the LoRa
 traffic drifting through the building. Mesh nodes relaying each other's
-messages. Someone's sensor phoning home. Someone's "private" channel still
-running on whatever key it shipped with. By the time we packed up, we had 3,630
-packets from 266 devices, and 57 messages we could read in plaintext. Every
-readable one was sitting on a public channel or an unchanged default key.
+messages. Someone's sensor phoning home. By the time we packed up, we had 3,630
+packets from 266 devices, and 57 messages we could read in plaintext — every
+one of them opened with a known or default channel key, nothing custom.
 
-None of it expected a listener. That is the interesting part, and it is what
-this article is about.
+That's what this article is about: what a key like that actually opens, and
+how LoRecon does the listening.
 
 [LoRecon](https://github.com/haksht/lorecon) is the listener. It's firmware for
 a twenty-dollar ESP32 board that turns it into a self-contained LoRa
@@ -145,17 +144,61 @@ operator name it could decrypt.
 This is the part I'd want to know first if I were reading instead of writing:
 **a cracked default key does not hand you someone's private messages.**
 
-Meshtastic firmware from 2.5.0 onward split its encryption into two systems, and
-it's worth understanding both, because the difference is the entire argument for
-why this tool is interesting rather than alarming.
+Meshtastic firmware from 2.5.0 onward split its encryption into two systems. A
+sweep like this treats them very differently.
 
 Everything a node broadcasts automatically — its position, its telemetry, its
 node info, its traceroutes, routing packets, and anything typed into a *channel*
 (as opposed to a direct message) — is wrapped in one shared AES key per channel.
-If that key is still the factory default, which most deployments never change,
-LoRecon's 23-key database opens it in one pass. That's the finding, and it's the
-whole of the finding: almost nobody rotates the key their gear shipped with. The
-57 readable messages in that hotel were 57 people who never changed a setting.
+If that key matches one of the 23 known and historically common values LoRecon
+carries, the database opens it in one pass.
+
+That's what happened to all 57 readable messages in the hotel capture: every
+one decrypted with a known key, none with a custom PSK. Two distinct channels
+were in use — a main one with 261 devices, and a separately named one with 17 —
+and both decrypted with the identical unmodified default key, which is what
+actually determined the outcome.
+
+Position broadcasts aren't uniformly precise, either. Firmware supports a
+range of reduced-precision settings, each defining a grid cell centered on the
+reported point rather than blurring the true location — a limit set locally by
+the app, not the radio link. Of the nodes broadcasting position in this same
+capture, 91% used some reduced-precision setting; the remaining 9% broadcast
+full, meter-level precision. Same channel, same key in both cases — just a
+different setting.
+
+<aside class="callout" markdown="1">
+**Sidebar: how much does a reduced setting actually hide?**
+
+"Reduced precision" isn't one setting — the capture had nodes spread across
+nine distinct levels, each cutting the position down to a different grid size:
+
+| `precision_bits` | Nodes | Share | Error radius |
+| --- | --- | --- | --- |
+| 10 | 1 | 0.6% | ±23.3 km |
+| 12 | 6 | 3.3% | ±5.8 km |
+| 13 (the common default) | 74 | 41.1% | ±2.9 km |
+| 14 | 41 | 22.8% | ±1.5 km |
+| 15 | 31 | 17.2% | ±730 m |
+| 16 | 5 | 2.8% | ±365 m |
+| 17 | 2 | 1.1% | ±182 m |
+| 18 | 1 | 0.6% | ±91 m |
+| 19 | 3 | 1.7% | ±46 m |
+| 32 (full) | 16 | 8.9% | meter-level |
+
+The two coarsest settings — 3.9% of nodes — narrow a position to roughly
+"somewhere in the metro area." Everything from row five down, full precision
+included, is about a third of all nodes and narrows to under a kilometer:
+enough to say which venue an operator is transmitting from, not just which
+city. I didn't have this breakdown in front of me while I was writing the
+position-extraction code — I'd have logged the precision level alongside the
+coordinates from the start if I had.
+</aside>
+
+None of that says anything about why any particular node in the capture is set
+up the way it is. For a lot of Meshtastic's user base, the public channel is
+exactly what they want: a way to reach and be reached by other operators
+nearby, on a network anyone can join without arranging a key first.
 
 Direct messages and admin commands are a different story. Since firmware 2.5.0
 they get a second, independent layer — Curve25519 public-key encryption, keyed
@@ -208,16 +251,14 @@ shared secret to guess. This is the correct primitive, used correctly.
 <figcaption>The channel PSK is one shared secret protecting everything a node sends automatically. A hit opens it all at once. Direct messages and admin commands sit behind a second, independent lock keyed to one device’s private key — a channel-PSK hit never reaches it.</figcaption>
 </figure>
 
-If an operator has set a custom channel PSK, the 23-key database simply doesn't
-match anything, and the broadcasts stay encrypted blobs too. That's the correct
-outcome, and honestly it's the whole point of running the tool against your own
-mesh: one six-minute sweep tells you which side of that line you're on. Setting
-a custom PSK is a thirty-second job, and it is the difference between being a
-readable blip in someone's hotel capture and being noise.
+If an operator sets a custom channel PSK, the 23-key database doesn't match
+anything, and the broadcasts stay encrypted blobs too. A sweep like this checks
+the key, not the name — renaming a channel has no effect on it. Setting a
+custom PSK is a thirty-second job in the app, and it's the one change that
+alters what a listener sees.
 
-One historical wrinkle worth knowing: before firmware 2.5.0, direct messages
-were just channel messages with a destination field, protected by the same
-shared key as everything else. Pre-2.5.0 devices don't get the Curve25519
+Before firmware 2.5.0, direct messages were just channel messages with a
+destination field, protected by the same shared key as everything else. Pre-2.5.0 devices don't get the Curve25519
 protection at all. So if you're auditing an older deployment, keep in mind that
 "we're on the default key" and "our DMs are private" cannot both be true at
 once.
