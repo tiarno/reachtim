@@ -21,6 +21,9 @@ from __future__ import annotations
 
 import argparse
 import ftplib
+import hashlib
+import io
+import json
 import os
 import sys
 from pathlib import Path
@@ -30,8 +33,37 @@ DIST = ROOT / "dist"
 
 MAX_FILE_BYTES = 40 * 1024 * 1024  # Porkbun static hosting limit
 
+# What is on the server, by content hash. FTP has no checksum command on this
+# host, and size alone misses same-length edits (a typo swap never uploads), so
+# each deploy records the sha256 of every file it knows is on the server and the
+# next deploy skips a file only when its hash matches. Kept on the server, not
+# locally, so it describes the server whichever machine deploys. Public, and
+# harmless: it holds hashes of files that are already public.
+MANIFEST = ".deploy-manifest.json"
+
 # Never delete these during --prune, whatever the reason they exist.
-PRUNE_KEEP = {".well-known", ".ftpquota", ".htaccess"}
+PRUNE_KEEP = {".well-known", ".ftpquota", ".htaccess", MANIFEST}
+
+
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def read_manifest(ftp: ftplib.FTP_TLS) -> dict[str, str]:
+    """The server's last recorded {path: sha256}; empty if absent or unreadable,
+    which makes every file count as changed."""
+    buf = io.BytesIO()
+    try:
+        ftp.retrbinary(f"RETR {MANIFEST}", buf.write)
+        data = json.loads(buf.getvalue().decode("utf-8"))
+    except (ftplib.error_perm, ValueError, UnicodeDecodeError):
+        return {}
+    return {k: v for k, v in data.items() if isinstance(k, str) and isinstance(v, str)}
+
+
+def write_manifest(ftp: ftplib.FTP_TLS, manifest: dict[str, str]) -> None:
+    body = json.dumps(dict(sorted(manifest.items())), indent=0).encode("utf-8")
+    ftp.storbinary(f"STOR {MANIFEST}", io.BytesIO(body))
 
 
 def connect() -> ftplib.FTP_TLS:
@@ -131,16 +163,11 @@ def main() -> int:
 
     print(f"remote: {len(remote_files)} files, {len(stale)} not in dist/")
 
-    if args.dry_run:
-        for r in sorted(stale)[:40]:
-            print(f"  stale: {r}")
-        if len(stale) > 40:
-            print(f"  ... and {len(stale) - 40} more")
-        ftp.quit()
-        return 0
-
-    # Remote sizes let us skip anything already uploaded, so a run that dies
-    # halfway costs almost nothing to repeat.
+    # A file is current only when the server has it at the same size AND the
+    # manifest says the server's copy has the same hash. Size catches a file
+    # changed or truncated behind the manifest's back; the hash catches
+    # same-length edits. A file the manifest does not know is uploaded.
+    manifest = read_manifest(ftp)
     remote_size: dict[str, int] = {}
     for r in remote_files:
         try:
@@ -148,36 +175,71 @@ def main() -> int:
         except ftplib.error_perm:
             remote_size[r] = -1
 
-    made: set[str] = set()
-    sent = skipped = 0
-    for i, path in enumerate(files, 1):
+    todo: list[tuple[Path, str, str]] = []
+    for path in files:
         rel = path.relative_to(DIST).as_posix()
-        size = path.stat().st_size
-        if remote_size.get(rel) == size:
-            skipped += 1
+        digest = sha256(path)
+        if remote_size.get(rel) == path.stat().st_size and manifest.get(rel) == digest:
             continue
+        todo.append((path, rel, digest))
+    skipped = len(files) - len(todo)
+    if not manifest:
+        print(f"  no {MANIFEST} on the server yet: every file counts as changed")
+    print(f"to upload: {len(todo)} changed, {skipped} current")
 
-        parent = str(Path(rel).parent).replace("\\", "/")
-        for attempt in range(1, 5):
-            try:
-                ensure_dir(ftp, parent, made)
-                with path.open("rb") as fh:
-                    ftp.storbinary(f"STOR {rel}", fh, blocksize=32768)
-                break
-            except (ftplib.all_errors, OSError) as exc:
-                if attempt == 4:
-                    raise
-                print(f"  retry {attempt} for {rel}: {type(exc).__name__}")
-                # The control connection is usually dead too; rebuild both.
+    if args.dry_run:
+        for _, rel, _ in todo[:40]:
+            print(f"  upload: {rel}")
+        if len(todo) > 40:
+            print(f"  ... and {len(todo) - 40} more")
+        for r in sorted(stale)[:40]:
+            print(f"  stale: {r}")
+        if len(stale) > 40:
+            print(f"  ... and {len(stale) - 40} more")
+        ftp.quit()
+        return 0
+
+    made: set[str] = set()
+    sent = 0
+    try:
+        for i, (path, rel, digest) in enumerate(todo, 1):
+            parent = str(Path(rel).parent).replace("\\", "/")
+            for attempt in range(1, 5):
                 try:
-                    ftp.close()
-                except Exception:
-                    pass
+                    ensure_dir(ftp, parent, made)
+                    with path.open("rb") as fh:
+                        ftp.storbinary(f"STOR {rel}", fh, blocksize=32768)
+                    break
+                except ftplib.all_errors as exc:  # a tuple that already includes OSError
+                    if attempt == 4:
+                        raise
+                    print(f"  retry {attempt} for {rel}: {type(exc).__name__}")
+                    # The control connection is usually dead too; rebuild both.
+                    try:
+                        ftp.close()
+                    except Exception:
+                        pass
+                    ftp = connect()
+                    made.clear()
+            manifest[rel] = digest
+            sent += path.stat().st_size
+            if i % 25 == 0 or i == len(todo):
+                print(f"  {i:4}/{len(todo)}  {sent / 1024 / 1024:5.1f} MB sent  {rel}")
+    finally:
+        # Record what is on the server even after a failed run, so a re-run
+        # resends only what did not make it.
+        for p in list(manifest):
+            if p not in wanted and p not in remote_files:
+                del manifest[p]
+        try:
+            write_manifest(ftp, manifest)
+        except ftplib.all_errors:
+            try:
                 ftp = connect()
-                made.clear()
-        sent += size
-        if i % 25 == 0 or i == len(files):
-            print(f"  {i:4}/{len(files)}  {sent / 1024 / 1024:5.1f} MB sent  {rel}")
+                write_manifest(ftp, manifest)
+            except ftplib.all_errors as exc:
+                print(f"  could not write {MANIFEST} ({type(exc).__name__}); "
+                      "the next deploy will resend everything", file=sys.stderr)
 
     if skipped:
         print(f"  skipped {skipped} already-current file(s)")
@@ -199,7 +261,7 @@ def main() -> int:
                 pass  # not empty, or still wanted
 
     ftp.quit()
-    print(f"uploaded {len(files)} files, {sent / 1024 / 1024:.1f} MB")
+    print(f"uploaded {len(todo)} of {len(files)} files, {sent / 1024 / 1024:.1f} MB")
     return 0
 
 
