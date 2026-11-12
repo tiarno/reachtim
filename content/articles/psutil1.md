@@ -54,13 +54,13 @@ The charts I use for each machine are:
 
 The following tools are the ones to install for this implementation, but you can use a different database or web framework if you already have one.
 
-The `psutil` Python package is a great cross-platform tool for system monitoring. Read more about it on its [project page](http://pythonhosted.org/psutil/). You can install it with `pip`.
+The `psutil` Python package is a great cross-platform tool for system monitoring. Read more about it on its [project page](https://psutil.readthedocs.io/). You can install it with `pip`.
 
 The NOSQL database [mongoDB](http://www.mongodb.org/) is an open-source document database. If you have data that naturally fits a JSON-style structure, mongoDB is a great fit for data storage. It has become a natural tool for me anytime I find I need a JSON store. The funny thing is, the more I use it, the more I find new uses for it. The structure of a MongoDB *document* is suprising useful and can provide a map for lots of information types.
 
 The `bottle` web [framework](http://bottlepy.org/docs/dev/index.html) is a tiny framework written in Python with no other dependencies. You can install it with `pip`. You can use the included development server to get things going and put it under a different backend server later. I put mine under my Apache server once I got things like I wanted them. I'll write an article about that setup later on.
 
-The [jqplot](http://www.jqplot.com/) `jquery` plugin makes producing the charts easy, plus they look good and they are all uniform so it easy to compare charts. For example, it is easy to see on the chart when a process spins up because you can see the spike for cpu and memory at the same moment, which is the same x-axis location for both charts. There is a lot more you can do with this plugin, this exercise just scratches the surface.
+The [jqplot](https://github.com/jqPlot/jqPlot) `jquery` plugin makes producing the charts easy, plus they look good and they are all uniform so it easy to compare charts. For example, it is easy to see on the chart when a process spins up because you can see the spike for cpu and memory at the same moment, which is the same x-axis location for both charts. There is a lot more you can do with this plugin, this exercise just scratches the surface.
 
 ### Part 1: Get the Data {: .article-title}
 

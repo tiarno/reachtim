@@ -42,7 +42,7 @@ I'm assuming you have installed Bottle, the Apache HTTP server with `mod_wsgi`, 
 
      Bottle is on the other end of the spectrum.  While I have to program the stuff I need, that gives me confidence because there's no magic. If it doesn't work, it's my code that broke it and I know where to look.  On the other hand, my needs are simple. You might find this [question](http://stackoverflow.com/questions/4941145/python-flask-vs-bottle) on `stackoverflow` helpful if you're trying to decide on a web framework.
 
-* [Apache](http://httpd.apache.org/) Over time Apache has lost some of its cool factor I guess, and Node/Express, Lighttpd, and Nginx, etc. are hot now. But Apache is a hardy, stable, and very popular tool. It is easy to install and not too hard to configure. You also need to follow the `modwsgi` installation [guide](https://code.google.com/p/modwsgi/wiki/QuickInstallationGuide) since that is the bridge between Apache and Bottle.
+* [Apache](http://httpd.apache.org/) Over time Apache has lost some of its cool factor I guess, and Node/Express, Lighttpd, and Nginx, etc. are hot now. But Apache is a hardy, stable, and very popular tool. It is easy to install and not too hard to configure. You also need to follow the `modwsgi` installation [guide](https://modwsgi.readthedocs.io/en/master/user-guides/quick-installation-guide.html) since that is the bridge between Apache and Bottle.
 
 * [MongoDB](http://www.mongodb.org/) I really like the JSON-like structure of MongoDB documents (records). For my own needs (configuration database, build reports, and system monitoring) that structure fits much better than an SQL database. 
 
@@ -102,7 +102,7 @@ In this example we won't use any javascript or even css, but in real life you wi
 ### Apache Configuration {: .article-title}
 
 In the Apache `httpd.conf` file, set the `WSGIScriptAlias` and `WSGIDaemonProcess`. 
-For details on `wsgi` configuration, see the [guide](https://code.google.com/p/modwsgi/wiki/QuickConfigurationGuide).
+For details on `wsgi` configuration, see the [guide](https://modwsgi.readthedocs.io/en/master/user-guides/quick-configuration-guide.html).
 When a request comes in to our server with a url that begins with `service`, the request is passed on to our bottle application.
 
     :::bash

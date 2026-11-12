@@ -5,8 +5,8 @@ Reads Markdown/YAML out of content/, renders it through the Jinja2 templates in
 templates/, and writes a complete static site to dist/. That directory is what
 gets uploaded to the host — there is no server-side anything.
 
-    .venv/Scripts/python build.py            build to dist/
-    .venv/Scripts/python build.py --serve    build, then serve dist/ on :8000
+    .venv/bin/python build.py            build to dist/
+    .venv/bin/python build.py --serve    build, then serve dist/ on :8000
 
 Markdown is handled by python-markdown, which is the same library Pelican used
 for the original blog. That is deliberate: the old `:::python` / `#!python`

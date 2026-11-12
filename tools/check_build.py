@@ -4,7 +4,7 @@ Checks that every internal link and asset reference resolves on disk, that the
 feed and sitemap are well-formed, that every legacy Pelican URL lands on a real
 article, and that nothing on the site reaches out to a third-party host.
 
-    .venv/Scripts/python tools/check_build.py
+    .venv/bin/python tools/check_build.py
 """
 
 from __future__ import annotations
@@ -23,6 +23,8 @@ REF = re.compile(
     re.IGNORECASE,
 )
 ALLOWED_EXTERNAL_SCHEMES = {"mailto", "tel"}
+# Example markup shown in code blocks is text, not a link the page makes.
+CODE_BLOCK = re.compile(r"<pre\b.*?</pre>|<code\b.*?</code>", re.IGNORECASE | re.DOTALL)
 
 
 def targets(html: str) -> list[str]:
@@ -63,7 +65,7 @@ def main() -> int:
         ids = set(re.findall(r'id="([^"]+)"', html))
         rel = page.relative_to(DIST).as_posix()
 
-        for ref in targets(html):
+        for ref in targets(CODE_BLOCK.sub("", html)):
             parsed = urlparse(ref)
             if parsed.netloc:
                 external.setdefault(parsed.netloc, set()).add(rel)

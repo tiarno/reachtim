@@ -7,15 +7,15 @@ framework, nothing to run on the server.
 ## Setup
 
 ```bash
-python -m venv .venv
-.venv/Scripts/python -m pip install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 ## Build
 
 ```bash
-.venv/Scripts/python build.py            # -> dist/
-.venv/Scripts/python build.py --serve    # -> dist/, then http://localhost:8000
+.venv/bin/python build.py            # -> dist/
+.venv/bin/python build.py --serve    # -> dist/, then http://localhost:8000
 ```
 
 `dist/` is disposable and gitignored. It is also exactly what gets uploaded.
@@ -25,11 +25,12 @@ python -m venv .venv
 Live at <https://reachtim.com> on Porkbun static hosting.
 
 ```bash
-.venv/Scripts/python tools/check_build.py     # validate first
-set FTP_HOST=pixie-ss1-ftp.porkbun.com
-set FTP_USER=reachtim.com
-set FTP_PASS=...                              # from the Porkbun panel
-.venv/Scripts/python tools/deploy.py --prune
+.venv/bin/python tools/check_build.py     # validate first
+export FTP_HOST=pixie-ss1-ftp.porkbun.com
+export FTP_USER=reachtim.com
+export FTP_PASS=...                       # from the Porkbun panel
+# or, with a local gitignored .env holding those three: set -a; . ./.env; set +a
+.venv/bin/python tools/deploy.py --prune
 ```
 
 `check_build.py` verifies every internal link, asset, anchor and legacy redirect

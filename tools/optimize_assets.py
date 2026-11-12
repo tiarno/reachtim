@@ -16,7 +16,7 @@ Three jobs:
 3. Write static/img/manifest.json — dimensions and srcset for each piece, so
    templates can size images exactly and nothing reflows during load.
 
-    .venv/Scripts/python tools/optimize_assets.py
+    .venv/bin/python tools/optimize_assets.py
 
 Needs Chrome or Edge for SVG rasterization; both ship on Windows. Without one,
 SVG minification and the JPEG derivatives still run.

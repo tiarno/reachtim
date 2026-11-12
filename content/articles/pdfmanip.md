@@ -329,7 +329,7 @@ If you commonly deal with PDFs, you need a deep toolbox to turn to. In addition 
 : C++ library and program suite. Transforms PDF files. Useful for linearizing/optimizing uncompressing, and encryption. [repo](http://qpdf.sourceforge.net/)
 
 ``ghostscript``
-: Interpreter for Postscript and PDF. [info](http://www.ghostscript.com/). [Command-line info](http://www.ghostscript.com/doc/9.15/Use.htm)
+: Interpreter for Postscript and PDF. [info](http://www.ghostscript.com/). [Command-line info](https://ghostscript.readthedocs.io/en/latest/Use.html)
 
 ``XPDF``
 : Open source project. Contains several useful tools such as ``pdffonts`` and ``pdfinfo``. [repo](http://www.foolabs.com/xpdf/)

@@ -3,7 +3,7 @@
 Six strokes with the pitch tightening left to right. That is the whole of the
 site's ornament — it sits beside the wordmark and nowhere else.
 
-    .venv/Scripts/python tools/linefield.py
+    .venv/bin/python tools/linefield.py
 """
 
 from __future__ import annotations

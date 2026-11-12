@@ -3,7 +3,7 @@
 Both reuse the site's mark — ruled strokes tightening left to right — so the tab
 icon, the share card and the masthead are the same drawing at three sizes.
 
-    .venv/Scripts/python tools/make_icons.py
+    .venv/bin/python tools/make_icons.py
 """
 
 from __future__ import annotations

@@ -3,13 +3,13 @@
 Credentials come from the environment — never from this file, and never from
 anything committed. The repository is public.
 
-    set FTP_HOST=pixie-ss1-ftp.porkbun.com
-    set FTP_USER=reachtim.com
-    set FTP_PASS=...
-    .venv/Scripts/python tools/deploy.py            # upload
-    .venv/Scripts/python tools/deploy.py --prune    # also delete remote files
+    export FTP_HOST=pixie-ss1-ftp.porkbun.com
+    export FTP_USER=reachtim.com
+    export FTP_PASS=...
+    .venv/bin/python tools/deploy.py            # upload
+    .venv/bin/python tools/deploy.py --prune    # also delete remote files
                                                     # that dist/ no longer has
-    .venv/Scripts/python tools/deploy.py --dry-run  # show the plan, change nothing
+    .venv/bin/python tools/deploy.py --dry-run  # show the plan, change nothing
 
 Porkbun requires TLS, so this connects with FTP_TLS and turns on protection for
 the data channel as well as the control channel. Their per-file limit is 40 MB.

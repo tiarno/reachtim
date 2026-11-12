@@ -86,7 +86,7 @@ Bugs found during verification, all of which were silent:
 - Porkbun requires TLS, and its vsFTPd has no `MLSD`, so remote listing parses
   unix `LIST`. Transfers reset often; `deploy.py` retries and skips files whose
   remote size matches.
-- Build: `.venv/Scripts/python build.py [--serve]`.
+- Build: `.venv/bin/python build.py [--serve]`.
 
 ## Files Changed
 

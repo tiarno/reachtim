@@ -10,7 +10,7 @@ two fields the build needs:
 
 Run once per batch of newly migrated articles:
 
-    .venv/Scripts/python tools/normalize_frontmatter.py
+    .venv/bin/python tools/normalize_frontmatter.py
 """
 
 from __future__ import annotations
