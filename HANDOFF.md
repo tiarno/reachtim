@@ -1,5 +1,40 @@
 # Handoff
 
+## Latest Session — 2026-11-12
+
+Maintenance only; no new content. Live site matches `master` byte for byte
+(every HTML and XML page compared after deploy).
+
+- **Dead links fixed** (`2337e5a`) in four 2014–2015 articles: psutil, Ghostscript
+  and both mod_wsgi links now point at their readthedocs homes, jqPlot at its
+  GitHub repo, the Sagehill DocBook page at its 2014 Wayback copy. A full sweep of
+  the 76 external links found no other dead ones; Stack Overflow, O'Reilly, PubMed
+  and IEEE block scripted checks but are fine in a browser.
+- **Linux paths** — the machine moved from Windows to Linux Mint. README, this
+  file and the tool docstrings now say `.venv/bin/python` and `export FTP_…`.
+  A local, gitignored `.env` holds the three FTP variables:
+  `set -a; . ./.env; set +a` before deploying.
+- **`check_build.py` ignores code blocks.** It used to report example markup in
+  `<pre>`/`<code>` (`excanvas.js`, `myfile.pdf#section.8`) as broken links. A
+  real broken link outside code is still caught (tested).
+- **`deploy.py` skips by content hash, not size** (`c289dff`). Size-only meant a
+  same-length edit (a typo swap) never uploaded. The server now holds
+  `.deploy-manifest.json` (sha256 per file, public and harmless); a file is
+  skipped only when size and hash both match, and the manifest is written even
+  after a failed run, so a re-run sends only what didn't land. `--dry-run` now
+  lists what would upload. `--prune` never deletes the manifest. If it is ever
+  lost, the next deploy resends everything once (~18 MB) and re-seeds it.
+- **Retry was broken.** `except (ftplib.all_errors, OSError)` nests a tuple,
+  which raises `TypeError` on Python 3.14 the moment an upload fails, so the
+  retry-on-reset never ran here. Fixed in `c289dff`; covered by a fake-server
+  test (five cases: first deploy, no-op, same-length edit, dry run, resume
+  after failure).
+
+Still open: `qpdf.sourceforge.net` (project moved to GitHub) and the old
+`shop.oreilly.com` link in the 2014–2015 articles are worth a manual look.
+
+---
+
 ## Session Date
 2026-07-30
 
@@ -84,8 +119,8 @@ Bugs found during verification, all of which were silent:
   `reachtim.com`, password from the Porkbun panel. **Not stored in this repo —
   it is public.**
 - Porkbun requires TLS, and its vsFTPd has no `MLSD`, so remote listing parses
-  unix `LIST`. Transfers reset often; `deploy.py` retries and skips files whose
-  remote size matches.
+  unix `LIST`. Transfers reset often; `deploy.py` retries, and skips files whose
+  size and sha256 match `.deploy-manifest.json` on the server (since 2026-11-12).
 - Build: `.venv/bin/python build.py [--serve]`.
 
 ## Files Changed

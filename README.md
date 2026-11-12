@@ -52,8 +52,9 @@ Two things about this host worth knowing before debugging it:
   protects the data channel as well as the control channel.
 - **Its vsFTPd does not implement `MLSD`.** Walking the remote tree has to parse
   traditional unix `LIST` output. Uploads also get reset mid-run fairly often,
-  so `deploy.py` retries, reconnects, and skips files whose remote size already
-  matches — re-running a failed deploy is cheap.
+  so `deploy.py` retries, reconnects, and skips files the server already has
+  (same size and same sha256 in `.deploy-manifest.json`, which it keeps on the
+  server) — re-running a failed deploy is cheap.
 
 ## Adding content
 
