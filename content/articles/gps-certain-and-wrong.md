@@ -855,7 +855,8 @@ decodes exactly as the unpatched code decodes it.
 I posted the analysis publicly on the bug report on 2026-07-27. As of
 2026-08-31 there had been no reply, so I filed the fix as
 [PR #801](https://github.com/tomojitakasu/RTKLIB/pull/801) — filed, not
-merged. <!-- CONFIRM BEFORE PUBLISH: push the 1007/1008 clamp to the PR #801 branch, then change this to say the PR now covers all three decoders. -->
+merged. On 2026-11-16 I added the 1007/1008 clamp to the same PR, so it now
+covers all three decoders.
 
 **If you run a receiver and can't recompile it,** there is a simpler defence.
 Most RTK software, RTKLIB included, can be told to use a base position you
