@@ -1021,4 +1021,4 @@ shipped build that lands in the crash column, I would genuinely like to hear
 about it — I have not found one. The full technical writeup — exact source,
 struct offsets across six architectures, the reproduction harness, sanitizer
 output, and every script used to generate a number in this piece — is at
-[TODO: link once the research repo is public].*
+[github.com/tiarno/rtk-research](https://github.com/tiarno/rtk-research), starting from [research/README.md](https://github.com/tiarno/rtk-research/blob/master/research/README.md).*
