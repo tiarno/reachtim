@@ -948,9 +948,27 @@ not a fix.
 
 That puts the currently sold, drone-mounted Reach M2 on the loud side of the
 table in Part 12: one message, and the program feeding the flight controller
-its position stops. I read that from the disassembly. I have not run the M2
-firmware, and I have not measured what ArduPilot does when that program
-dies. Older units stay silent. The original Reach RS line's last release,
+its position stops.
+
+Reading the code says it would abort, so I ran it to check. The program that
+feeds the flight controller won't start its correction input without the
+real GPS chip attached. A second program in the same firmware, the one that
+records logs, carries the same decoder and will read corrections from a
+network connection. I ran it under the same emulator as before, using the
+firmware's own message broker, and asked it, the way Emlid's app would, to
+record a correction stream I was serving.
+
+| The 1033's receiver-type text | What the M2 program did |
+|---|---|
+| 31 or 64 characters | kept running and wrote its log, with my fake receiver name in the header |
+| 65 characters or more | `*** buffer overflow detected ***: terminated` |
+
+Sixty-four characters is exactly the size of the field. One more, and it
+dies. Reaching the coordinate takes 208. So on current Emlid firmware the
+silent attack is gone, and every attempt at it is a remote kill.
+
+What I still haven't done is run the program that actually talks to the
+flight controller, or measure what ArduPilot does when it stops. Older units stay silent. The original Reach RS line's last release,
 28.4, imports no hardened copy at all, and the 2019 Reach Plus build above
 doesn't either. Whether Reach Plus got a later build that changed this, I
 couldn't find out: its current firmware isn't on the list under any name I
@@ -981,7 +999,8 @@ log had nothing in it. I shut it down cleanly afterward with its own
 This section started with a claim about source code, then a claim about
 firmware contents. It ends with the actual program running and reporting the
 corrupted position itself. What's still open: this was emulation, not the receiver itself powered on,
-and the M2's abort was read from its code, not run. Both
+and the M2's abort was run in its logging program, not the one that feeds the
+flight controller. Both
 matter; neither erases what the emulator run settled.
 
 Reach is one confirmed instance of something bigger than one product. RTKLIB
