@@ -591,7 +591,9 @@ without the feature would corrupt silently, and Linux builds would have it and
 would crash. Linux distributions have formal policies requiring this hardening.
 Embedded receivers run Linux. I wrote that prediction down.
 
-It is wrong. **Every build I have measured corrupts silently.**
+It is wrong. **Nearly every build I have measured corrupts silently.** The one
+exception, Emlid's current receiver firmware, turned up last, and Part 14
+covers it.
 
 **Both Windows distributions.** I downloaded the official Windows tools and the
 popular demo5 fork, fed them the malicious message, and watched them write a
@@ -613,8 +615,9 @@ settings the distribution tries to inject.
 So installing this from your Linux distribution, on ARM, lands in the silent
 corruption column alongside everything else.
 
-The crash is what you get by compiling the software yourself with the right
-settings — nobody ships it.
+For the most part, the crash is what you get by compiling the software
+yourself with the right settings. The exception is Emlid, whose current
+receivers ship the hardened build (Part 14).
 
 "The right settings" is narrower than it sounds. The feature, glibc's
 `_FORTIFY_SOURCE`, comes in levels. I built the same code at level 1 and level 2
@@ -778,7 +781,8 @@ harmless case.
               |                             |
        build without the            build with the
        safety check                 safety check
-       (what everyone ships)        (compile it yourself)
+       (what most builds ship)      (current Emlid firmware,
+                                     or compile it yourself)
               |                             |
               v                             v
        coordinate quietly            the program dies
@@ -798,7 +802,7 @@ harmless case.
                                     but it is on the ground
 ```
 
-| | the version that ships | the hardened version |
+| | the usual shipped build | the hardened build (current Emlid firmware) |
 |---|---|---|
 | what it does | moves the reported position | brings the aircraft down |
 | precision | attacker picks the scale, the station's coordinate picks the amount | ~10 m, or worse |
@@ -921,11 +925,36 @@ fortified libc symbol. Same silent-corruption result as everything else
 measured in this piece, this time on an actual shipped product's actual
 firmware.
 
-Reach M2 and RS2+ — the models currently for sale — are not yet checked.
-Neither is whether Emlid's current firmware differs from this 2019 build.
-"The source is affected" now has one specific, dated exception where it's
-stronger than that; it hasn't become "the product line behaves this way"
-across the board.
+The current models came later, and they came out the other way. Emlid's
+Linux Flash Tool has the address of its firmware list built in, and that list
+gives the full release history for the Reach M2, from v2.22.1 to v33.1
+(February 2026), with public download links for 2.24.2 and everything from
+28.1 on. I pulled eleven of those images apart the same way and read the
+decoder in each one's `reach-ublox-daemon`. The RS2 runs the same program
+as the M2; in v33.1 the two binaries are byte-for-byte identical.
+
+| Reach M2 firmware | Built | The five text copies in the 1033 decoder |
+|---|---|---|
+| 2.24.2 to 28.4 | Nov 2020 to Mar 2022 | plain `strncpy`: silent corruption |
+| **29.0** onward, to 33.1 | **Jul 2022** to Feb 2026 | `__strncpy_chk`: the program aborts |
+
+So the switch came in **v29.0, built 2022-07-14**. From that release on,
+Emlid's receivers are in the hardened column. The bug itself is still
+there: v33.1 checks nothing about the declared length before the copy. It
+just dies when the length runs past the 64-byte field, and reaching the
+coordinate takes 208 bytes or more. Nothing I can see says this was a
+response to the bug. It looks like a change in how the firmware was built,
+not a fix.
+
+That puts the currently sold, drone-mounted Reach M2 on the loud side of the
+table in Part 12: one message, and the program feeding the flight controller
+its position stops. I read that from the disassembly. I have not run the M2
+firmware, and I have not measured what ArduPilot does when that program
+dies. Older units stay silent. The original Reach RS line's last release,
+28.4, imports no hardened copy at all, and the 2019 Reach Plus build above
+doesn't either. Whether Reach Plus got a later build that changed this, I
+couldn't find out: its current firmware isn't on the list under any name I
+tried.
 
 Later the same day: reading the binary says what it *would* do. I wanted to
 watch it actually do it. `qemu-aarch64-static` — downloaded as a `.deb` and
@@ -951,8 +980,8 @@ log had nothing in it. I shut it down cleanly afterward with its own
 
 This section started with a claim about source code, then a claim about
 firmware contents. It ends with the actual program running and reporting the
-corrupted position itself. What's still open: Reach M2 and RS2+ remain
-unchecked, and this was emulation, not the receiver itself powered on. Both
+corrupted position itself. What's still open: this was emulation, not the receiver itself powered on,
+and the M2's abort was read from its code, not run. Both
 matter; neither erases what the emulator run settled.
 
 Reach is one confirmed instance of something bigger than one product. RTKLIB
@@ -971,8 +1000,9 @@ should be.
 
 - **No aircraft, real or simulated-into-the-real-world, was ever attacked
   live.** The closest I got: two small real radios sent the malicious
-  message over the air into RTKLIB's own unmodified decoder; one real
-  receiver's firmware was downloaded and read; and that receiver's actual
+  message over the air into RTKLIB's own unmodified decoder; real
+  receiver firmware was downloaded and read (Reach Plus, and eleven Reach
+  M2 releases); and the Reach Plus receiver's actual
   program was run under emulation against a real correction stream, with
   its own console confirming the corruption (Part 14). None of those is an
   attack on a powered-on device with a propeller attached.
