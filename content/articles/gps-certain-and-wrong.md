@@ -416,22 +416,43 @@ Two things follow, and they are what make this attack practical.
 metres north." They can only say "round it off this hard." Where it lands then
 depends on the base station's actual coordinates — which they may not know.
 
-**But one of those rungs is universal.** Look at the row where the grid becomes
-2 metres. Whatever the base station's true coordinate is, rounding it down to
-the nearest multiple of 2 metres moves it by *somewhere between zero and two
-metres*. Always. The attacker does not need to know anything about the base
-station to guarantee an error of that size. Below that rung the error is too
-small to matter; above it, the error gets so large that the receiver stops
-producing a confident answer at all and the attack becomes obvious.
+**But the right rung can be picked from a map.** The grid spacing for a given
+number of erased bytes depends on only one thing about the coordinate: which
+power of two it falls between. My test station's X coordinate is a little under
+4.2 million metres, so erasing 4 bytes leaves a 2-metre grid, and the error
+lands somewhere between zero and two metres wherever the station sits inside
+that band. The attacker doesn't need the coordinate. They need its rough size,
+and that comes from knowing roughly where on Earth the target is.
 
-There is a narrow band where the damage is big enough to matter and small enough
-to stay invisible, and it is reachable without knowing anything about the target.
+That is less universal than I first wrote. The X coordinate measures distance
+along an axis through the equator at the prime meridian, so its size depends on
+latitude and longitude:
+
+| where the base station is | example | 4-byte grid | error from that rung |
+|---|---|---|---|
+| close to the equator and prime meridian | Madrid, Lagos | 4 m | 0 to 4 m |
+| the middle band | London, San Jose | 2 m | 0 to 2 m |
+| further out | Delhi, Denver | 1 m | 0 to 1 m |
+| near 90° east or west, or near the poles | Chicago, New Orleans | centimetres or less | too small to matter |
+
+Worked out over the whole surface, about a third of the Earth gets the 2-metre
+grid, a third gets 4 metres, and the rest gets 1 metre or finer. In that last
+group, the next rung up is 256 times coarser, so the best quiet error on offer
+is under a metre, and near 90° it is a few millimetres. The attack is weakest in
+the Mississippi valley and strongest in a band through southern Europe, Africa
+and Australia.
+
+Below the right rung the error is too small to matter. Above it, the error gets
+so large that the receiver stops producing a confident answer at all and the
+attack becomes obvious. For most of the planet there is a narrow band where the
+damage is big enough to matter and small enough to stay invisible, and an
+attacker can find it without knowing the target's coordinates.
 
 The "declared length" column above is arithmetic anyone can redo from the
-public source in an afternoon — offset of the coordinates, minus offset of the
-field, minus the 31 bytes that get read correctly. It's in the table now
-because there's no longer a reason to make a reader do that arithmetic
-themselves.
+public source in an afternoon. The coordinates sit 208 bytes after the start of
+the field, so a declared length of 208 erases one byte, and each extra unit
+erases one more. It's in the table now because there's no longer a reason to
+make a reader do that arithmetic themselves.
 
 # Part 7: The message that triggers its own damage
 
@@ -449,14 +470,46 @@ So a single message does both halves of the job: it corrupts the coordinate, and
 it causes the corrupted coordinate to be put into service. No second message, no
 waiting.
 
-And here is the detail I keep coming back to. RTKLIB has a second code path for
-processing recorded data after the fact, rather than live. **That path checks.**
-Before adopting a base position it verifies the coordinate is not obviously
-broken.
+It does not last forever on its own. A working base station repeats its true
+coordinates every few seconds, in a message called type 1005, and the next one
+puts the right value back. An attacker who wants the error to stay sends their
+message again after every 1005. My test harnesses do exactly that. So the
+silent attack needs a transmitter that keeps running; one message buys a few
+seconds.
 
-Somebody thought about this problem. The check lives in the path that reads a
-file on your desk after the flight. The path that takes bytes off a radio in
-real time has no equivalent.
+And here is the detail I keep coming back to. RTKLIB has a second code path for
+processing recorded data after the fact, rather than live. **That path checks**,
+though not much. Before adopting a base position it makes sure the coordinate
+isn't exactly zero. That would catch a coordinate erased completely. It would not
+catch one rounded off by a couple of metres, which is still about 6,400
+kilometres from the centre of the Earth and looks perfectly reasonable.
+
+Somebody thought about this problem, at least a little. The check lives in the
+path that reads a file on your desk after the flight. The path that takes bytes
+off a radio in real time has nothing at all.
+
+## Couldn't an attacker just lie about the coordinate?
+
+Yes, and a careful reader will ask. The correction link has no authentication.
+Anyone who can transmit on it can send their own type 1005 message with a base
+coordinate of their choosing, and every RTK receiver will believe it, not only
+RTKLIB. That attack needs no bug, and it lets the attacker pick the exact
+direction and distance.
+
+So what does this bug add? Three things.
+
+- **The attacker doesn't need to know where the base station is.** A fake 1005
+  that moves the base by two metres has to start from the true coordinate. This
+  bug rounds off whatever coordinate is already in memory, sight unseen. Part 6
+  shows that rough location is enough to pick the rung.
+- **It arrives in a message nobody watches.** A 1005 carries coordinates, and
+  anything monitoring a correction stream for tampering looks there. A 1033 is
+  supposed to carry the antenna's model name.
+- **On a hardened build it is a kill switch.** No well-formed 1005 can crash the
+  receiver. This message can, and Part 12 shows why that matters.
+
+The broader problem is the unauthenticated link, and this bug is one sharp
+example of what it allows.
 
 # Part 8: What the receiver does about it
 
@@ -561,6 +614,13 @@ corruption column alongside everything else.
 
 The crash is what you get by compiling the software yourself with the right
 settings — nobody ships it.
+
+"The right settings" is narrower than it sounds. The feature, glibc's
+`_FORTIFY_SOURCE`, comes in levels. I built the same code at level 1 and level 2
+and sent both the same message. Level 2 crashed. Level 1 let the write through
+and quietly moved the coordinate, exactly like the unhardened builds, because at
+that level the check doesn't know how big the destination field is. A build
+that has the feature switched on can still land in the silent column.
 
 *(One footnote for the suspicious: the internal layout that determines exactly
 which erasures reach the coordinate turns out to be identical across every
@@ -721,7 +781,7 @@ harmless case.
               |                             |
               v                             v
        coordinate quietly            the program dies
-       wrong by ~2 m                        |
+       wrong by a few m                     |
               |                             v
               v                      aircraft loses GPS,
        vehicle flies on,             cannot fly home,
@@ -740,10 +800,11 @@ harmless case.
 | | the version that ships | the hardened version |
 |---|---|---|
 | what it does | moves the reported position | brings the aircraft down |
-| precision | exact, attacker's choice | ~10 m, or worse |
-| magnitude | ~2 m before it starts looking wrong | total — it stops flying |
+| precision | attacker picks the scale, the station's coordinate picks the amount | ~10 m, or worse |
+| magnitude | a few metres before it starts looking wrong | total — it stops flying |
 | does anyone notice? | **no** | yes, immediately |
-| useful for | quietly ruining survey data, agriculture, landing accuracy, for as long as you like | taking an aircraft out of the air at a chosen moment |
+| how long it lasts | until the next genuine 1005, so it has to be re-sent every few seconds | one message is enough |
+| useful for | quietly ruining survey data, agriculture, landing accuracy, for as long as the attacker keeps transmitting | taking an aircraft out of the air at a chosen moment |
 
 Which leads somewhere uncomfortable. **If your goal is to put a drone in a lake,
 the hardened build is the better tool for the job.** Two metres of silent error
@@ -773,10 +834,36 @@ the same data through both: the attacked streams come back at the true
 coordinate, and legitimate messages decode identically, so the change costs
 nothing that a real base station would notice.
 
+The same missing clamp sits in two sibling decoders, for message types 1007 and
+1008, which carry the antenna's name and serial number. Those fields sit too
+early in memory to reach the coordinates, so on the builds everyone runs they
+are harmless. On a hardened build they are not. I sent each an oversized name
+on a level-2 build and all three cases crashed the program, the same kill switch
+as 1033. Clamping only 1033 would leave a hardened receiver exactly as easy to
+knock out. Three more lines close it:
+
+```c
+if (n>31) n=31;            /* decode_type1007 */
+if (n>31) n=31;            /* decode_type1008 */
+if (m>31) m=31;
+```
+
+With those added, the same level-2 build survives all three, and every message
+decodes exactly as the unpatched code decodes it.
+
 I posted the analysis publicly on the bug report on 2026-07-27. As of
 2026-08-31 there had been no reply, so I filed the fix as
 [PR #801](https://github.com/tomojitakasu/RTKLIB/pull/801) — filed, not
-merged.
+merged. <!-- CONFIRM BEFORE PUBLISH: push the 1007/1008 clamp to the PR #801 branch, then change this to say the PR now covers all three decoders. -->
+
+**If you run a receiver and can't recompile it,** there is a simpler defence.
+Most RTK software, RTKLIB included, can be told to use a base position you
+enter by hand instead of whatever the correction stream announces. In RTKLIB
+that's `ant2-postype`: set it to `llh` or `xyz` with the surveyed coordinate,
+rather than `rtcm`. The live server only adopts a streamed base position when
+that option says `rtcm`, so with it set, neither this bug nor a fake 1005 can
+move the base. Running the correction stream over an authenticated, encrypted
+connection rather than open radio or plain NTRIP closes the door more broadly.
 
 # Part 14: Where this actually stands
 
@@ -786,8 +873,27 @@ analysis has been public since.
 All four reports have been open and unpatched since 2026-06-09. Each carries a
 single comment from the person who found them, offering to file the paperwork
 for an official vulnerability identifier and asking the maintainer how they'd
-like to handle it. As of 2026-08-31, neither that comment nor mine (posted
-2026-07-27 on #799) has drawn a reply.
+like to handle it. As of 2026-11-16, neither that comment nor mine (posted
+2026-07-27 on #799) has drawn a reply, and PR #801 has no comments either.
+
+The identifier exists, and I missed it when I first wrote this. The 1033 bug is
+[CVE-2026-56786](https://nvd.nist.gov/vuln/detail/CVE-2026-56786), published
+2026-06-25. The two official descriptions of it point in opposite directions,
+and both miss the point of this article:
+
+- **The national vulnerability database** scores it 9.3 out of 10 and says the
+  overflow could allow "arbitrary code execution". I can't see a route to
+  that. The only bytes that spill past the field are zeros. An attacker can
+  erase values but can't write any of their own, which rules out the usual
+  ways of hijacking a program.
+- **Debian's security tracker** calls it a minor issue and has postponed fixing
+  it, because the overflow "consists only of strncpy NUL padding". That's an
+  accurate description of the bytes. It misses what those zeros land on: the
+  low digits of the base station's coordinate.
+
+One side overstates the bug as a memory-corruption exploit; the other dismisses
+it as one that doesn't work. As of 2026-11-16, Debian's package is still
+unpatched in every release.
 
 The demo5 fork shipped a new release on 2026-06-22 — **thirteen days after**
 the bugs were made public — with the flaw untouched.
@@ -862,15 +968,16 @@ Worth being blunt about, because a lot of security writing is vaguer here than i
 should be.
 
 - **No aircraft, real or simulated-into-the-real-world, was ever attacked
-  live.** Three things have since happened that this draft doesn't narrate
-  at the top yet: two small real radios sent the real malicious message
-  over the air into RTKLIB's own unmodified decoder (see
-  `research/README.md`, "Over a serial link" / the radio delivery work);
-  one real receiver's firmware was downloaded and read (Part 14, above);
-  and that same receiver's actual binary was then run, under emulation,
-  against a real correction stream, with its own console confirming the
-  live corruption (Part 14, later addendum). None of the three is a live
+  live.** The closest I got: two small real radios sent the malicious
+  message over the air into RTKLIB's own unmodified decoder; one real
+  receiver's firmware was downloaded and read; and that receiver's actual
+  program was run under emulation against a real correction stream, with
+  its own console confirming the corruption (Part 14). None of those is an
   attack on a powered-on device with a propeller attached.
+- **The silent attack was never tested against a working base station
+  sending its own corrections in real time.** My harnesses replay recorded
+  streams and re-send the malicious message after every genuine 1005. How
+  well that holds up against a live base on a busy radio channel is untested.
 - **One base station, one rover, one data set**, and an old one. Whether the same
   invisibility holds across other satellite constellations and modern
   multi-frequency receivers is untested.
@@ -882,7 +989,9 @@ should be.
   as a floor, not a bound. A real figure would need many runs across different
   heights and wind conditions, which I have not done.
 - **The size of the error depends on the specific base station**, because what is
-  being erased is the digits of its particular coordinate.
+  being erased is the digits of its particular coordinate. Part 6's map of
+  which rung applies where is computed from the geometry, not measured at
+  real stations in those places.
 
 # Why I think it matters
 
