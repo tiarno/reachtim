@@ -418,8 +418,8 @@ depends on the base station's actual coordinates — which they may not know.
 
 **But the right rung can be picked from a map.** The grid spacing for a given
 number of erased bytes depends on only one thing about the coordinate: which
-power of two it falls between. My test station's X coordinate is a little under
-4.2 million metres, so erasing 4 bytes leaves a 2-metre grid, and the error
+power of two it falls between. My test station's X coordinate is about 3.98
+million metres, so erasing 4 bytes leaves a 2-metre grid, and the error
 lands somewhere between zero and two metres wherever the station sits inside
 that band. The attacker doesn't need the coordinate. They need its rough size,
 and that comes from knowing roughly where on Earth the target is.
@@ -430,7 +430,7 @@ latitude and longitude:
 
 | where the base station is | example | 4-byte grid | error from that rung |
 |---|---|---|---|
-| close to the equator and prime meridian | Madrid, Lagos | 4 m | 0 to 4 m |
+| low to middle latitudes, near 0° or 180° longitude | Madrid, Lagos, Sydney | 4 m | 0 to 4 m |
 | the middle band | London, San Jose | 2 m | 0 to 2 m |
 | further out | Delhi, Denver | 1 m | 0 to 1 m |
 | near 90° east or west, or near the poles | Chicago, New Orleans | centimetres or less | too small to matter |
@@ -439,8 +439,9 @@ Worked out over the whole surface, about a third of the Earth gets the 2-metre
 grid, a third gets 4 metres, and the rest gets 1 metre or finer. In that last
 group, the next rung up is 256 times coarser, so the best quiet error on offer
 is under a metre, and near 90° it is a few millimetres. The attack is weakest in
-the Mississippi valley and strongest in a band through southern Europe, Africa
-and Australia.
+the Mississippi valley and strongest at low to middle latitudes near the prime
+meridian and its
+opposite: southern Europe, Africa, eastern Australia, New Zealand.
 
 Below the right rung the error is too small to matter. Above it, the error gets
 so large that the receiver stops producing a confident answer at all and the
