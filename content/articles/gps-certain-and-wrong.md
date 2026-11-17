@@ -628,8 +628,12 @@ that has the feature switched on can still land in the silent column.
 
 *(One footnote for the suspicious: the internal layout that determines exactly
 which erasures reach the coordinate turns out to be identical across every
-processor architecture I checked — six of them, 32-bit and 64-bit alike. The same
-malicious message works everywhere without adjustment.)*
+processor architecture I checked — six of them, 32-bit and 64-bit alike — so the
+same malicious message works on all of them without adjustment. Two exceptions
+turned up later. Older 32-bit PCs pack the record four bytes tighter, so the
+message needs a slightly shorter name. And on the few processors that store
+numbers big end first, the same erasure wipes out the coordinate entirely
+instead of nudging it, which is loud rather than quiet.)*
 
 # Part 11: Flying it
 
@@ -728,7 +732,8 @@ there is no signal to react to. No alarm can fire when every reading looks
 perfect.
 
 So on the question of *whether anyone finds out*, the version that crashes wins
-outright — and it is the version nobody ships.
+outright. Almost nobody ships it; Emlid's current firmware is the exception
+(Part 14).
 
 # Part 12: But the crash is its own attack
 
@@ -1065,9 +1070,9 @@ point where a value is simply taken on faith.
 
 ---
 
-*Corrections welcome. Everything above is reproducible, and if you can show me a
-shipped build that lands in the crash column, I would genuinely like to hear
-about it — I have not found one. The full technical writeup — exact source,
+*Corrections welcome. Everything above is reproducible, and if you know of a
+shipped build besides Emlid's that lands in the crash column, I would genuinely
+like to hear about it. The full technical writeup — exact source,
 struct offsets across six architectures, the reproduction harness, sanitizer
 output, and every script used to generate a number in this piece — is at
 [github.com/tiarno/rtk-research](https://github.com/tiarno/rtk-research), starting from [research/README.md](https://github.com/tiarno/rtk-research/blob/master/research/README.md).*
