@@ -4,79 +4,58 @@ slug: gps-certain-and-wrong
 date: 2026-09-03
 category: Security
 tags: [GNSS, RTK, RTKLIB, vulnerability-research, drones]
-summary: "A single fake antenna name can move a survey rover two metres while it insists it has a perfect fix -- or, on a differently-compiled copy of the same program, bring a drone down within tens of metres of wherever the attacker chooses. A long walk through how, for people who have never touched GPS software."
+summary: "A single fake antenna name can move a survey rover two metres while it insists it has a perfect fix -- or, on a differently-compiled copy of the same program, bring a drone down within tens of metres of wherever the attacker chooses. A walk through how, for people who have never touched GPS software."
 ---
 
-There is a bug in a piece of free software called RTKLIB that I have been
-picking at for a few weeks. On the surface it is a boring bug — the kind that
-gets filed, ignored, and forgotten. Underneath it is something more interesting:
-a way to make a very expensive, very precise GPS receiver report a location that
-is wrong by a couple of metres, while it continues to insist that its answer is
-perfect.
+There's a bug in a piece of free software called RTKLIB that turns a very
+precise GPS receiver into one that's wrong by a couple of metres while it
+reports that its answer is perfect. No crash, no warning, nothing in the log.
 
-No crash. No warning. Nothing in any log.
+In a simulated drone flight, the aircraft flew to the point it was sent to,
+announced arrival, and landed normally, about a metre and a half from where it
+believed it was. Built with one different compiler setting, the same software
+crashed instead, and the drone came down on the attacker's cue.
 
-I flew a simulated drone into it and the aircraft did exactly what it was told,
-arrived where it believed it had been sent, and shut down normally — while
-sitting well over a metre from where it actually was. Then I rebuilt the same
-software with one different compiler setting and flew it again, and this time
-the aircraft fell out of the sky on cue.
+This post walks through how that works, for people who have never thought about
+GPS software. If you already know what a mantissa is, skim the middle.
 
-This post is the long version, written for people who have never thought about
-GPS software in their lives. If you already know what a mantissa is, you can
-skim; I am going to explain everything.
-
-*Status as of 2026-08-31. Dates below are absolute rather than "a few weeks
-ago," so this post stays legible after the week it was written.*
+*Status as of 2026-11-16. Dates are absolute so the post stays readable after
+the week it was written.*
 
 ---
 
-# Part 1: How GPS knows where you are, and why it isn't good enough
+# How GPS knows where you are
 
-A GPS satellite does one useful thing: it shouts the time, constantly, very
+A GPS satellite does one useful thing. It shouts the time, constantly and very
 accurately.
 
-Your receiver listens to several of these shouts at once. Because it knows how
-fast radio travels, and it knows roughly what time it is, it can work out how
-long each signal took to arrive. Multiply by the speed of light and you have a
-distance to each satellite. Get four or more distances and there is only one
-point in space where you could possibly be standing.
+Your receiver listens to several of those shouts at once. It knows how fast
+radio travels and roughly what time it is, so it can work out how long each
+signal took to arrive. Multiply by the speed of light and you have a distance to
+each satellite. With four or more distances there's only one point in space you
+can be standing.
 
-That is the whole idea, and it works remarkably well for something that involves
-listening to clocks in orbit. It will put you within a few metres.
+That gets you within a few metres. Fine for finding a restaurant; useless for
+surveying a property line, steering a tractor between last year's rows, or
+landing a drone on a platform.
 
-A few metres is fine for finding a restaurant. It is useless for a great many
-other things. It is useless for surveying a property boundary. It is useless for
-a tractor that has to plant this year's rows between last year's rows. It is
-useless for a drone inspecting a bridge, or landing on a platform, or flying a
-mapping grid where the photos have to line up.
+The few metres come from the atmosphere. The ionosphere slows the signal a bit,
+the troposphere slows it a bit differently, and the satellite's own clock and
+orbit are known slightly imperfectly. Each adds a small error to every distance.
 
-Why only a few metres? Because the signal has to cross the atmosphere to reach
-you, and the atmosphere is not a vacuum, and it is not consistent. The
-ionosphere slows the signal down a bit. The troposphere slows it down a bit
-differently. The satellite's own clock and orbit are known slightly imperfectly.
-Each of these adds a small error to every distance, and the small errors add up
-to a few metres of uncertainty.
+Those errors are almost identical for two receivers standing near each other,
+because the same patch of sky sits over both of them.
 
-Here is the important part: **those errors are almost identical for two
-receivers standing near each other.** The same patch of atmosphere is sitting
-over both of you. The same satellite clock is slightly wrong for both of you.
+# RTK: getting to centimetres
 
-That shared error is the opening.
+If two receivers a few kilometres apart are being lied to the same way, and one
+of them already knows exactly where it is, it can measure the lie and tell the
+other one. That's Real-Time Kinematic positioning, RTK. It has two halves:
 
-# Part 2: RTK, and the trick that gets you centimetres
-
-If two receivers a few kilometres apart are both being lied to in the same way,
-and one of them *already knows exactly where it is*, then it can work out how
-big the lie is right now and tell the other one.
-
-That is Real-Time Kinematic positioning — RTK. It has two halves:
-
-- A **base station**: a receiver bolted to something that does not move, at a
-  location that has been surveyed precisely in advance. It knows its own
-  coordinates to the centimetre.
-- A **rover**: the receiver that is actually going somewhere — on a survey pole,
-  a tractor, a drone.
+- A **base station**, bolted to something that doesn't move, at a location
+  surveyed in advance to the centimetre.
+- A **rover**, the receiver that's going somewhere: a survey pole, a tractor,
+  a drone.
 
 ```
                       *       *       *          GPS satellites
@@ -98,101 +77,55 @@ That is Real-Time Kinematic positioning — RTK. It has two halves:
                    now are THIS big"      them from mine"
 ```
 
-The base watches the same satellites as the rover. Because it knows where it
-really is, it can compute what the satellite distances *should* be, compare them
-to what it is actually measuring, and derive the error in each one. It packages
-those corrections up and streams them to the rover continuously — over a radio
-link, or the internet, or a phone connection.
-
-The rover applies the corrections and the shared error cancels out. Instead of a
-few metres, you get one to two centimetres.
-
-This is not exotic kit. Farm equipment uses it. Construction sites use it.
-Surveyors use it all day. Drone mapping depends on it.
+The base computes what each satellite distance *should* be, compares that with
+what it measures, and streams the difference to the rover over radio, the
+internet, or a phone link. The rover subtracts it, the shared error cancels, and
+a few metres becomes one or two centimetres. Farms, construction sites,
+surveyors, and mapping drones all run on this.
 
 ## The linchpin
 
-Read that again and notice what the whole scheme rests on: **the base station
-knowing exactly where it is.**
+The whole scheme rests on one number, **the base station's stated position.**
 
-RTK does not really measure where the rover is. It measures the *distance and
-direction from the base to the rover*, very precisely, and then adds that to
-where the base says it is.
+RTK measures the distance and direction from the base to the rover, very
+precisely, then adds that to the base's stated position. If the base's
+coordinate is off by two metres, every position the rover produces is off by the
+same two metres. The rover has accurately measured its distance from a lie.
 
-So if the base station's stated coordinate is wrong by two metres, the geometry
-is still perfect — the rover measures its offset from the base beautifully — but
-every position it produces is shifted by exactly those two metres. The rover has
-accurately measured its distance from a lie.
+Nothing about that looks like an error. The rover's confidence checks look at
+the quality of the measurements, and the measurements are good. Only the
+starting point is wrong. That starting point is the target.
 
-Nothing about that looks like an error. The measurements are all clean and
-consistent. The rover's own confidence checks pass, because they are checking
-the quality of the measurements, and the measurements *are* good. It is only the
-starting point that is wrong.
+# The software and the message
 
-That is the target.
+RTKLIB is an open-source library that implements all of this, written by Tomoji
+Takasu. It's excellent, and for years it was the only way to do serious RTK
+without buying proprietary gear. It runs in Windows tools surveyors use, it's
+packaged by Linux distributions, a popular fork called demo5 is what most
+hobbyists use, and its code has been folded into commercial receivers. The
+stable branch hasn't had a commit since December 2020.
 
-# Part 3: The software
+The base talks to the rover in a format called RTCM3. Most messages carry
+corrections. A few are housekeeping, and type 1033 is one of those. It
+carries five pieces of text describing the base station's hardware: antenna
+model, antenna serial number, receiver model, receiver firmware version, and
+receiver serial number. Labels like `TRIMBLE NETR9`. Nobody navigates by them.
 
-RTKLIB is an open-source library that implements all of this. It was written by
-a Japanese academic, Tomoji Takasu, and it is genuinely excellent — for a long
-time it was the only way to do serious RTK without buying proprietary equipment.
+Each string is sent as a length, then that many characters, like an envelope
+with the page count written on the outside. The length is a single byte, so it
+can say anything from 0 to 255.
 
-It is also everywhere. It ships in Windows applications that surveyors run. It
-is packaged by Linux distributions. A popular fork called "demo5" is what most
-hobbyists with low-cost receivers use. And its code has been copied into
-commercial GPS products.
+# The bug
 
-One more fact matters: **the stable branch has not received a commit since
-December 2020.** The project is, in practice, unmaintained.
+RTKLIB keeps a 64-character slot for each of those five strings. Real receiver
+names are far shorter.
 
-# Part 4: The message
-
-The base station talks to the rover in a format called RTCM3. Most of the
-messages are corrections — satellite by satellite, here is how wrong your
-distance measurement is.
-
-But a few messages are just housekeeping. Message **type 1033** is one of these.
-It carries five pieces of text describing the base station's hardware:
-
-- the antenna model
-- the antenna serial number
-- the receiver model
-- the receiver firmware version
-- the receiver serial number
-
-Nothing but labels. `TRIMBLE NETR9`, that sort of thing. Nobody navigates by
-them.
-
-Because these are text of varying length, the format uses a common trick. Each
-string is sent as **a length, then that many characters**. So the receiver reads
-one byte that says "the next thing is 13 characters long", then reads 13
-characters. Like an envelope with the page count written on the outside.
-
-That length byte is a single byte, so it can say any number from 0 to 255.
-
-Hold that thought.
-
-# Part 5: The bug
-
-Inside RTKLIB there is a place to put each of those five strings. The receiver
-model, for example, gets a slot 64 characters wide. That is generous; real
-receiver names are far shorter.
-
-The code does something careful and then something careless.
-
-**The careful bit:** when it reads the characters off the wire, it uses a
-temporary holding area of 32 characters and it explicitly refuses to read more
-than 31 of them. However big a number the attacker writes on the envelope, only
-31 characters ever get read in.
-
-**The careless bit:** when it then copies that text into the permanent 64-character
-slot, it uses **the length the attacker declared** — not the amount it actually
-read, and not the size of the slot.
-
-So an attacker sends a message that says "the receiver model is 255 characters
-long," and the program dutifully copies 255 characters into a space built for
-64. It runs off the end by about 190 characters and keeps writing into whatever
-happens to sit next in memory.
+When the code reads characters off the wire, it uses a 32-character holding area
+and reads at most 31 characters, whatever the envelope says. That part is
+careful. When it copies that text into the 64-character slot, though, it uses
+the length the sender declared. So a message that says "the receiver model
+is 255 characters long" gets 255 characters copied into a space built for 64,
+and the copy runs about 190 bytes past the end.
 
 ```
   memory:  receiver-model slot      other fields        BASE COORDINATES
@@ -209,134 +142,65 @@ happens to sit next in memory.
                  characters
 ```
 
-That is a buffer overflow, and a security firm called FuzzingLabs found and
-reported it, along with three similar ones, on 2026-06-09.
+The security firm FuzzingLabs found and reported this overflow, along with three
+similar ones, on 2026-06-09. This post follows where the overflow lands and what
+that does to the receiver.
 
-## What's theirs, and what's new here
+## Why it looks harmless
 
-FuzzingLabs found this — the overflow, the unbounded length, the missing
-check — and reported it accurately: an out-of-bounds write, attacker-controlled
-length, reachable over an unauthenticated correction stream. That part is
-theirs, and Part 14 credits it in full.
+If you've done exploit work, a buffer overflow suggests a takeover. Two details
+rule that out here.
 
-What their write-up doesn't do is follow the spillover to where it lands. It
-frames this as a memory-corruption bug and stops there — it never mentions the
-base station's coordinates, and their own proof-of-concept drives a field that
-can't reach them. Everything from here on — which of the five text fields
-actually reaches the coordinates, what erasing rather than overwriting them
-does, whether the receiver notices, and which real programs corrupt silently
-versus crash — builds on their find.
+First, **everything written past the end is zeros.** The copy stops at the end
+of the real text and pads the rest of the declared length with zeros, and at
+most 31 real characters were ever read. The attacker can't write chosen bytes out
+of bounds. They can only erase, starting where they choose and going as far as
+they choose. Think of it as an eraser.
 
-## Why it looks boring
+Second, **the write stays inside its container.** The 64-character slot sits
+inside a structure of around 240 kilobytes, and the worst case reaches a few
+hundred bytes past the slot. No return addresses, no function pointers. The
+common memory checkers watch the edges of whole allocations, so a write that
+crosses a field boundary inside one passes them silently. A check that knows each
+field's size catches it at once.
 
-If you have any security background, your instinct now is that this is a
-takeover — overflow a buffer, overwrite something important, take control of the
-machine. That instinct is wrong here, for two reasons.
+So it's a bug that writes zeros into the middle of a big object it can't escape.
+That would be the end of it, except for what sits a couple of hundred bytes past
+the receiver-model slot.
 
-**Everything written past the end is zeros.** The copying function stops at the
-end of the real text and then pads the rest of the declared length with zeros.
-Since at most 31 real characters were ever read in, everything beyond that is
-zero-fill. The attacker cannot write chosen values out of bounds. They can only
-*erase*.
+# What the zeros land on
 
-Think of it as an eraser rather than a pen. You choose where the erasing starts
-and how far it goes, and that is all you choose.
+They land on the base station's coordinates: three numbers, X, Y and Z, in a
+coordinate system centred on the Earth. The number the whole system trusts.
 
-**And it never escapes its container.** The 64-character slot sits inside a much
-larger structure — around 240 kilobytes of it. Even the worst case only reaches
-a few hundred bytes past the slot, which is still deep inside that structure.
-There is nothing there worth hitting. No return addresses, no function pointers,
-none of the machinery an exploit would need.
-
-So: a bug that writes zeros into the middle of a large object it cannot get out
-of. It is still out of bounds for the 64-byte slot it is writing into — the
-most common automated memory-checking tools just don't watch for that. They
-track the edges of a whole allocation; the boundary between two fields inside
-it is smaller than what they watch, so a write that crosses that boundary but
-stays inside the container passes silently. A finer-grained check, one that
-knows the declared size of each individual field, catches it immediately.
-
-Boring.
-
-Except for what happens to be sitting a couple of hundred bytes past the
-receiver-model slot.
-
-## A second bug, not in FuzzingLabs' report
-
-I found this one while checking that my fix didn't break anything else, and
-it has nothing to do with the coordinates.
-
-Each of the five text fields is read using its own length, computed from a
-running position in the message. But the loop that actually copies the
-characters only ever advances by the 31 bytes it read — never by however many
-the sender declared. So if an *earlier* field claims to be longer than 31
-characters, every field parsed after it gets read from the wrong spot in the
-message. The lengths still come out right, because those are read separately;
-only the contents shift. The result looks like an ordinary receiver serial
-number that happens to be nonsense, not an obvious parse failure.
-
-Every read stays inside the message, so this stays out of memory-safety
-territory, and the field the coordinate attack depends on is read before the
-walk drifts off course, so that attack is unaffected. Worth mentioning
-anyway: it's the same shape as the main bug, a length taken off the wire and
-never checked against what actually happened.
-
-# Part 6: What the zeros land on, and what a mantissa is
-
-They land on the base station's coordinates.
-
-Remember Part 2: the coordinate of the base station is the number the entire
-system trusts. Those three numbers — an X, Y and Z position in a coordinate
-system centred on the Earth — sit in memory a couple of hundred bytes past the
-receiver-model text. Well within reach.
-
-Now, an attacker who could write *chosen* values there would simply type in a
-new location. But we established that this attacker can only write zeros. So
-what does erasing part of a number actually do to it?
-
-This is the part that turns a boring bug into an interesting one, and it needs a
-short detour into how computers store numbers with decimal points.
+An attacker who could write chosen values would just type in a new location.
+This one can only write zeros. So what does erasing part of a number do to it?
+That takes a short detour into how computers store numbers with decimal points.
 
 ## Scientific notation, in binary
 
-You already know scientific notation. Instead of writing
+You know scientific notation. Instead of `3,978,242.4348` you write
+`3.9782424348 × 10⁶`. That's two pieces of information, the digits and where
+the decimal point goes.
 
-    3,978,242.4348
-
-you write
-
-    3.9782424348 × 10⁶
-
-Two separate pieces of information: **the digits** (3.9782424348) and **where
-the decimal point goes** (10⁶). Move the point around, and you can write
-enormous numbers or tiny ones using the same handful of digits.
-
-Computers store decimal numbers exactly this way, but in binary. The format is
-called a *double*, it occupies 8 bytes, and those 8 bytes are divided into three
-parts:
+Computers store these numbers the same way, in binary. The format is called a
+*double*, it takes 8 bytes, and the bytes split into three parts:
 
 | part | size | what it does |
 |---|---|---|
 | sign | 1 bit | positive or negative |
-| **exponent** | 11 bits | where the point goes — the overall scale |
+| **exponent** | 11 bits | where the point goes, the overall scale |
 | **mantissa** | 52 bits | the actual digits |
 
-The **mantissa** is just the fancy word for "the digits." It is the significant
-part of the number, stripped of any information about how big the number is. The
-exponent handles bigness; the mantissa handles precision.
-
-Fifty-two binary digits is a lot of precision. For a number around four million
-— which is roughly what our coordinate is, measured in metres — those 52 bits
-let you specify a position down to about *half a millionth of a millimetre*,
-under half a nanometre. Far finer than anyone needs.
+The **mantissa** is the digits. For a number around four million, which is
+about what our coordinate is in metres, 52 binary digits pin it down to under
+half a nanometre.
 
 ## Now erase some digits
 
-Here is the crucial detail. On essentially every computer you will meet, the
-8 bytes of a double are stored with the **least important digits first**. So
-when our attacker's eraser sweeps through, the first thing it destroys is the
-fine detail — and only as it continues does it start eating the digits that
-matter.
+On essentially every computer you'll meet, a double's 8 bytes are stored
+least important digits first. So the eraser destroys the fine detail first
+and only reaches the digits that matter as it keeps going.
 
 ```
   one coordinate = one double = 8 bytes
@@ -354,17 +218,15 @@ matter.
           so precision is destroyed from the bottom up
 ```
 
-Each byte erased wipes out 8 binary digits of precision. The number does not
-become garbage. It becomes a **rounder version of itself**.
+Each erased byte removes 8 binary digits of precision, and the number becomes a
+rounder version of itself. Picture a ruler marked in millimetres. Rub out
+most of the marks and you can only read to the nearest centimetre; rub out more
+and you're down to the nearest metre. The ruler still gives sensible-looking
+answers. They're just coarser, and anything between the surviving marks snaps to
+a mark.
 
-Picture a ruler marked in millimetres. Rub out every tenth marking and you can
-now only report positions to the nearest centimetre. Rub out more and you are
-down to the nearest 10 cm, then the nearest metre. The ruler still works. It
-still gives you sensible-looking answers. The answers are just coarser, and
-anything between the surviving marks gets snapped to a mark.
-
-Here is that idea on an actual number line, using the real coordinate from my
-test data. The base station's true X position is `-3,978,242.4348` metres:
+Here's that on a real coordinate from the test data, a base station at
+X = `-3,978,242.4348` metres:
 
 ```
   FULL PRECISION - every fine gradation still present
@@ -391,140 +253,82 @@ test data. The base station's true X position is `-3,978,242.4348` metres:
                                   the base has "moved" 0.43 m
 ```
 
-Note which way it moves. Erasing digits always rounds the number *towards zero*,
-so the attacker does not even choose the direction — that falls out of the base
-station's own coordinates.
+Erasing always rounds toward zero, so the direction comes from the
+station's own coordinate, and the attacker doesn't get to pick it. Here's every
+rung on the same coordinate. The coordinate sits 208 bytes past the start of the
+field, so a declared length of 208 erases one byte and each extra unit erases
+one more:
 
-Running that for every number of erased bytes, on the same real coordinate:
+| bytes erased | declared length | resulting grid | coordinate becomes | error |
+|---|---|---|---|---|
+| 1 | 208 | 0.00012 mm | −3978242.4348 | none you could measure |
+| 2 | 209 | 0.03 mm | −3978242.4348 | none you could measure |
+| 3 | 210 | 8 mm | −3978242.4297 | **5 mm** |
+| 4 | 211 | **2 m** | −3978242.0000 | **0.43 m** |
+| 5 | 212 | 512 m | −3978240.0000 | **2.43 m** |
+| 6 | 213 | 131 km | −3932160.0000 | 46 km |
 
-| bytes erased | declared length | mantissa digits left | resulting grid | coordinate becomes | error |
-|---|---|---|---|---|---|
-| 1 | 208 | 44 | 0.00012 mm | −3978242.4348 | none you could measure |
-| 2 | 209 | 36 | 0.03 mm | −3978242.4348 | none you could measure |
-| 3 | 210 | 28 | 8 mm | −3978242.4297 | **5 mm** |
-| 4 | 211 | 20 | **2 m** | −3978242.0000 | **0.43 m** |
-| 5 | 212 | 12 | 512 m | −3978240.0000 | **2.43 m** |
-| 6 | 213 | 4 | 131 km | −3932160.0000 | 46 km |
+Each extra byte makes the grid 256 times coarser. That means the attacker picks
+the *scale* of the error and the station's coordinate decides the exact amount.
 
-Each extra byte erased multiplies the coarseness by 256, because that is what
-eight more binary digits does. The coordinate gets snapped down to the nearest
-multiple of the grid spacing.
+The grid for a given rung depends only on which power of two the coordinate
+falls between, and that depends on where on Earth the station is. So an
+attacker who knows roughly where the target is can pick the rung without knowing
+the coordinate. Across the globe, about a third of locations get a 2-metre grid
+at the 4-byte rung, a third get 4 metres, and the rest get 1 metre or finer. The
+attack is weakest around the Mississippi valley and strongest at low to middle
+latitudes near the prime meridian and its opposite: southern Europe, Africa,
+eastern Australia, New Zealand.
 
-Two things follow, and they are what make this attack practical.
+Below the right rung, the error is too small to matter. Above it, the error is
+so large that the receiver stops giving a confident answer. For most of the
+planet there's a band in between where the damage matters and stays invisible.
 
-**The attacker chooses the scale, not the value.** They cannot say "move it two
-metres north." They can only say "round it off this hard." Where it lands then
-depends on the base station's actual coordinates — which they may not know.
+# The message triggers its own damage
 
-**But the right rung can be picked from a map.** The grid spacing for a given
-number of erased bytes depends on only one thing about the coordinate: which
-power of two it falls between. My test station's X coordinate is about 3.98
-million metres, so erasing 4 bytes leaves a 2-metre grid, and the error
-lands somewhere between zero and two metres wherever the station sits inside
-that band. The attacker doesn't need the coordinate. They need its rough size,
-and that comes from knowing roughly where on Earth the target is.
+When RTKLIB finishes decoding a type 1033, it reports "this was an antenna
+information message." The real-time server responds by taking the base
+coordinates and adopting them as the reference for every position it computes
+from then on, without checking them.
 
-That is less universal than I first wrote. The X coordinate measures distance
-along an axis through the equator at the prime meridian, so its size depends on
-latitude and longitude:
+So one message both corrupts the coordinate and puts it into service.
 
-| where the base station is | example | 4-byte grid | error from that rung |
-|---|---|---|---|
-| low to middle latitudes, near 0° or 180° longitude | Madrid, Lagos, Sydney | 4 m | 0 to 4 m |
-| the middle band | London, San Jose | 2 m | 0 to 2 m |
-| further out | Delhi, Denver | 1 m | 0 to 1 m |
-| near 90° east or west, or near the poles | Chicago, New Orleans | centimetres or less | too small to matter |
+It doesn't last on its own. A working base repeats its true coordinates every
+few seconds in a type 1005 message, and the next one puts the right value back.
+To keep the error in place, the attacker re-sends after every 1005, which is
+what the test harnesses do. The silent attack needs a transmitter that keeps
+running.
 
-Worked out over the whole surface, about a third of the Earth gets the 2-metre
-grid, a third gets 4 metres, and the rest gets 1 metre or finer. In that last
-group, the next rung up is 256 times coarser, so the best quiet error on offer
-is under a metre, and near 90° it is a few millimetres. The attack is weakest in
-the Mississippi valley and strongest at low to middle latitudes near the prime
-meridian and its
-opposite: southern Europe, Africa, eastern Australia, New Zealand.
+RTKLIB's other code path, the one that processes recorded data after the fact,
+does check. It refuses a base coordinate of exactly zero. That would catch a
+fully erased coordinate. It wouldn't catch one rounded off by a couple of
+metres. The live path, the one taking bytes off a radio, has no check at all.
 
-Below the right rung the error is too small to matter. Above it, the error gets
-so large that the receiver stops producing a confident answer at all and the
-attack becomes obvious. For most of the planet there is a narrow band where the
-damage is big enough to matter and small enough to stay invisible, and an
-attacker can find it without knowing the target's coordinates.
+## Couldn't an attacker just send a fake coordinate?
 
-The "declared length" column above is arithmetic anyone can redo from the
-public source in an afternoon. The coordinates sit 208 bytes after the start of
-the field, so a declared length of 208 erases one byte, and each extra unit
-erases one more. It's in the table now because there's no longer a reason to
-make a reader do that arithmetic themselves.
+They could. The correction link has no authentication, so anyone who can transmit on
+it can send their own type 1005 with any base coordinate they like, and every
+RTK receiver will believe it. That needs no bug.
 
-# Part 7: The message that triggers its own damage
+This bug adds three things:
 
-There is one more piece, and it is what makes this a live attack rather than a
-curiosity.
+- **The attacker doesn't need to know where the base is.** A fake 1005 that
+  moves the base two metres has to start from the true coordinate. This bug
+  rounds off whatever's already in memory.
+- **It arrives in a message tamper monitoring isn't built to inspect.** Anything
+  watching a correction stream for a moved base looks at the 1005s. A 1033 is supposed to carry an
+  antenna name.
+- **On a hardened build it's a kill switch.** No well-formed 1005 can crash the
+  receiver. This message can, as you'll see below.
 
-When RTKLIB finishes decoding a type 1033 message, it reports back "this was an
-antenna information message." The real-time server sees that report and responds
-by taking the base station coordinates out of the message and adopting them as
-the reference for all future position calculations.
+The underlying problem is the unauthenticated link. This bug is one sharp
+example of what that allows.
 
-Without checking them.
+# What the receiver does about it
 
-So a single message does both halves of the job: it corrupts the coordinate, and
-it causes the corrupted coordinate to be put into service. No second message, no
-waiting.
-
-It does not last forever on its own. A working base station repeats its true
-coordinates every few seconds, in a message called type 1005, and the next one
-puts the right value back. An attacker who wants the error to stay sends their
-message again after every 1005. My test harnesses do exactly that. So the
-silent attack needs a transmitter that keeps running; one message buys a few
-seconds.
-
-And here is the detail I keep coming back to. RTKLIB has a second code path for
-processing recorded data after the fact, rather than live. **That path checks**,
-though not much. Before adopting a base position it makes sure the coordinate
-isn't exactly zero. That would catch a coordinate erased completely. It would not
-catch one rounded off by a couple of metres, which is still about 6,400
-kilometres from the centre of the Earth and looks perfectly reasonable.
-
-Somebody thought about this problem, at least a little. The check lives in the
-path that reads a file on your desk after the flight. The path that takes bytes
-off a radio in real time has nothing at all.
-
-## Couldn't an attacker just lie about the coordinate?
-
-Yes, and a careful reader will ask. The correction link has no authentication.
-Anyone who can transmit on it can send their own type 1005 message with a base
-coordinate of their choosing, and every RTK receiver will believe it, not only
-RTKLIB. That attack needs no bug, and it lets the attacker pick the exact
-direction and distance.
-
-So what does this bug add? Three things.
-
-- **The attacker doesn't need to know where the base station is.** A fake 1005
-  that moves the base by two metres has to start from the true coordinate. This
-  bug rounds off whatever coordinate is already in memory, sight unseen. Part 6
-  shows that rough location is enough to pick the rung.
-- **It arrives in a message nobody watches.** A 1005 carries coordinates, and
-  anything monitoring a correction stream for tampering looks there. A 1033 is
-  supposed to carry the antenna's model name.
-- **On a hardened build it is a kill switch.** No well-formed 1005 can crash the
-  receiver. This message can, and Part 12 shows why that matters.
-
-The broader problem is the unauthenticated link, and this bug is one sharp
-example of what it allows.
-
-# Part 8: What the receiver does about it
-
-Nothing. That is the finding, and it took me a while to believe it.
-
-This particular run used a longer declared length than the 2-metre rung from
-Part 6 — the coarser, less predictable setting, chosen here because it
-happened to produce a clean, sizeable number against this base station. The
-point below (whether the receiver's quality flags notice) doesn't depend on
-which rung was used; it just needed one that was large enough to be
-unmistakable in a table.
-
-I ran a clean data set and an attacked one all the way through, and compared
-every single position the receiver produced:
+The receiver doesn't react at all. I ran a clean data set and an attacked one
+all the way through and compared them position by position. This run used the 5-byte rung, which gave a
+big, unmistakable number against this station:
 
 | | clean | attacked |
 |---|---|---|
@@ -534,123 +338,62 @@ every single position the receiver produced:
 | any quality flag different, at any moment? | — | **no** |
 | how far the position moved | — | **2.435 m** |
 
-The injected error was 2.435 metres. The rover's reported position moved by that
-amount, exactly, and **the quality flags were identical** — same count, same flag
-at every single moment in the run. No dropouts. No degradation. No rejection.
+The position moved by exactly the injected error, and **the quality flags were
+identical** at every moment. The receiver's flags describe how well it solved
+the geometry, and it solved the geometry beautifully. It has no way to question
+the starting point it was handed.
 
-The receiver emits a position nearly two and a half metres from the truth, while
-reporting precisely the confidence it reports when everything is perfect.
+The logs don't help either. RTKLIB's diagnostic log does record each 1033, but
+it prints the 31-character holding buffer, which the attacker can make look
+completely ordinary. **The declared length, the number that does the damage, is
+never logged at any verbosity.** The step that puts the corrupted coordinate
+into service isn't logged at all; the only trace is a counter ticking up by one.
+At maximum logging, an operator sees a plausible antenna name and no record that
+the base coordinates changed.
 
-It does not notice because there is nothing to notice. Its quality flags describe
-how well it solved the geometry, and it solved the geometry beautifully. It has
-no way to question the starting point it was handed.
+# The compiler setting
 
-# Part 9: The logs are watching the wrong thing
+C compilers on Linux have an optional safety feature, glibc's
+`_FORTIFY_SOURCE`. With it on, certain copies get a check: *does this fit where
+it's going?* If not, the program kills itself. The copy in this bug is exactly
+that kind, so on a hardened build the program dies instead of corrupting
+anything. One message is a remote crash.
 
-"Nothing is logged" is nearly true, and the precise version is worse.
+Which builds have it? Almost none of the ones measured:
 
-RTKLIB does have a diagnostic log, and the type 1033 decoder does write to it.
-Turn the logging all the way up and you get one line per antenna message,
-recording the text it received.
+- **Both Windows distributions**, the official tools and the demo5 fork, wrote
+  a corrupted base coordinate into their output files and exited cleanly. The
+  feature belongs to the GNU C library, and these are built against different
+  libraries where it doesn't exist.
+- **Debian's package**, at the exact version studied here, has no hardened
+  functions anywhere in the ARM binary, despite Debian's policy asking for them.
+  The likeliest cause is RTKLIB's build files overriding the flags the
+  distribution injects.
+- **The feature comes in levels.** At level 2 the same message crashed the
+  program. At level 1 the write went through and moved the coordinate, because
+  at that level the check doesn't know the destination field's size.
 
-That line cannot show the attack. It prints the *temporary holding buffer* — the
-one capped at 31 characters. So the log faithfully records up to 31 characters of
-attacker-chosen text, which the attacker can make look completely ordinary. A
-message declaring a length of 255 produces a log line indistinguishable from a
-normal one.
+So the crash is mostly what you get by compiling RTKLIB yourself at level 2. The
+one product exception is current firmware for Emlid's Reach M2 and RS2, covered
+below.
 
-**The declared length — the number that causes all the damage — is never written
-to any log, at any verbosity setting.**
+*(A footnote on processors: the memory layout that decides which erasures reach
+the coordinate is identical on the six architectures checked, 32-bit and 64-bit
+alike, so the same message works on all of them unchanged. Older 32-bit PCs pack
+the record four bytes tighter, so the message needs a slightly shorter name
+there. And on processors that store numbers big end first, the same erasure
+wipes out the coordinate entirely, so the attack turns loud.)*
 
-And the step that actually does the harm, taking the corrupted coordinate and
-putting it into service, has no logging at all. The only trace is a counter
-ticking up by one.
+# Flying it
 
-So: at default settings, nothing. With diagnostics compiled in and turned to
-maximum, an operator gets one line recording a plausible-looking antenna name,
-and still no record that the base station's coordinates changed.
-
-The instrument exists. It is pointed in the wrong direction.
-
-# Part 10: The compiler setting, and the thing I got wrong
-
-Now for the part that surprised me, because I predicted it wrongly in writing and
-had to correct myself.
-
-Modern C compilers have an optional safety feature. Switch it on and, for certain
-common operations, the compiler inserts a check: *does this copy actually fit
-where it is going?* If it does not fit, the program deliberately kills itself
-rather than continue.
-
-The copy in this bug is exactly the kind that gets checked. So with that feature
-active, this bug does not corrupt anything. The program simply dies. One message
-is a remote crash — bad, but loud and obvious.
-
-I assumed the world divided along an obvious line: Windows applications built
-without the feature would corrupt silently, and Linux builds would have it and
-would crash. Linux distributions have formal policies requiring this hardening.
-Embedded receivers run Linux. I wrote that prediction down.
-
-It is wrong. **Nearly every build I have measured corrupts silently.** The one
-exception, Emlid's current receiver firmware, turned up last, and Part 14
-covers it.
-
-**Both Windows distributions.** I downloaded the official Windows tools and the
-popular demo5 fork, fed them the malicious message, and watched them write a
-corrupted base station coordinate into their own output files. Exit code zero, no
-complaint. The feature belongs to the GNU C library; these are built with a
-different compiler, against different libraries, where it doesn't exist to
-enable. It was never on the menu.
-
-**Debian's own package.** This is the one that killed my prediction. Debian
-packages RTKLIB, at exactly the version I had been studying, built for every
-processor architecture they support. I pulled the ARM build apart and looked for
-the hardened functions.
-
-There are none. Not one, anywhere in the binary. The ordinary unchecked versions
-are all present. Debian's package escapes the hardening its own policy nominally
-requires — most likely because RTKLIB's build files override the compiler
-settings the distribution tries to inject.
-
-So installing this from your Linux distribution, on ARM, lands in the silent
-corruption column alongside everything else.
-
-For the most part, the crash is what you get by compiling the software
-yourself with the right settings. The exception is Emlid, whose current
-receivers ship the hardened build (Part 14).
-
-"The right settings" is narrower than it sounds. The feature, glibc's
-`_FORTIFY_SOURCE`, comes in levels. I built the same code at level 1 and level 2
-and sent both the same message. Level 2 crashed. Level 1 let the write through
-and quietly moved the coordinate, exactly like the unhardened builds, because at
-that level the check doesn't know how big the destination field is. A build
-that has the feature switched on can still land in the silent column.
-
-*(One footnote for the suspicious: the internal layout that determines exactly
-which erasures reach the coordinate turns out to be identical across every
-processor architecture I checked — six of them, 32-bit and 64-bit alike — so the
-same malicious message works on all of them without adjustment. Two exceptions
-turned up later. Older 32-bit PCs pack the record four bytes tighter, so the
-message needs a slightly shorter name. And on the few processors that store
-numbers big end first, the same erasure wipes out the coordinate entirely
-instead of nudging it, which is loud rather than quiet.)*
-
-# Part 11: Flying it
-
-Simulated positions on a screen only get you so far. I wanted to know what a
-vehicle does.
-
-So I built a loop: a simulated drone's true position feeds a synthetic GPS
-signal generator, which feeds RTKLIB, which produces a position, which is fed
-back to the drone's autopilot as its only GPS. The malicious message gets spliced
-into the correction stream mid-flight, exactly as it would arrive over a radio
-link. The drone's flight controller then computes its own false position from the
-corrupted data and flies on that.
+To see what a vehicle does, I built a closed loop. A simulated drone's true
+position feeds a synthetic GPS signal generator, which feeds RTKLIB, whose
+output is the autopilot's only GPS. The malicious message is spliced into the
+correction stream mid-flight, as it would arrive over a radio link.
 
 ```
         real base station                    ATTACKER
         (legitimate corrections)             (one fake antenna-name message)
-                  |                                |
                   |                                |
                   +--------------+-----------------+
                                  |
@@ -677,30 +420,16 @@ corrupted data and flies on that.
         v    input to the GPS simulation, closing the loop)
 ```
 
-Nothing is patched in by hand. The aircraft's own position is what the simulated
-satellites are computed from, and RTKLIB's output is the aircraft's only GPS — so
-a corrupted base coordinate propagates all the way round into the flight control
-loop and back out again.
+Same aircraft, same flight plan, same message, flown twice. The only difference
+was which build of RTKLIB was in the loop.
 
-I flew it twice. Same aircraft, same flight plan, same malicious message. The
-only difference was which version of RTKLIB was in the loop.
+**The usual build.** The drone took off, hovered, received the message, and
+carried on. Sent to a point 30 metres away, it flew there, announced arrival,
+and landed normally, 1.4 metres from where it believed it was. Its flight log
+has zero errors, and GPS quality read best-possible from takeoff to
+touchdown.
 
-## The version everyone runs
-
-The drone took off, hovered, received the malicious message, and carried on. When
-told to fly to a specific point 30 metres away it flew there, announced arrival,
-and landed normally.
-
-It was 1.4 metres from where it believed it was.
-
-Its flight log contains **zero errors**. Not one warning, not one anomaly. GPS
-quality reported as the highest possible value from takeoff to touchdown, without
-a flicker.
-
-## The version that crashes
-
-Same flight, hardened build. The malicious message arrives while the drone is
-hovering:
+**The hardened build.** The message arrives while the drone hovers:
 
 ```
 87.5 s   GPS quality: BEST -> NONE        (RTKLIB has just died)
@@ -713,48 +442,31 @@ hovering:
 122.7 s  Disarming motors
 ```
 
-Four seconds from losing GPS to declaring an emergency. Thirty-three seconds from
-losing GPS to sitting on the ground, descending at half a metre per second, which
-is a landing rather than a fall. It abandoned the route it was flying. It logged
-four distinct errors while doing it.
+Four seconds from losing GPS to declaring an emergency, and 33 seconds to the
+ground, touching down at half a metre per second. That's a controlled landing, with four
+errors logged along the way.
 
-## Which is worse?
+Autonomous systems are built to handle *"my sensor stopped working."* That's an
+expected condition with a plan: alarm, stop, land. Almost nothing is built to
+handle *"my sensor is confidently wrong,"* because there's no signal to react
+to. On the question of whether anyone finds out, the crash is the better
+outcome.
 
-Instinct says the crash. Instinct is wrong.
+# The crash is an attack too
 
-Every autonomous system is built to handle *"my sensor stopped working."* That is
-an expected condition with a plan attached: raise an alarm, stop, hand back
-control, land. Here it fired in four seconds and the aircraft put itself down
-safely.
-
-Essentially nothing is built to handle *"my sensor is confidently wrong,"* because
-there is no signal to react to. No alarm can fire when every reading looks
-perfect.
-
-So on the question of *whether anyone finds out*, the version that crashes wins
-outright. Almost nobody ships it; Emlid's current firmware is the exception
-(Part 14).
-
-# Part 12: But the crash is its own attack
-
-I nearly stopped there, and stopping there would have been wrong. Look again at
-one line from the crashed drone's log:
+Look at one line from that log:
 
 ```
 105.9 s  SmartRTL deactivated: bad position
 ```
 
-With no position, the drone **could not fly home**. It did not know where home
-was. It had exactly one option: land immediately.
+With no position, the drone couldn't fly home. Its only option was to land where
+it was, and the attacker decides when that happens. Someone who can see the
+target can wait until it's over a lake or the far side of a fence, then send one
+message.
 
-Now ask who decides *when* that happens.
-
-The attacker does. It happens the moment they transmit. So an attacker who can
-see the target can wait until it is over a lake, or a river, or the far side of a
-fence, and then send one message to bring it down there.
-
-I measured how well that can be aimed. With no position estimate the drone has no
-way to hold station, so it drifts for the whole descent:
+How well can that be aimed? With no position estimate the drone can't hold
+station, so it drifts during the descent:
 
 | | |
 |---|---|
@@ -763,21 +475,12 @@ way to hold station, so it drifts for the whole descent:
 | **sideways drift before touchdown** | **10.13 metres** |
 | character of the drift | one direction, never corrected |
 
-So the attacker selects a **circle tens of metres across**, not a spot. Good
-enough for a lake or a field. Not good enough for a specific lane of traffic.
-
-And 10 metres is the **best case**. The simulation had no wind, the drone was
-low, and it was nearly stationary when it was hit. Wind, height, or a moving
-target all make it worse. One run is one measurement, not a guarantee.
-
-A human watching can still rescue it — the aircraft flies fine by hand once you
-stop asking it where it is, and the alarms are loud. An automated flight with
-nobody watching cannot be rescued.
-
-## Two weapons, and no safe option
-
-The two builds hand an attacker **different tools**. Neither one is the
-harmless case.
+So the attacker picks a circle tens of metres across. Good enough for a lake,
+too coarse for a particular lane of traffic. Two runs drifted 10.13 and 10.76
+metres, both with no wind, a low drone, and almost no forward speed, so treat
+10 metres as a best case. A
+pilot watching can take over and fly by hand. An unattended automated flight
+can't be rescued.
 
 ```
                     ONE MALICIOUS MESSAGE
@@ -786,7 +489,7 @@ harmless case.
               |                             |
        build without the            build with the
        safety check                 safety check
-       (what most builds ship)      (current Emlid firmware,
+       (most builds)                (current Emlid M2/RS2,
                                      or compile it yourself)
               |                             |
               v                             v
@@ -807,28 +510,23 @@ harmless case.
                                     but it is on the ground
 ```
 
-| | the usual shipped build | the hardened build (current Emlid firmware) |
+| | the usual build | the hardened build |
 |---|---|---|
 | what it does | moves the reported position | brings the aircraft down |
-| precision | attacker picks the scale, the station's coordinate picks the amount | ~10 m, or worse |
-| magnitude | a few metres before it starts looking wrong | total — it stops flying |
+| magnitude | a few metres, before it starts looking wrong | total |
 | does anyone notice? | **no** | yes, immediately |
-| how long it lasts | until the next genuine 1005, so it has to be re-sent every few seconds | one message is enough |
-| useful for | quietly ruining survey data, agriculture, landing accuracy, for as long as the attacker keeps transmitting | taking an aircraft out of the air at a chosen moment |
+| how long it lasts | until the next real 1005, so it's re-sent every few seconds | one message is enough |
+| useful for | quietly ruining survey, farm, or landing accuracy | taking an aircraft down at a chosen moment |
 
-Which leads somewhere uncomfortable. **If your goal is to put a drone in a lake,
-the hardened build is the better tool for the job.** Two metres of silent error
-will not do it. A forced landing will.
+If the goal is to put a drone in a lake, the hardened build is the better tool.
+Two metres of silent error won't do it; a forced landing will. Turning on the
+compiler's safety feature trades a quiet attack for a loud one. That's a good
+trade if you care about knowing you were attacked, and most people do, but it
+leaves the bug in place.
 
-Turning on the compiler's safety feature does not fix this bug. It exchanges a
-quiet attack for a loud one. That is a trade genuinely worth making if what you
-care about is knowing you were attacked — which is most people, most of the time
-— but it should be described as what it is.
+# The fix
 
-# Part 13: The actual fix
-
-Five lines. Refuse to believe the declared length if it is bigger than what was
-actually read:
+Refuse to believe a declared length bigger than what was actually read:
 
 ```c
 if (n >31) n =31;
@@ -838,19 +536,15 @@ if (n2>31) n2=31;
 if (n3>31) n3=31;
 ```
 
-The holding buffers are 32 characters, so this only stops the copy from claiming
-more than ever arrived. I built the software with and without this change and ran
-the same data through both: the attacked streams come back at the true
-coordinate, and legitimate messages decode identically, so the change costs
-nothing that a real base station would notice.
+The holding buffers are 32 characters, so this only stops the copy from
+claiming more than arrived. Run with and without the change, attacked streams
+come back at the true coordinate and legitimate messages decode identically.
 
-The same missing clamp sits in two sibling decoders, for message types 1007 and
-1008, which carry the antenna's name and serial number. Those fields sit too
-early in memory to reach the coordinates, so on the builds everyone runs they
-are harmless. On a hardened build they are not. I sent each an oversized name
-on a level-2 build and all three cases crashed the program, the same kill switch
-as 1033. Clamping only 1033 would leave a hardened receiver exactly as easy to
-knock out. Three more lines close it:
+Two sibling decoders, for message types 1007 and 1008, have the same missing
+check on the antenna name and serial number. Those fields sit too early in
+memory to reach the coordinates, so on the usual builds they're harmless. On a
+level-2 build an oversized name crashes the program, the same kill switch as
+1033. Three more lines close them:
 
 ```c
 if (n>31) n=31;            /* decode_type1007 */
@@ -858,221 +552,113 @@ if (n>31) n=31;            /* decode_type1008 */
 if (m>31) m=31;
 ```
 
-With those added, the same level-2 build survives all three, and every message
-decodes exactly as the unpatched code decodes it.
+I posted the analysis on the bug report on 2026-07-27, filed the fix as
+[PR #801](https://github.com/tomojitakasu/RTKLIB/pull/801) on 2026-08-31, and
+added the 1007/1008 lines to the same PR on 2026-11-16. It hasn't been merged.
 
-I posted the analysis publicly on the bug report on 2026-07-27. As of
-2026-08-31 there had been no reply, so I filed the fix as
-[PR #801](https://github.com/tomojitakasu/RTKLIB/pull/801) — filed, not
-merged. On 2026-11-16 I added the 1007/1008 clamp to the same PR, so it now
-covers all three decoders.
+**If you run a receiver and can't recompile it,** tell it to use a base position
+you enter by hand. In RTKLIB that's `ant2-postype`: set it to `llh` or `xyz`
+with the surveyed coordinate in place of `rtcm`. The live server only adopts a
+streamed base position when that option says `rtcm`, so with it set, neither this
+bug nor a fake 1005 can move the base. Running corrections over an
+authenticated, encrypted connection closes the door more broadly.
 
-**If you run a receiver and can't recompile it,** there is a simpler defence.
-Most RTK software, RTKLIB included, can be told to use a base position you
-enter by hand instead of whatever the correction stream announces. In RTKLIB
-that's `ant2-postype`: set it to `llh` or `xyz` with the surveyed coordinate,
-rather than `rtcm`. The live server only adopts a streamed base position when
-that option says `rtcm`, so with it set, neither this bug nor a fake 1005 can
-move the base. Running the correction stream over an authenticated, encrypted
-connection rather than open radio or plain NTRIP closes the door more broadly.
+# Where this stands
 
-# Part 14: Where this actually stands
+All four FuzzingLabs reports have been open since 2026-06-09. As of 2026-11-16
+none has had a reply from the maintainer, and neither has PR #801. The demo5
+fork put out a release on 2026-06-22 with the flaw untouched. There's nobody to
+wait for a patch from.
 
-None of this is a secret. The bugs were reported publicly in June 2026 and the
-analysis has been public since.
+The 1033 bug is
+[CVE-2026-56786](https://nvd.nist.gov/vuln/detail/CVE-2026-56786), and its two
+official descriptions disagree:
 
-All four reports have been open and unpatched since 2026-06-09. Each carries a
-single comment from the person who found them, offering to file the paperwork
-for an official vulnerability identifier and asking the maintainer how they'd
-like to handle it. As of 2026-11-16, neither that comment nor mine (posted
-2026-07-27 on #799) has drawn a reply, and PR #801 has no comments either.
+- **The national vulnerability database entry** carries a score of 9.3 out of
+  10 (CVSS 4.0, assigned by VulnCheck, the CVE's issuer) and mentions
+  "arbitrary code execution." Since only zeros spill past the field, I can't
+  see a route to that.
+- **Debian's security tracker** rates it a minor issue and isn't issuing a security update, because
+  the overflow "consists only of strncpy NUL padding." That's accurate about
+  the bytes. Those zeros happen to land on the low digits of the base
+  coordinate.
 
-The identifier exists, and I missed it when I first wrote this. The 1033 bug is
-[CVE-2026-56786](https://nvd.nist.gov/vuln/detail/CVE-2026-56786), published
-2026-06-25. The two official descriptions of it point in opposite directions,
-and both miss the point of this article:
+Debian's package is still unpatched in every release.
 
-- **The national vulnerability database** scores it 9.3 out of 10 and says the
-  overflow could allow "arbitrary code execution". I can't see a route to
-  that. The only bytes that spill past the field are zeros. An attacker can
-  erase values but can't write any of their own, which rules out the usual
-  ways of hijacking a program.
-- **Debian's security tracker** calls it a minor issue and has postponed fixing
-  it, because the overflow "consists only of strncpy NUL padding". That's an
-  accurate description of the bytes. It misses what those zeros land on: the
-  low digits of the base station's coordinate.
+## Emlid's receivers
 
-One side overstates the bug as a memory-corruption exploit; the other dismisses
-it as one that doesn't work. As of 2026-11-16, Debian's package is still
-unpatched in every release.
+Emlid's public fork of RTKLIB carries the same code. Their firmware images are
+public downloads, so I opened several without root (`dd` to carve the
+partition, `debugfs` to read it) and looked at the decoder in each.
 
-The demo5 fork shipped a new release on 2026-06-22 — **thirteen days after**
-the bugs were made public — with the flaw untouched.
+- **Reach Plus (RS+/M+), firmware 2.18.1, 2019:** Emlid's own RTKLIB build, no
+  hardened functions. Running the real `rtkrcv` binary under `qemu` against a
+  correction stream carrying the message, its own console reported the base at
+  `-2694684.000` against a true `-2694685.4730`, a 1.473-metre shift with
+  nothing in its error log.
+- **Reach M2 and RS2** (the same program, byte for byte, in v33.1):
 
-So "wait for the patch" is not advice that means anything here. There is nobody
-to wait for. I would rather say that plainly than imply a fix is on its way.
-
-The same code is also present, unchanged, in Emlid's public fork of RTKLIB —
-same flaw, same internal layout, same missing check on the live path. For a
-long time that was an observation about published source code only: the source
-is affected, which is a different claim from any particular product behaving
-that way.
-
-That changed for one Emlid product. Their firmware images are served
-publicly with no purchase or login required. I downloaded one — Reach Plus
-(RS+/M+), version 2.18.1, dated 2019 — opened the disk image without root
-(partition carved with `dd`, read with `debugfs`), and found `librtk.so`:
-RTKLIB 2.4.3, Emlid's own build, compiled for the receiver's ARM processor.
-The decoder is in there — inlined into the message dispatcher rather than
-kept as its own named function, confirmed by tracing both of its diagnostic
-strings back to live code inside it — and the library imports not one
-fortified libc symbol. Same silent-corruption result as everything else
-measured in this piece, this time on an actual shipped product's actual
-firmware.
-
-The current models came later, and they came out the other way. Emlid's
-Linux Flash Tool has the address of its firmware list built in, and that list
-gives the full release history for the Reach M2, from v2.22.1 to v33.1
-(February 2026), with public download links for 2.24.2 and everything from
-28.1 on. I pulled eleven of those images apart the same way and read the
-decoder in each one's `reach-ublox-daemon`. The RS2 runs the same program
-as the M2; in v33.1 the two binaries are byte-for-byte identical.
-
-| Reach M2 firmware | Built | The five text copies in the 1033 decoder |
+| Reach M2 firmware | Built | The 1033 decoder's copies |
 |---|---|---|
 | 2.24.2 to 28.4 | Nov 2020 to Mar 2022 | plain `strncpy`: silent corruption |
-| **29.0** onward, to 33.1 | **Jul 2022** to Feb 2026 | `__strncpy_chk`: the program aborts |
+| **29.0** to 33.1 | **Jul 2022** to Feb 2026 | `__strncpy_chk`: the program aborts |
 
-So the switch came in **v29.0, built 2022-07-14**. From that release on,
-Emlid's receivers are in the hardened column. The bug itself is still
-there: v33.1 checks nothing about the declared length before the copy. It
-just dies when the length runs past the 64-byte field, and reaching the
-coordinate takes 208 bytes or more. Nothing I can see says this was a
-response to the bug. It looks like a change in how the firmware was built,
-not a fix.
+From v29.0 on, the M2 and RS2 are in the hardened column. The decoder still
+doesn't check the declared length; the build just aborts once a copy runs past
+the 64-byte field. Running the M2's logging program, which carries the same
+decoder, under emulation confirmed it: a 64-character receiver name ran fine,
+and 65 printed `*** buffer overflow detected ***: terminated`. Reaching the
+coordinate takes 208, so on current M2 and RS2 firmware the silent attack is gone and
+every attempt is a remote kill.
 
-That puts the currently sold, drone-mounted Reach M2 on the loud side of the
-table in Part 12: one message, and the program feeding the flight controller
-its position stops.
+Two things are still open. I haven't run the program that feeds the flight
+controller or seen what ArduPilot does when it stops, and I couldn't find
+current Reach Plus firmware to check. Older units, including the original Reach
+RS line through 28.4, stay silent.
 
-Reading the code says it would abort, so I ran it to check. The program that
-feeds the flight controller won't start its correction input without the
-real GPS chip attached. A second program in the same firmware, the one that
-records logs, carries the same decoder and will read corrections from a
-network connection. I ran it under the same emulator as before, using the
-firmware's own message broker, and asked it, the way Emlid's app would, to
-record a correction stream I was serving.
+RTKLIB's permissive license lets it go into closed firmware without its name
+on the box. Farm autosteer, survey stakeout, marine autopilots, and RTK mapping
+drones draw from the same small pool of open positioning code. Which of them
+carry this decoder is untested.
 
-| The 1033's receiver-type text | What the M2 program did |
-|---|---|
-| 31 or 64 characters | kept running and wrote its log, with my fake receiver name in the header |
-| 65 characters or more | `*** buffer overflow detected ***: terminated` |
+# What I didn't do
 
-Sixty-four characters is exactly the size of the field. One more, and it
-dies. Reaching the coordinate takes 208. So on current Emlid firmware the
-silent attack is gone, and every attempt at it is a remote kill.
+- **No aircraft was attacked live.** The closest: two small real radios sent the
+  message over the air into RTKLIB's own decoder, real firmware was pulled
+  apart, and the Reach Plus program ran under emulation. None of that is a
+  powered-on device with propellers.
+- **The silent attack wasn't tested against a live base** sending its own
+  corrections. The harnesses replay recorded streams and re-send after every
+  1005. A busy radio channel is untested.
+- **One base, one rover, one data set**, and an old one. Other constellations
+  and modern multi-frequency receivers are untested.
+- **Each drone result is one or two flights**, one airframe, stock settings.
+  The direction of the result is the claim; the exact seconds are illustrative.
+- **The 10-metre drift is two samples in zero wind.** Treat it as a floor.
+- **The rung-by-location map is computed from geometry**, not measured at real
+  stations in those places.
 
-What I still haven't done is run the program that actually talks to the
-flight controller, or measure what ArduPilot does when it stops. Older units stay silent. The original Reach RS line's last release,
-28.4, imports no hardened copy at all, and the 2019 Reach Plus build above
-doesn't either. Whether Reach Plus got a later build that changed this, I
-couldn't find out: its current firmware isn't on the list under any name I
-tried.
+# Why it matters
 
-Later the same day: reading the binary says what it *would* do. I wanted to
-watch it actually do it. `qemu-aarch64-static` — downloaded as a `.deb` and
-unpacked by hand, no root needed anywhere in this — will run one aarch64
-binary under emulation on an ordinary x86 machine, resolving its shared
-libraries from a directory you point it at. Pointed that directory at the
-Reach Plus filesystem, ran the real `rtkrcv` binary from the real firmware
-against its own real configuration file, and fed it a correction stream
-carrying the same malicious message over a local TCP connection standing in
-for the radio link. Then asked `rtkrcv` itself — its own console, the same
-interface a real operator would use — what it currently believed the base
-station's position to be:
+The bug is small and the fix is eight lines.
 
-```
-pos xyz (m) base : -2694684.000,-4293642.366,3857878.924
-```
+Every safety check in this system looks at the quality of the measurements. Are
+the satellites healthy? Is the geometry good? Did the maths converge? All of
+those passed in every attacked run, because the measurements really were fine.
 
-The true position was `-2694685.4730,-4293642.3660,3857878.9240`. One axis
-moved **1.473 metres**, live, watched, on the actual shipped program. The
-message counters matched what I'd sent exactly, and the console's own error
-log had nothing in it. I shut it down cleanly afterward with its own
-`shutdown` command; nothing crashed.
-
-This section started with a claim about source code, then a claim about
-firmware contents. It ends with the actual program running and reporting the
-corrupted position itself. What's still open: this was emulation, not the receiver itself powered on,
-and the M2's abort was run in its logging program, not the one that feeds the
-flight controller. Both
-matter; neither erases what the emulator run settled.
-
-Reach is one confirmed instance of something bigger than one product. RTKLIB
-is permissively licensed, which is exactly what lets it get folded into closed
-firmware that never uses its name — one way to find another instance is the
-way this one turned up: look at what a device actually ships, not what a
-spec sheet claims. Precision-agriculture autosteer, survey and construction
-stakeout, marine autopilots, and RTK-equipped mapping drones all draw from the
-same small pool of open positioning code Reach draws from. Which of them,
-specifically, remains untested.
-
-# Part 15: What I did not do
-
-Worth being blunt about, because a lot of security writing is vaguer here than it
-should be.
-
-- **No aircraft, real or simulated-into-the-real-world, was ever attacked
-  live.** The closest I got: two small real radios sent the malicious
-  message over the air into RTKLIB's own unmodified decoder; real
-  receiver firmware was downloaded and read (Reach Plus, and eleven Reach
-  M2 releases); and the Reach Plus receiver's actual
-  program was run under emulation against a real correction stream, with
-  its own console confirming the corruption (Part 14). None of those is an
-  attack on a powered-on device with a propeller attached.
-- **The silent attack was never tested against a working base station
-  sending its own corrections in real time.** My harnesses replay recorded
-  streams and re-send the malicious message after every genuine 1005. How
-  well that holds up against a live base on a busy radio channel is untested.
-- **One base station, one rover, one data set**, and an old one. Whether the same
-  invisibility holds across other satellite constellations and modern
-  multi-frequency receivers is untested.
-- **The drone results are one flight each.** One airframe, one flight profile,
-  stock settings. A different vehicle or different emergency-response settings
-  would give different numbers. The *direction* of the result is the claim; the
-  exact seconds are illustrative.
-- **The 10-metre landing dispersion is a single sample in zero wind.** Treat it
-  as a floor, not a bound. A real figure would need many runs across different
-  heights and wind conditions, which I have not done.
-- **The size of the error depends on the specific base station**, because what is
-  being erased is the digits of its particular coordinate. Part 6's map of
-  which rung applies where is computed from the geometry, not measured at
-  real stations in those places.
-
-# Why I think it matters
-
-The bug itself is small and the fix is five lines. What is interesting is the
-shape of it.
-
-Every safety check in this system is aimed at the quality of the measurements.
-Are the satellites healthy? Is the geometry good? Did the maths converge? All of
-those checks passed, throughout, in every attacked run I did — because the
-measurements really were fine.
-
-Nothing checks the *assumption* the measurements are built on. The base station's
+Nothing checks the assumption the measurements are built on. The base
 coordinate arrives over an unauthenticated link, gets adopted without a glance,
-and every downstream check then dutifully confirms that the arithmetic performed
-on it was correct.
+and every check downstream confirms that the arithmetic done on it was correct.
 
-That is not unique to GPS software. It is what most systems look like: heavily
-instrumented at the point where errors are expected, and completely blind at the
-point where a value is simply taken on faith.
+Most systems are built the same way. They're well instrumented
+where errors are expected and blind where a value is taken on faith.
 
 ---
 
-*Corrections welcome. Everything above is reproducible, and if you know of a
-shipped build besides Emlid's that lands in the crash column, I would genuinely
-like to hear about it. The full technical writeup — exact source,
-struct offsets across six architectures, the reproduction harness, sanitizer
-output, and every script used to generate a number in this piece — is at
-[github.com/tiarno/rtk-research](https://github.com/tiarno/rtk-research), starting from [research/README.md](https://github.com/tiarno/rtk-research/blob/master/research/README.md).*
+*Corrections welcome. Everything here is reproducible, and if you know of a
+build besides Emlid's that lands in the crash column, I'd like to hear about it.
+The full technical writeup, with exact source, struct offsets, the reproduction
+harness, sanitizer output, and every script behind every number here, is at
+[github.com/tiarno/rtk-research](https://github.com/tiarno/rtk-research),
+starting from
+[research/README.md](https://github.com/tiarno/rtk-research/blob/master/research/README.md).*
